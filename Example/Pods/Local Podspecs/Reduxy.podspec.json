@@ -1,8 +1,8 @@
 {
   "name": "Reduxy",
   "version": "0.1.0",
-  "summary": "A short description of Reduxy.",
-  "description": "TODO: Add long description of the pod here.",
+  "summary": "A implementation of redux with ObjC.",
+  "description": "Reduxy(Redux[Obj]C) is a implementation of redux with ObjC.\n\nReduxy is for whom is sitting on old machines with swift ObjC.",
   "homepage": "https://github.com/skyofdwarf/Reduxy",
   "license": {
     "type": "MIT",
