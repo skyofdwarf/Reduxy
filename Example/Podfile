@@ -1,0 +1,12 @@
+use_frameworks!
+
+target 'Reduxy_Example' do
+  pod 'Reduxy', :path => '../'
+
+  target 'Reduxy_Tests' do
+    inherit! :search_paths
+
+    pod 'Specta'
+  pod 'Expecta'
+  end
+end
