@@ -1,0 +1,22 @@
+PODS:
+  - Expecta (1.0.5)
+  - Reduxy (0.1.0)
+  - Specta (1.0.6)
+
+DEPENDENCIES:
+  - Expecta
+  - Reduxy (from `../`)
+  - Specta
+
+EXTERNAL SOURCES:
+  Reduxy:
+    :path: ../
+
+SPEC CHECKSUMS:
+  Expecta: e1c022fcd33910b6be89c291d2775b3fe27a89fe
+  Reduxy: 5ed926307500390a823515414177b5ba7a6fcc33
+  Specta: f506f3a8361de16bc0dcf3b17b75e269072ba465
+
+PODFILE CHECKSUM: 9990574aba6998d728a7d6496c0bff6d1342bb0d
+
+COCOAPODS: 1.2.1
