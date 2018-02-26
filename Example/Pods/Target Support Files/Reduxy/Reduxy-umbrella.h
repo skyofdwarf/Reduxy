@@ -10,6 +10,11 @@
 #endif
 #endif
 
+#import "ReduxyAsyncAction.h"
+#import "ReduxyFunctionAction.h"
+#import "ReduxyFunctionMiddleware.h"
+#import "ReduxyStore.h"
+#import "ReduxyTypes.h"
 
 FOUNDATION_EXPORT double ReduxyVersionNumber;
 FOUNDATION_EXPORT const unsigned char ReduxyVersionString[];
