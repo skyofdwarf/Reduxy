@@ -8,14 +8,13 @@
 
 #import <Foundation/Foundation.h>
 
-#import "ReduxyStoreDelegate.h"
 #import "ReduxyTypes.h"
 
 /*! Reduxy(Redux[Obj]C) is a implementation of redux with ObjC.
  */
 
 /// reduxy store
-@interface ReduxyStore : NSObject
+@interface ReduxyStore : NSObject <ReduxyStore>
 
 + (instancetype)storeWithReducer:(ReduxyReducer)reducer;
 
@@ -40,7 +39,7 @@
 
 - (ReduxyAction)dispatch:(ReduxyAction)action;
 
-- (void)subscribe:(id<ReduxyStoreDelegate>)subscriber;
-- (void)unsubscribe:(id<ReduxyStoreDelegate>)subscriber;
+- (void)subscribe:(id<ReduxyStoreSubscriber>)subscriber;
+- (void)unsubscribe:(id<ReduxyStoreSubscriber>)subscriber;
 
 @end

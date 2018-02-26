@@ -8,10 +8,14 @@
 
 #import "ReduxyViewController.h"
 #import "ReduxyStore.h"
+#import "ReduxyFunctionMiddleware.h"
 #import "ReduxyAsyncAction.h"
+#import "ReduxyFunctionAction.h"
 
 
 #pragma mark - actions
+
+ReduxyAction ReduxyActionTag = @"reduxy.action.tag";
 
 ReduxyAction ReduxyActionIncrease = @"reduxy.action.increase";
 ReduxyAction ReduxyActionDecrease = @"reduxy.action.decrease";
@@ -24,44 +28,54 @@ ReduxyAction ReduxyActionIgnore = @"reduxy.action.ignore";
 #pragma mark - reducers
 
 ReduxyReducer valueReducer = ^ReduxyState (NSNumber *state, ReduxyAction action) {
-    if ([action isEqualToString:ReduxyActionIgnore])
+    if ([ReduxyActionIncrease isEqual:action])
         return @(state.integerValue + 1);
-    if ([action isEqualToString:ReduxyActionDecrease])
+    if ([ReduxyActionDecrease isEqual:action])
         return @(state.integerValue - 1);
     return state;
 };
 
-ReduxyReducer notUsedReducer = ^ReduxyState (NSString *state, ReduxyAction action) {
+ReduxyReducer innerReducer = ^ReduxyState (NSString *state, ReduxyAction action) {
+    if ([ReduxyActionTag isEqualToString:action]) {
+        return @"modified inner value";
+    }
     return state;
+};
+
+ReduxyReducer tagReducer = ^ReduxyState (NSDictionary *state, ReduxyAction action) {
+    return @{ @"inner key": innerReducer(state[@"inner key"], action),
+              @"const key": @"const value"
+              };
 };
 
 ReduxyReducer rootReducer = ^ReduxyState (ReduxyState state, ReduxyAction action) {
     return @{ @"value": valueReducer(state[@"value"], action),
-              @"tag": notUsedReducer(state[@"tag"], action)
+              @"tag": tagReducer(state[@"tag"], action)
               };
 };
 
 
 #pragma mark - middlewares
 
-ReduxyMiddleware logger = ReduxyMiddlewareCreateMacro({
-    NSLog(@"sent action: %@", action);
-    return nextDispatch(action);
+ReduxyMiddleware logger = ReduxyMiddlewareCreateMacro(store, next, action, {
+    NSLog(@"logger> received action: %@", action);
+    return next(action);
 });
 
-ReduxyMiddleware ignorer = ReduxyMiddlewareCreateMacro({
+ReduxyMiddleware ignorer = ReduxyMiddlewareCreateMacro(store, next, action, {
+    NSLog(@"ignorer> received action: %@", action);
     if ([action isKindOfClass:NSString.class]) {
         if ([(NSString *)action isEqualToString:ReduxyActionIgnore]) {
+            NSLog(@"ignorer> ignored: %@", action);
             return action;
         }
     }
-    return nextDispatch(action);
+    return next(action);
 });
-
 
 #pragma mark - ViewController
 
-@interface ReduxyViewController () <ReduxyStoreDelegate>
+@interface ReduxyViewController () <ReduxyStoreSubscriber>
 @property (weak, nonatomic) IBOutlet UITextField *customActionTextField;
 @property (strong, nonatomic) ReduxyStore *store;
 @end
@@ -91,15 +105,17 @@ ReduxyMiddleware ignorer = ReduxyMiddlewareCreateMacro({
     
     
     self.store = [ReduxyStore storeWithState:@{ @"value": @(0),
-                                                @"tag": @"no tag",
+                                                @"tag": @{ @"inner key": @"inner value",
+                                                           @"const key": @"const value"
+                                                           }
                                                 }
                                      reducer:rootReducer
-                                 middlewares:@[ logger, ignorer, ReduxyAsyncActionMiddleware ]];
+                                 middlewares:@[ logger, ignorer, /*ReduxyAsyncActionMiddleware,*/ ReduxyFunctionMiddleware ]];
     
     [self.store subscribe:self];
 }
 
-#pragma mark - ReduxyStoreDelegate
+#pragma mark - ReduxyStoreSubscriber
 
 - (void)reduxyStore:(ReduxyStore *)store stateDidChange:(id)state {
     NSLog(@"state did change: %@", state);
@@ -107,16 +123,20 @@ ReduxyMiddleware ignorer = ReduxyMiddlewareCreateMacro({
 
 #pragma mark - actions
 
+- (IBAction)tagButtonDidTouch:(id)sender {
+    NSLog(@"dispatched action: %@", [self.store dispatch:ReduxyActionTag]);
+}
+
 - (IBAction)increaseButtonDidTouch:(id)sender {
-    NSLog(@"dispatched action: %@", [self.store dispatch:@"inc"]);
+    NSLog(@"dispatched action: %@", [self.store dispatch:ReduxyActionIncrease]);
 }
 
 - (IBAction)decreaseButtonDidTouch:(id)sender {
-    NSLog(@"dispatched action: %@", [self.store dispatch:@"dec"]);
+    NSLog(@"dispatched action: %@", [self.store dispatch:ReduxyActionDecrease]);
 }
 
 - (IBAction)asyncButtonDidTouch:(id)sender {
-    ReduxyAsyncAction *aa = [ReduxyAsyncAction newWithActor:^ReduxyAsyncActionCanceller (ReduxyDispatch storeDispatch, ReduxyGetState getState) {
+    ReduxyAsyncAction *aa = [ReduxyAsyncAction newWithActor:^ReduxyAsyncActionCanceller (ReduxyDispatch storeDispatch) {
         dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(3 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
             storeDispatch(@"async action after 3s");
         });
@@ -134,6 +154,66 @@ ReduxyMiddleware ignorer = ReduxyMiddlewareCreateMacro({
     
 //    canceller();
 }
+
+
+- (IBAction)cancellingAsyncButtonDidTouch:(id)sender {
+    static BOOL s_cancelled = NO;
+    
+    s_cancelled = NO;
+    
+    ReduxyAsyncAction *aa = [ReduxyAsyncAction newWithActor:^ReduxyAsyncActionCanceller (ReduxyDispatch storeDispatch) {
+        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(3 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+            if (!s_cancelled) {
+                storeDispatch(@"async action after 3s");
+            }
+        });
+        
+        return ^() {
+            //dispatch(@"async cancelled action after 2s");
+            NSLog(@"cancelled");
+            s_cancelled = YES;
+        };
+    }];
+    
+    ReduxyAsyncActionCanceller canceller = [self.store dispatch:aa];
+    
+    NSLog(@"dispatched action: %@", canceller);
+    
+    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(1 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+        canceller();
+        NSLog(@"called canceller");
+    });
+}
+
+- (IBAction)bypassFunctionButtonDidTouch:(id)sender {
+    // bypass middleware
+    ReduxyFunctionAction *action = [ReduxyFunctionAction newWithActor:^ReduxyAction(id<ReduxyStore> store, ReduxyDispatch next, ReduxyAction action) {
+        return next(action);
+    }];
+    
+    ReduxyAction dispatchedAction = [self.store dispatch:action];
+    
+    NSLog(@"dispatched actin: %@", dispatchedAction);
+}
+
+- (IBAction)asyncFunctionButtonDidTouch:(id)sender {
+    ReduxyFunctionAction *action = [ReduxyFunctionAction newWithActor:^ReduxyAction(id<ReduxyStore> store, ReduxyDispatch next, ReduxyAction action) {
+        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(3 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+            [store dispatch:@"async action after 3s"];
+        });
+        
+        return ^{
+            //[store dispatch:@"async cancelled action after 2s");
+            NSLog(@"cancelled");
+        };
+    }];
+    
+    
+    ReduxyAction dispatchedAction = [self.store dispatch:action];
+    
+    NSLog(@"dispatched actin: %@", dispatchedAction);
+}
+
 
 - (IBAction)customButtonDidTouch:(id)sender {
     NSString *action = self.customActionTextField.text;

@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="12121" systemVersion="16F73" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" colorMatched="YES" initialViewController="whP-gf-Uak">
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="13771" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" colorMatched="YES" initialViewController="whP-gf-Uak">
     <device id="retina4_0" orientation="portrait">
         <adaptation id="fullscreen"/>
     </device>
     <dependencies>
         <deployment identifier="iOS"/>
-        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="12089"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="13772"/>
         <capability name="Constraints to layout margins" minToolsVersion="6.0"/>
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
     </dependencies>
@@ -70,6 +70,36 @@
                                     <action selector="newStoreButtonDidTouch:" destination="whP-gf-Uak" eventType="touchUpInside" id="GoI-aZ-tyX"/>
                                 </connections>
                             </button>
+                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="Wab-rl-eal">
+                                <rect key="frame" x="158" y="58" width="146" height="30"/>
+                                <state key="normal" title="async with cancelling"/>
+                                <connections>
+                                    <action selector="cancellingAsyncButtonDidTouch:" destination="whP-gf-Uak" eventType="touchUpInside" id="qoY-Oa-ECw"/>
+                                </connections>
+                            </button>
+                            <button opaque="NO" contentMode="scaleToFill" fixedFrame="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="OEy-uj-m4b">
+                                <rect key="frame" x="35" y="158" width="109" height="30"/>
+                                <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                                <state key="normal" title="bypass function"/>
+                                <connections>
+                                    <action selector="bypassFunctionButtonDidTouch:" destination="whP-gf-Uak" eventType="touchUpInside" id="97H-lY-2Rt"/>
+                                </connections>
+                            </button>
+                            <button opaque="NO" contentMode="scaleToFill" fixedFrame="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="cSO-Eh-F5g">
+                                <rect key="frame" x="39" y="196" width="101" height="30"/>
+                                <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                                <state key="normal" title="async function"/>
+                                <connections>
+                                    <action selector="asyncFunctionButtonDidTouch:" destination="whP-gf-Uak" eventType="touchUpInside" id="dHa-4x-Woq"/>
+                                </connections>
+                            </button>
+                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="TAx-xo-enc">
+                                <rect key="frame" x="274" y="158" width="30" height="30"/>
+                                <state key="normal" title="tag"/>
+                                <connections>
+                                    <action selector="tagButtonDidTouch:" destination="whP-gf-Uak" eventType="touchUpInside" id="gNG-y6-swp"/>
+                                </connections>
+                            </button>
                         </subviews>
                         <color key="backgroundColor" red="1" green="1" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
                         <constraints>
@@ -78,14 +108,18 @@
                             <constraint firstItem="tJ1-4W-r9V" firstAttribute="top" secondItem="uEw-UM-LJ8" secondAttribute="bottom" id="7iv-Ef-lz6"/>
                             <constraint firstItem="TyD-Ol-R24" firstAttribute="leading" secondItem="TpU-gO-2f1" secondAttribute="leadingMargin" constant="8" id="9a7-x1-p4z"/>
                             <constraint firstItem="L8H-75-FmJ" firstAttribute="leading" secondItem="TTI-Vg-BaP" secondAttribute="trailing" constant="20" id="Aic-4s-ZV3"/>
+                            <constraint firstAttribute="trailing" secondItem="Wab-rl-eal" secondAttribute="trailing" constant="16" id="Ttd-mo-LtC"/>
                             <constraint firstItem="TTI-Vg-BaP" firstAttribute="leading" secondItem="TpU-gO-2f1" secondAttribute="leadingMargin" constant="3" id="U39-RD-M4n"/>
                             <constraint firstItem="aMj-gr-B16" firstAttribute="leading" secondItem="TpU-gO-2f1" secondAttribute="leadingMargin" id="W5d-83-ZFg"/>
                             <constraint firstItem="Mvr-aV-6Um" firstAttribute="top" secondItem="aMj-gr-B16" secondAttribute="bottom" constant="20" id="WoG-LT-HTG"/>
                             <constraint firstItem="tJ1-4W-r9V" firstAttribute="leading" secondItem="pIW-9K-WZI" secondAttribute="trailing" constant="50" id="aCV-W3-6Bn"/>
                             <constraint firstItem="L8H-75-FmJ" firstAttribute="top" secondItem="TwF-NH-4ba" secondAttribute="bottom" constant="55" id="ezM-z8-Q3C"/>
+                            <constraint firstItem="TAx-xo-enc" firstAttribute="top" secondItem="L8H-75-FmJ" secondAttribute="bottom" constant="23" id="h0j-bV-3LM"/>
                             <constraint firstItem="TwF-NH-4ba" firstAttribute="trailing" secondItem="TpU-gO-2f1" secondAttribute="trailingMargin" id="iu4-J0-9HS"/>
                             <constraint firstItem="pIW-9K-WZI" firstAttribute="leading" secondItem="TpU-gO-2f1" secondAttribute="leadingMargin" constant="8" id="kGe-kv-QBl"/>
+                            <constraint firstAttribute="trailing" secondItem="TAx-xo-enc" secondAttribute="trailing" constant="16" id="lyE-BE-AlX"/>
                             <constraint firstItem="pIW-9K-WZI" firstAttribute="top" secondItem="uEw-UM-LJ8" secondAttribute="bottom" id="pIt-Ht-K7N"/>
+                            <constraint firstItem="Wab-rl-eal" firstAttribute="top" secondItem="TwF-NH-4ba" secondAttribute="bottom" constant="8" id="r7W-bV-t5F"/>
                             <constraint firstItem="TwF-NH-4ba" firstAttribute="top" secondItem="uEw-UM-LJ8" secondAttribute="bottom" id="v8c-kJ-MzC"/>
                             <constraint firstItem="aMj-gr-B16" firstAttribute="top" secondItem="TyD-Ol-R24" secondAttribute="bottom" constant="16" id="zts-ca-pFP"/>
                         </constraints>
@@ -96,7 +130,7 @@
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="tc2-Qw-aMS" userLabel="First Responder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="-422" y="117"/>
+            <point key="canvasLocation" x="-1159" y="13"/>
         </scene>
     </scenes>
 </document>

@@ -9,28 +9,6 @@
 #import "ReduxyAsyncAction.h"
 
 
-#pragma mark - middleware
-
-ReduxyMiddleware const ReduxyAsyncActionMiddleware = ^ReduxyTransducer (ReduxyDispatch storeDispatch, ReduxyGetState getState) {
-    return ^ReduxyDispatch (ReduxyDispatch nextDispatch) {
-        return ^ReduxyAction (ReduxyAction action) {
-            NSLog(@"async> received action: %@", action);
-            if ([action isKindOfClass:ReduxyAsyncAction.class]) {
-                NSLog(@"async> async action");
-                ReduxyAsyncAction *functionAction = (ReduxyAsyncAction *)action;
-                return functionAction.call(storeDispatch, getState);
-            }
-            else {
-                NSLog(@"async> normal action");
-                return nextDispatch(action);
-            }
-        };
-    };
-};
-
-
-#pragma mark - ReduxyAsyncAction
-
 @implementation ReduxyAsyncAction
 + (instancetype)newWithActor:(ReduxyAsyncActor)actor {
     return [[ReduxyAsyncAction alloc] initWithActor:actor];
@@ -39,9 +17,14 @@ ReduxyMiddleware const ReduxyAsyncActionMiddleware = ^ReduxyTransducer (ReduxyDi
 - (instancetype)initWithActor:(ReduxyAsyncActor)actor {
     self = [super init];
     if (self) {
-        self.call = actor;
+        self.call = ^ReduxyAction (id<ReduxyStore> store, ReduxyDispatch next, ReduxyAction action) {
+            ReduxyDispatch storeDispatch = ^ReduxyAction(ReduxyAction action) {
+                return [store dispatch:action];
+            };
+            
+            return actor(storeDispatch);
+        };
     }
     return self;
 }
 @end
-

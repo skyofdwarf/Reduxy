@@ -7,39 +7,30 @@
 //
 
 #import <Foundation/Foundation.h>
-#import "ReduxyTypes.h"
+#import "ReduxyFunctionAction.h"
 
-#pragma mark - middleware
-
-/*! 
- supports ReduxyAsyncAction instance for action argument of dispatch function to asynchronous action.
- */
-FOUNDATION_EXPORT ReduxyMiddleware const ReduxyAsyncActionMiddleware;
-
-
-#pragma mark - ReduxyAsyncAction
 
 /*!
- used to cancel async task.
- dispatch function returns ReduxyAsyncActionCanceller function as a result of dispatching ReduxyAsyncAction action.
+ type for cancelling a task.
+ ReduxyFunctionMiddleware returns ReduxyAsyncActionCanceller function as a result of dispatching ReduxyAsyncAction action.
  */
 typedef void (^ReduxyAsyncActionCanceller)();
 
-/*!
- implemented to do a async task.
- must return ReduxyAsyncActionCanceller function to cancel running task.
- */
-typedef ReduxyAsyncActionCanceller (^ReduxyAsyncActor)(ReduxyDispatch storeDispatch, ReduxyGetState getState);
 
 /*!
- the action type used as a action for ReduxyAsyncActionMiddleware.
- ReduxyAsyncAction is wrapper of ReduxyAsyncActor function. 
+ type for async task.
+ must return ReduxyAsyncActionCanceller function to cancel running task.
  */
-@interface ReduxyAsyncAction: NSObject
-@property (copy, nonatomic) ReduxyAsyncActor call;
+typedef ReduxyAsyncActionCanceller (^ReduxyAsyncActor)(ReduxyDispatch storeDispatch);
+
+
+/*!
+ the action type used as a action for ReduxyFunctionMiddleware.
+ ReduxyAsyncAction is wrapper of ReduxyAsyncActor function.
+ */
+@interface ReduxyAsyncAction : ReduxyFunctionAction
 
 + (instancetype)newWithActor:(ReduxyAsyncActor)actor;
 - (instancetype)initWithActor:(ReduxyAsyncActor)actor;
 @end
-
 

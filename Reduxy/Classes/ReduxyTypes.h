@@ -9,45 +9,66 @@
 #ifndef ReduxyTypes_h
 #define ReduxyTypes_h
 
+#pragma mark - reduxy protocols
 
-/// reduxy data types
+
+@protocol ReduxyStore;
+@protocol ReduxyStoreSubscriber;
+
+
 typedef id ReduxyAction;
 typedef id ReduxyState;
 
 
-/// reduxy function types
+#pragma mark - reduxy function types
 typedef ReduxyState (^ReduxyReducer)(ReduxyState state, ReduxyAction action);
 
 typedef ReduxyState (^ReduxyGetState)();
 typedef ReduxyAction (^ReduxyDispatch)(ReduxyAction action);
 
-typedef ReduxyDispatch (^ReduxyTransducer)(ReduxyDispatch nextDispatch);
-typedef ReduxyTransducer (^ReduxyMiddleware)(ReduxyDispatch storeDispatch, ReduxyGetState getState);
+typedef ReduxyDispatch (^ReduxyTransducer)(ReduxyDispatch next);
+typedef ReduxyTransducer (^ReduxyMiddleware)(id<ReduxyStore> store);
 
 
-/// reduxy errors
+#pragma mark - reduxy error domain
+FOUNDATION_EXPORT NSErrorDomain const ReduxyErrorDomain;
+
+
+#pragma mark - reduxy errors
+
 typedef NS_ENUM(NSUInteger, ReduxyError) {
     ReduxyErrorUnknown = 0,
     ReduxyErrorMultipleDispatching = 100,
 };
 
-FOUNDATION_EXPORT NSErrorDomain const ReduxyErrorDomain;
 
-/// reduxy middleware
-typedef ReduxyAction (^ReduxyMiddlewareBlock)(ReduxyDispatch storeDispatch, ReduxyDispatch nextDispatch, ReduxyGetState getState, ReduxyAction action);
+#pragma mark - middleware helper macro
 
-FOUNDATION_EXPORT ReduxyMiddleware ReduxyMiddlewareCreate(ReduxyMiddlewareBlock block);
-
-/// middleware helper macro
-#define ReduxyMiddlewareCreateMacro(block) \
-^ReduxyTransducer (ReduxyDispatch storeDispatch, ReduxyGetState getState) { \
-    return ^ReduxyDispatch (ReduxyDispatch nextDispatch) { \
-        return ^ReduxyAction (ReduxyAction action) { \
-            block \
-        }; \
+#define ReduxyMiddlewareCreateMacro(store, next, action, block) \
+^ReduxyTransducer (id<ReduxyStore> store) { \
+  return ^ReduxyDispatch (ReduxyDispatch next) { \
+    return ^ReduxyAction (ReduxyAction action) { \
+      block \
     }; \
+  }; \
 };
 
+
+
+
+@protocol ReduxyStoreSubscriber <NSObject>
+@required
+- (void)reduxyStore:(id<ReduxyStore>)store stateDidChange:(ReduxyState)state;
+@end
+
+
+@protocol ReduxyStore <NSObject>
+- (ReduxyState)getState;
+- (ReduxyAction)dispatch:(ReduxyAction)action;
+
+- (void)subscribe:(id<ReduxyStoreSubscriber>)subscriber;
+- (void)unsubscribe:(id<ReduxyStoreSubscriber>)subscriber;
+@end
 
 
 #endif /* ReduxyTypes_h */

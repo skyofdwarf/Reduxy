@@ -19,7 +19,7 @@
 @property (copy, nonatomic) ReduxyReducer reducer;
 @property (copy, nonatomic) ReduxyDispatch dispatchFuction;
 
-@property (strong, nonatomic) NSMutableSet<id<ReduxyStoreDelegate>> *subscribers;
+@property (strong, nonatomic) NSMutableSet<id<ReduxyStoreSubscriber>> *subscribers;
 @end
 
 
@@ -91,39 +91,23 @@
         return action;
     };
     
-    ReduxyGetState getState = ^ReduxyState () {
-        typeof(self) __strong sself = wself;
-        if (sself) {
-            return [sself getState];
-        }
-        
-        return nil;
-    };
-    
     NSArray<ReduxyMiddleware> *revereMiddlewares = [[middlewares reverseObjectEnumerator] allObjects];
     ReduxyDispatch dispatch = defaultDispatch;
-    ReduxyDispatch storeDispatch = ^ReduxyAction (ReduxyAction action) {
-        typeof(self) __strong sself = wself;
-        if (sself) {
-            return sself.dispatchFuction(action);
-        }
-        return action;
-    };
-    
+
     for (ReduxyMiddleware mw in revereMiddlewares) {
-        dispatch = mw(storeDispatch, getState)(dispatch);
+        dispatch = mw(self)(dispatch);
     }
     
     return dispatch;
 }
 
 - (void)publish:(ReduxyState)state {
-    for (id<ReduxyStoreDelegate> subscriber in self.subscribers) {
+    for (id<ReduxyStoreSubscriber> subscriber in self.subscribers) {
         [self publish:state to:subscriber];
     }
 }
 
-- (void)publish:(ReduxyState)state to:(id<ReduxyStoreDelegate>)subscriber {
+- (void)publish:(ReduxyState)state to:(id<ReduxyStoreSubscriber>)subscriber {
     [subscriber reduxyStore:self stateDidChange:state];
 }
 
@@ -137,7 +121,7 @@
     return self.dispatchFuction(action);
 }
 
-- (void)subscribe:(id<ReduxyStoreDelegate>)subscriber {
+- (void)subscribe:(id<ReduxyStoreSubscriber>)subscriber {
     if (![self.subscribers containsObject:subscriber]) {
         [self.subscribers addObject:subscriber];
         
@@ -145,7 +129,7 @@
     }
 }
 
-- (void)unsubscribe:(id<ReduxyStoreDelegate>)subscriber {
+- (void)unsubscribe:(id<ReduxyStoreSubscriber>)subscriber {
     [self.subscribers removeObject:subscriber];
 }
 

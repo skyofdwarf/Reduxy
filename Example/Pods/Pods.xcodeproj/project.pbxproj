@@ -72,7 +72,6 @@
 		9CAFC7DAE2E661FC92393E5CC55D1D61 /* EXPMatchers.h in Headers */ = {isa = PBXBuildFile; fileRef = 2AFD77F6B582228E3C05EB3F700225A9 /* EXPMatchers.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		9E4463D68D13C127762B1ACB8249B64C /* EXPBlockDefinedMatcher.m in Sources */ = {isa = PBXBuildFile; fileRef = 4F67D8E8E16F0E77A2D4E5F714CEBC41 /* EXPBlockDefinedMatcher.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
 		9EA076D25036A0F4765FF3FB57CF4A6A /* EXPMatchers+contain.m in Sources */ = {isa = PBXBuildFile; fileRef = 31695F545CD3669506497ADBB22873F6 /* EXPMatchers+contain.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
-		9F22A606CC097B0179E4F8EA2F32ADFA /* ReduxyStoreDelegate.h in Headers */ = {isa = PBXBuildFile; fileRef = 3611EA85020217402B64F31C8C624682 /* ReduxyStoreDelegate.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		9F51005FE4BF10FA9906B02DAD609C6E /* EXPMatchers+postNotification.m in Sources */ = {isa = PBXBuildFile; fileRef = 393405584126BC701B16CB695FBEC1B0 /* EXPMatchers+postNotification.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
 		A027B2CE55CE62708D90C13B2029F880 /* ReduxyTypes.m in Sources */ = {isa = PBXBuildFile; fileRef = 0928BE2753BF42A4B7ACDB98507FDA0A /* ReduxyTypes.m */; };
 		A037AD9C808583B3EC9F49B3EEDA588A /* EXPMatchers+beginWith.m in Sources */ = {isa = PBXBuildFile; fileRef = 5D431759C2312628BAF106B8D2CC8DB2 /* EXPMatchers+beginWith.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
@@ -104,6 +103,10 @@
 		CD66900813CFE317343F5A4053AE73EC /* EXPMatchers+beNil.m in Sources */ = {isa = PBXBuildFile; fileRef = 93B613869003A3D21F03ECEADC589822 /* EXPMatchers+beNil.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
 		CE7E4C141657D23213C7FAE616D7FA75 /* EXPMatchers+beLessThanOrEqualTo.m in Sources */ = {isa = PBXBuildFile; fileRef = A0E90BF1DB04C094A5015446308F5C85 /* EXPMatchers+beLessThanOrEqualTo.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
 		D1768C977F0CD5B420D1A1D2375CDBD4 /* Expecta-dummy.m in Sources */ = {isa = PBXBuildFile; fileRef = FD3A245D75F8D2D0FFAD5230F5925974 /* Expecta-dummy.m */; };
+		D500582720439C59008C073F /* ReduxyFunctionMiddleware.h in Headers */ = {isa = PBXBuildFile; fileRef = D500582620439B3C008C073F /* ReduxyFunctionMiddleware.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		D500582820439C5C008C073F /* ReduxyFunctionMiddleware.m in Sources */ = {isa = PBXBuildFile; fileRef = D500582420439B30008C073F /* ReduxyFunctionMiddleware.m */; };
+		D500582920439C64008C073F /* ReduxyFunctionAction.h in Headers */ = {isa = PBXBuildFile; fileRef = D500582020439AE0008C073F /* ReduxyFunctionAction.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		D500582A20439C6A008C073F /* ReduxyFunctionAction.m in Sources */ = {isa = PBXBuildFile; fileRef = D500582120439AE0008C073F /* ReduxyFunctionAction.m */; };
 		D76A4A072BAAC8C9CFB7AE0519DF93BB /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E5D8173434FE00016739EAFDEFEA9313 /* Foundation.framework */; };
 		D8372A2C4CBC1DA48D57CC9AD1D32E70 /* XCTestCase+Specta.h in Headers */ = {isa = PBXBuildFile; fileRef = C2D5F98443188468F5CFE556EC251738 /* XCTestCase+Specta.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		D89FDB37FEEBEAFAC0CEB3E7334610C6 /* SPTExampleGroup.m in Sources */ = {isa = PBXBuildFile; fileRef = DAACC7B2EAAA76EAB129F3A5D74DDC18 /* SPTExampleGroup.m */; };
@@ -182,7 +185,6 @@
 		2CF861D2ADFE89409C39B6E076059DCE /* EXPMatchers+beGreaterThanOrEqualTo.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; name = "EXPMatchers+beGreaterThanOrEqualTo.m"; path = "Expecta/Matchers/EXPMatchers+beGreaterThanOrEqualTo.m"; sourceTree = "<group>"; };
 		31695F545CD3669506497ADBB22873F6 /* EXPMatchers+contain.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; name = "EXPMatchers+contain.m"; path = "Expecta/Matchers/EXPMatchers+contain.m"; sourceTree = "<group>"; };
 		33C929F06DEC760FA0B134E8F8D1C9FA /* EXPMatchers+raise.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; name = "EXPMatchers+raise.h"; path = "Expecta/Matchers/EXPMatchers+raise.h"; sourceTree = "<group>"; };
-		3611EA85020217402B64F31C8C624682 /* ReduxyStoreDelegate.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; path = ReduxyStoreDelegate.h; sourceTree = "<group>"; };
 		36BB29C27B61C055294A8316529A8EF8 /* EXPMatchers+match.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; name = "EXPMatchers+match.h"; path = "Expecta/Matchers/EXPMatchers+match.h"; sourceTree = "<group>"; };
 		393405584126BC701B16CB695FBEC1B0 /* EXPMatchers+postNotification.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; name = "EXPMatchers+postNotification.m"; path = "Expecta/Matchers/EXPMatchers+postNotification.m"; sourceTree = "<group>"; };
 		3ACF80B5A24CE07B6C736EEF474E7E9C /* EXPMatchers+beSubclassOf.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; name = "EXPMatchers+beSubclassOf.m"; path = "Expecta/Matchers/EXPMatchers+beSubclassOf.m"; sourceTree = "<group>"; };
@@ -280,6 +282,10 @@
 		CA4355593EB50840945B184588F5F864 /* ReduxyTypes.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; path = ReduxyTypes.h; sourceTree = "<group>"; };
 		CDC92BECE41FDD487136814173CB1558 /* EXPMatchers+raiseWithReason.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; name = "EXPMatchers+raiseWithReason.m"; path = "Expecta/Matchers/EXPMatchers+raiseWithReason.m"; sourceTree = "<group>"; };
 		CDCE1E6823C0AC6058E1F677318C1D0F /* SPTCompiledExample.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; name = SPTCompiledExample.h; path = Specta/Specta/SPTCompiledExample.h; sourceTree = "<group>"; };
+		D500582020439AE0008C073F /* ReduxyFunctionAction.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ReduxyFunctionAction.h; sourceTree = "<group>"; };
+		D500582120439AE0008C073F /* ReduxyFunctionAction.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ReduxyFunctionAction.m; sourceTree = "<group>"; };
+		D500582420439B30008C073F /* ReduxyFunctionMiddleware.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = ReduxyFunctionMiddleware.m; sourceTree = "<group>"; };
+		D500582620439B3C008C073F /* ReduxyFunctionMiddleware.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ReduxyFunctionMiddleware.h; sourceTree = "<group>"; };
 		D61BC75AB795DFB7AE9CF80D79C1B530 /* Specta.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; name = Specta.h; path = Specta/Specta/Specta.h; sourceTree = "<group>"; };
 		D6BE4E35D0AA9FEFC1DA27890CBA2A19 /* Expecta-umbrella.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; path = "Expecta-umbrella.h"; sourceTree = "<group>"; };
 		D6CF3903D943792CF71D2E59A5FE6602 /* SPTGlobalBeforeAfterEach.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; name = SPTGlobalBeforeAfterEach.h; path = Specta/Specta/SPTGlobalBeforeAfterEach.h; sourceTree = "<group>"; };
@@ -393,11 +399,14 @@
 			children = (
 				A52AC32E461BF76802BE26FD6E37AA89 /* ReduxyAsyncAction.h */,
 				E597878DB0F24E7FAB3F334938C01724 /* ReduxyAsyncAction.m */,
+				D500582020439AE0008C073F /* ReduxyFunctionAction.h */,
+				D500582120439AE0008C073F /* ReduxyFunctionAction.m */,
 				60944460F1E1C1D90B4EFBFD465EBB41 /* ReduxyStore.h */,
 				2607DE7B09447A753DEF62D21E7674C8 /* ReduxyStore.m */,
-				3611EA85020217402B64F31C8C624682 /* ReduxyStoreDelegate.h */,
 				CA4355593EB50840945B184588F5F864 /* ReduxyTypes.h */,
 				0928BE2753BF42A4B7ACDB98507FDA0A /* ReduxyTypes.m */,
+				D500582620439B3C008C073F /* ReduxyFunctionMiddleware.h */,
+				D500582420439B30008C073F /* ReduxyFunctionMiddleware.m */,
 			);
 			path = Classes;
 			sourceTree = "<group>";
@@ -661,11 +670,12 @@
 			isa = PBXHeadersBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				D500582720439C59008C073F /* ReduxyFunctionMiddleware.h in Headers */,
 				2C2619B9FE2384C6383D3139B5DC5459 /* Reduxy-umbrella.h in Headers */,
 				7B7111D626628F7BF63DBD431A4796B6 /* ReduxyAsyncAction.h in Headers */,
 				68A0FEDCE712B5A1722B8B24DE1545F7 /* ReduxyStore.h in Headers */,
-				9F22A606CC097B0179E4F8EA2F32ADFA /* ReduxyStoreDelegate.h in Headers */,
 				DB0CA0C38436FB967AC03C893F134652 /* ReduxyTypes.h in Headers */,
+				D500582920439C64008C073F /* ReduxyFunctionAction.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -899,6 +909,8 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				D500582A20439C6A008C073F /* ReduxyFunctionAction.m in Sources */,
+				D500582820439C5C008C073F /* ReduxyFunctionMiddleware.m in Sources */,
 				C8BCE2C0464547F3B06435AD044D9D9E /* Reduxy-dummy.m in Sources */,
 				A662135B9AA2A8CA2B0B4D2B67A9B67C /* ReduxyAsyncAction.m in Sources */,
 				5D3B84A3C5676B1A9EAB7B4F6F1A3C04 /* ReduxyStore.m in Sources */,
