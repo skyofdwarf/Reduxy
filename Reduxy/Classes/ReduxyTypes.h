@@ -23,7 +23,7 @@ typedef id ReduxyState;
 #pragma mark - reduxy function types
 typedef ReduxyState (^ReduxyReducer)(ReduxyState state, ReduxyAction action);
 
-typedef ReduxyState (^ReduxyGetState)();
+typedef ReduxyState (^ReduxyGetState)(void);
 typedef ReduxyAction (^ReduxyDispatch)(ReduxyAction action);
 
 typedef ReduxyDispatch (^ReduxyTransducer)(ReduxyDispatch next);

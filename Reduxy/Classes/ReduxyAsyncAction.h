@@ -14,7 +14,7 @@
  type for cancelling a task.
  ReduxyFunctionMiddleware returns ReduxyAsyncActionCanceller function as a result of dispatching ReduxyAsyncAction action.
  */
-typedef void (^ReduxyAsyncActionCanceller)();
+typedef void (^ReduxyAsyncActionCanceller)(void);
 
 
 /*!
