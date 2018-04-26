@@ -20,7 +20,7 @@
 typedef id<ReduxyAction> ReduxyAction;
 typedef id ReduxyState;
 
-typedef NSString *ReduxyActionType;
+typedef NSString * ReduxyActionType;
 
 
 

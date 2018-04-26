@@ -102,7 +102,7 @@ http://dog.ceo/dog-api</string>
                         </constraints>
                     </view>
                     <navigationItem key="navigationItem" title="dog.ceo" id="RQr-2S-5Zy">
-                        <barButtonItem key="leftBarButtonItem" style="plain" id="YiL-6C-I34">
+                        <barButtonItem key="leftBarButtonItem" id="YiL-6C-I34">
                             <button key="customView" opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="infoLight" showsTouchWhenHighlighted="YES" lineBreakMode="middleTruncation" id="aLT-NJ-rm8">
                                 <rect key="frame" x="16" y="11" width="22" height="22"/>
                                 <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
