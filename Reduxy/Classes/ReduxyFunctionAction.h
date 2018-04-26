@@ -13,13 +13,13 @@
  type of actual function of ReduxyFunctionAction and do custom task like `middleware`
  must return `ReduxyAction` function to cancel running task.
  */
-typedef ReduxyAction (^ReduxyFunctionActor)(id<ReduxyStore> store, ReduxyDispatch next, ReduxyAction action);
+typedef id (^ReduxyFunctionActor)(id<ReduxyStore> store, ReduxyDispatch next, ReduxyAction action);
 
 /*!
  the action type used for ReduxyFunctionMiddleware.
  ReduxyFunctionAction is wrapper class for ReduxyFunctionActor function.
  */
-@interface ReduxyFunctionAction : NSObject
+@interface ReduxyFunctionAction : NSObject <ReduxyAction>
 @property (copy, nonatomic) ReduxyFunctionActor call;
 
 + (instancetype)newWithActor:(ReduxyFunctionActor)actor;

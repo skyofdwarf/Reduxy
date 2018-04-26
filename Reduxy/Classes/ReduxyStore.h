@@ -18,6 +18,9 @@
 
 + (instancetype)storeWithReducer:(ReduxyReducer)reducer;
 
++ (instancetype)storeWithReducer:(ReduxyReducer)reducer
+                     middlewares:(NSArray<ReduxyMiddleware> *)middlewares;
+    
 + (instancetype)storeWithState:(ReduxyState)state
                        reducer:(ReduxyReducer)reducer;
 
@@ -26,8 +29,11 @@
                    middlewares:(NSArray<ReduxyMiddleware> *)middlewares;
 
 - (instancetype)initWithReducer:(ReduxyReducer)reducer;
-- (instancetype)initWithState:(ReduxyState)state
 
+- (instancetype)initWithReducer:(ReduxyReducer)reducer
+                    middlewares:(NSArray<ReduxyMiddleware> *)middlewares;
+
+- (instancetype)initWithState:(ReduxyState)state
                       reducer:(ReduxyReducer)reducer;
 
 - (instancetype)initWithState:(ReduxyState)state
@@ -37,9 +43,10 @@
     
 - (ReduxyState)getState;
 
-- (ReduxyAction)dispatch:(ReduxyAction)action;
+- (id)dispatch:(ReduxyAction)action;
 
 - (void)subscribe:(id<ReduxyStoreSubscriber>)subscriber;
 - (void)unsubscribe:(id<ReduxyStoreSubscriber>)subscriber;
+- (void)unsubscribeAll;
 
 @end

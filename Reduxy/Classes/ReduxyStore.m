@@ -37,12 +37,20 @@
     return [ReduxyStore storeWithState:state reducer:reducer middlewares:nil];
 }
 
++ (instancetype)storeWithReducer:(ReduxyReducer)reducer middlewares:(NSArray<ReduxyMiddleware> *)middlewares {
+    return [[ReduxyStore alloc] initWithReducer:reducer middlewares:middlewares];
+}
+
 + (instancetype)storeWithState:(ReduxyState)state reducer:(ReduxyReducer)reducer middlewares:(NSArray<ReduxyMiddleware> *)middlewares {
     return [[ReduxyStore alloc] initWithState:state reducer:reducer middlewares:middlewares];
 }
 
 - (instancetype)initWithReducer:(ReduxyReducer)reducer {
     return [self initWithState:@{} reducer:reducer];
+}
+
+- (instancetype)initWithReducer:(ReduxyReducer)reducer middlewares:(NSArray<ReduxyMiddleware> *)middlewares {
+    return [self initWithState:@{} reducer:reducer middlewares:middlewares];
 }
 
 - (instancetype)initWithState:(ReduxyState)state reducer:(ReduxyReducer)reducer {
@@ -84,7 +92,7 @@
             sself.isDispatching = NO;
             
             NSLog(@"\twill publish new state");
-            [sself publish:sself.state];
+            [sself publishState:sself.state action:action];
             NSLog(@"\tdid publish new state");
         }
         
@@ -101,14 +109,14 @@
     return dispatch;
 }
 
-- (void)publish:(ReduxyState)state {
+- (void)publishState:(ReduxyState)state action:(ReduxyAction)action {
     for (id<ReduxyStoreSubscriber> subscriber in self.subscribers) {
-        [self publish:state to:subscriber];
+        [self publishState:state to:subscriber action:action];
     }
 }
 
-- (void)publish:(ReduxyState)state to:(id<ReduxyStoreSubscriber>)subscriber {
-    [subscriber reduxyStore:self stateDidChange:state];
+- (void)publishState:(ReduxyState)state to:(id<ReduxyStoreSubscriber>)subscriber action:(ReduxyAction)action {
+    [subscriber reduxyStore:self didChangeState:state byAction:action];
 }
 
 #pragma mark - public
@@ -117,20 +125,36 @@
     return [self.state copy];
 }
 
-- (ReduxyAction)dispatch:(ReduxyAction)action {
-    return self.dispatchFuction(action);
+- (id)dispatch:(ReduxyAction)action {
+    if (NSThread.isMainThread) {
+        return self.dispatchFuction(action);
+    }
+    else {
+        ReduxyDispatch dispatch = self.dispatchFuction;
+        __block id result = nil;
+        
+        dispatch_sync(dispatch_get_main_queue(), ^{
+            result = dispatch(action);
+        });
+        
+        return result;
+    }
 }
 
 - (void)subscribe:(id<ReduxyStoreSubscriber>)subscriber {
     if (![self.subscribers containsObject:subscriber]) {
         [self.subscribers addObject:subscriber];
         
-        [self publish:self.state to:subscriber];
+//        [self publishState:self.state to:subscriber action:ReduxyActionStoreSubscription];
     }
 }
 
 - (void)unsubscribe:(id<ReduxyStoreSubscriber>)subscriber {
     [self.subscribers removeObject:subscriber];
+}
+
+- (void)unsubscribeAll {
+    [self.subscribers removeAllObjects];
 }
 
 @end

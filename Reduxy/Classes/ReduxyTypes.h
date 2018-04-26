@@ -9,18 +9,23 @@
 #ifndef ReduxyTypes_h
 #define ReduxyTypes_h
 
-#pragma mark - reduxy protocols
+#pragma mark - forward declarations of protocols
 
-
+@protocol ReduxyAction;
 @protocol ReduxyStore;
 @protocol ReduxyStoreSubscriber;
 
 
-typedef id ReduxyAction;
+#pragma mark - types
+typedef id<ReduxyAction> ReduxyAction;
 typedef id ReduxyState;
 
+typedef NSString *ReduxyActionType;
 
-#pragma mark - reduxy function types
+
+
+#pragma mark - function types
+
 typedef ReduxyState (^ReduxyReducer)(ReduxyState state, ReduxyAction action);
 
 typedef ReduxyState (^ReduxyGetState)(void);
@@ -31,6 +36,7 @@ typedef ReduxyTransducer (^ReduxyMiddleware)(id<ReduxyStore> store);
 
 
 #pragma mark - reduxy error domain
+
 FOUNDATION_EXPORT NSErrorDomain const ReduxyErrorDomain;
 
 
@@ -54,11 +60,20 @@ typedef NS_ENUM(NSUInteger, ReduxyError) {
 };
 
 
+#pragma mark - reduxy protocols
 
+@protocol ReduxyAction <NSObject>
+@required
+- (ReduxyActionType)type;
+- (BOOL)is:(ReduxyActionType)type;
+
+@optional
+- (id)data;
+@end
 
 @protocol ReduxyStoreSubscriber <NSObject>
 @required
-- (void)reduxyStore:(id<ReduxyStore>)store stateDidChange:(ReduxyState)state;
+- (void)reduxyStore:(id<ReduxyStore>)store didChangeState:(ReduxyState)state byAction:(ReduxyAction)action;
 @end
 
 
@@ -68,6 +83,29 @@ typedef NS_ENUM(NSUInteger, ReduxyError) {
 
 - (void)subscribe:(id<ReduxyStoreSubscriber>)subscriber;
 - (void)unsubscribe:(id<ReduxyStoreSubscriber>)subscriber;
+@end
+
+
+#pragma mark - default implementations of ReduxyAction protocol
+
+@interface NSObject (ReduxyAction) <ReduxyAction>
+- (ReduxyActionType)type;
+
+- (BOOL)is:(ReduxyActionType)type;
+@end
+
+@interface NSString (ReduxyAction) <ReduxyAction>
+- (ReduxyActionType)type;
+- (NSString *)data;
+
+- (BOOL)is:(ReduxyActionType)type;
+@end
+
+@interface NSDictionary (ReduxyAction) <ReduxyAction>
+- (ReduxyActionType)type;
+- (NSDictionary *)data;
+
+- (BOOL)is:(ReduxyActionType)type;
 @end
 
 

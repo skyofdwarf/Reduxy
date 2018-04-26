@@ -17,7 +17,7 @@
 - (instancetype)initWithActor:(ReduxyAsyncActor)actor {
     self = [super init];
     if (self) {
-        self.call = ^ReduxyAction (id<ReduxyStore> store, ReduxyDispatch next, ReduxyAction action) {
+        self.call = ^id (id<ReduxyStore> store, ReduxyDispatch next, ReduxyAction action) {
             ReduxyDispatch storeDispatch = ^ReduxyAction(ReduxyAction action) {
                 return [store dispatch:action];
             };
@@ -26,5 +26,9 @@
         };
     }
     return self;
+}
+
+- (NSString *)type {
+    return @"ReduxyAsyncAction";
 }
 @end

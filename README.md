@@ -5,6 +5,8 @@
 [![License](https://img.shields.io/cocoapods/l/Reduxy.svg?style=flat)](http://cocoapods.org/pods/Reduxy)
 [![Platform](https://img.shields.io/cocoapods/p/Reduxy.svg?style=flat)](http://cocoapods.org/pods/Reduxy)
 
+Implementation of Reduxy in Objective-C, inspired by [Redux-in-Objective-C](https://github.com/zhooleen/Redux-in-Objective-C)
+
 ## Example
 
 To run the example project, clone the repo, and run `pod install` from the Example directory first.

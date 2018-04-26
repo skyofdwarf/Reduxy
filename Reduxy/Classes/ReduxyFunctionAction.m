@@ -20,6 +20,11 @@
     }
     return self;
 }
+
+- (NSString *)type {
+    return @"ReduxyFunctionAction";
+}
+
 @end
 
 
