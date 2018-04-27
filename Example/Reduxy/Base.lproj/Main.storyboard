@@ -6,6 +6,7 @@
     <dependencies>
         <deployment identifier="iOS"/>
         <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="14088"/>
+        <capability name="Navigation items with more than one left or right bar item" minToolsVersion="7.0"/>
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
     </dependencies>
     <scenes>
@@ -102,20 +103,54 @@ http://dog.ceo/dog-api</string>
                         </constraints>
                     </view>
                     <navigationItem key="navigationItem" title="dog.ceo" id="RQr-2S-5Zy">
-                        <barButtonItem key="leftBarButtonItem" id="YiL-6C-I34">
-                            <button key="customView" opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="infoLight" showsTouchWhenHighlighted="YES" lineBreakMode="middleTruncation" id="aLT-NJ-rm8">
-                                <rect key="frame" x="16" y="11" width="22" height="22"/>
-                                <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                        <leftBarButtonItems>
+                            <barButtonItem id="YiL-6C-I34">
+                                <button key="customView" opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="infoLight" showsTouchWhenHighlighted="YES" lineBreakMode="middleTruncation" id="aLT-NJ-rm8">
+                                    <rect key="frame" x="16" y="11" width="22" height="22"/>
+                                    <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                                    <connections>
+                                        <segue destination="Dem-PX-pSc" kind="show" id="lp8-uv-kmJ"/>
+                                    </connections>
+                                </button>
+                            </barButtonItem>
+                            <barButtonItem title="S" id="rXu-4K-wyY">
                                 <connections>
-                                    <segue destination="Dem-PX-pSc" kind="show" id="lp8-uv-kmJ"/>
+                                    <action selector="saveButtonDidClick:" destination="WCh-Zn-tPy" id="9ps-xE-rVo"/>
                                 </connections>
-                            </button>
-                        </barButtonItem>
-                        <barButtonItem key="rightBarButtonItem" systemItem="refresh" id="5dA-Bd-HMb">
-                            <connections>
-                                <action selector="reloadButtonDidClick:" destination="WCh-Zn-tPy" id="wAB-9F-bhl"/>
-                            </connections>
-                        </barButtonItem>
+                            </barButtonItem>
+                            <barButtonItem title="L" id="cIX-e4-gd0">
+                                <connections>
+                                    <action selector="loadButtonDidClick:" destination="WCh-Zn-tPy" id="ocT-L1-Zxz"/>
+                                </connections>
+                            </barButtonItem>
+                            <barButtonItem title="T" id="Gc9-tE-qI7">
+                                <connections>
+                                    <action selector="recordingToggleButtonDidClick:" destination="WCh-Zn-tPy" id="5hx-M3-x9G"/>
+                                </connections>
+                            </barButtonItem>
+                        </leftBarButtonItems>
+                        <rightBarButtonItems>
+                            <barButtonItem systemItem="refresh" id="5dA-Bd-HMb">
+                                <connections>
+                                    <action selector="reloadButtonDidClick:" destination="WCh-Zn-tPy" id="wAB-9F-bhl"/>
+                                </connections>
+                            </barButtonItem>
+                            <barButtonItem title="r" id="AKE-Cn-x7R">
+                                <connections>
+                                    <action selector="resetButtonDidClick:" destination="WCh-Zn-tPy" id="oNm-OZ-0Dg"/>
+                                </connections>
+                            </barButtonItem>
+                            <barButtonItem title="n" id="puO-1v-bK2">
+                                <connections>
+                                    <action selector="nextButtonDidClick:" destination="WCh-Zn-tPy" id="ezv-v7-vwg"/>
+                                </connections>
+                            </barButtonItem>
+                            <barButtonItem title="p" id="Myj-pQ-eiq">
+                                <connections>
+                                    <action selector="prevButtonDidClick:" destination="WCh-Zn-tPy" id="wwb-3y-FwU"/>
+                                </connections>
+                            </barButtonItem>
+                        </rightBarButtonItems>
                     </navigationItem>
                     <connections>
                         <outlet property="indicatorView" destination="CgD-Kb-KYU" id="SXt-fn-sWi"/>

@@ -17,7 +17,7 @@
  
  @ref ReduxyFunctionAction
  */
-FOUNDATION_EXPORT ReduxyMiddleware const ReduxyFunctionMiddleware;
+FOUNDATION_EXTERN ReduxyMiddleware const ReduxyFunctionMiddleware;
 
 
 

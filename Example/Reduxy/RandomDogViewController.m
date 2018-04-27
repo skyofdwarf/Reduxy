@@ -109,10 +109,10 @@ static ReduxyReducer rootReducer = ^ReduxyState (ReduxyState state, ReduxyAction
     NSLog(@"request url: %@", urlString);
     
     __weak typeof(self) wself = self;
-        
+    
+    [self.store dispatch:ReduxyActionRandomDogFetching];
+    
     ReduxyAsyncAction *action = [ReduxyAsyncAction newWithActor:^ReduxyAsyncActionCanceller(ReduxyDispatch storeDispatch) {
-        storeDispatch(ReduxyActionRandomDogFetching);
-        
         NSURL *url = [NSURL URLWithString:urlString];
         
         NSURLSessionDataTask *task = [NSURLSession.sharedSession dataTaskWithURL:url

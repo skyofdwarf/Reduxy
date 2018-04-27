@@ -10,6 +10,13 @@
 #import "ReduxyTypes.h"
 
 
+
+#pragma mark - reduxy action key
+
+FOUNDATION_EXTERN NSString * const ReduxyActionTypeKey = @"type";
+FOUNDATION_EXTERN NSString * const ReduxyActionDataKey = @"data";
+
+
 #pragma mark - reduxy error domain
 
 NSErrorDomain const ReduxyErrorDomain = @"ReduxyErrorDomain";
@@ -47,7 +54,7 @@ NSErrorDomain const ReduxyErrorDomain = @"ReduxyErrorDomain";
 
 @implementation NSDictionary (ReduxyAction)
 - (NSString *)type {
-    return [self objectForKey:@"type"];
+    return [self objectForKey:ReduxyActionTypeKey];
 }
 
 - (NSDictionary *)data {

@@ -9,7 +9,9 @@
 #import "ReduxyFunctionAction.h"
 
 ReduxyMiddleware const ReduxyFunctionMiddleware = ^ReduxyTransducer (id<ReduxyStore> store) {
+    NSLog(@"function mw> 1");
     return ^ReduxyDispatch (ReduxyDispatch next) {
+        NSLog(@"function mw> 2");
         return ^ReduxyAction (ReduxyAction action) {
             NSLog(@"function mw> received action: %@", action);
             if ([action isKindOfClass:ReduxyFunctionAction.class]) {

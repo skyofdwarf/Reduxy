@@ -9,18 +9,32 @@
 #ifndef ReduxyTypes_h
 #define ReduxyTypes_h
 
+
+
+
+#define REDUXY_ACTION(type, data)\
+@{\
+  ReduxyActionTypeKey: type,\
+  ReduxyActionDataKey: data \
+}
+
+
+
+
 #pragma mark - forward declarations of protocols
 
 @protocol ReduxyAction;
 @protocol ReduxyStore;
 @protocol ReduxyStoreSubscriber;
 
+@class ReduxyStore;
+
 
 #pragma mark - types
 typedef id<ReduxyAction> ReduxyAction;
 typedef id ReduxyState;
 
-typedef NSString * ReduxyActionType;
+typedef NSString * const ReduxyActionType;
 
 
 
@@ -35,9 +49,14 @@ typedef ReduxyDispatch (^ReduxyTransducer)(ReduxyDispatch next);
 typedef ReduxyTransducer (^ReduxyMiddleware)(id<ReduxyStore> store);
 
 
+#pragma mark - reduxy action key
+
+FOUNDATION_EXTERN NSString * const ReduxyActionTypeKey;
+FOUNDATION_EXTERN NSString * const ReduxyActionDataKey;
+
 #pragma mark - reduxy error domain
 
-FOUNDATION_EXPORT NSErrorDomain const ReduxyErrorDomain;
+FOUNDATION_EXTERN NSErrorDomain const ReduxyErrorDomain;
 
 
 #pragma mark - reduxy errors
@@ -50,6 +69,18 @@ typedef NS_ENUM(NSUInteger, ReduxyError) {
 
 #pragma mark - middleware helper macro
 
+
+/**
+ utility macro for creating a middleware
+ 
+ maybe you should be call `next(action)` at last line of block to keep chaining of middlewares
+
+ @param store instance of ReduxyStore
+ @param next next middleware
+ @param action action dispatched
+ @param block code block of middleware
+ @return block of middleware
+ */
 #define ReduxyMiddlewareCreateMacro(store, next, action, block) \
 ^ReduxyTransducer (id<ReduxyStore> store) { \
   return ^ReduxyDispatch (ReduxyDispatch next) { \

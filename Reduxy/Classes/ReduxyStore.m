@@ -125,6 +125,12 @@
     return [self.state copy];
 }
 
+- (id)dispatch:(ReduxyActionType)type data:(id)data {
+    return [self dispatch:(data?
+                           @{ ReduxyActionTypeKey: type, ReduxyActionDataKey: data }:
+                           @{ ReduxyActionTypeKey: type })];
+}
+
 - (id)dispatch:(ReduxyAction)action {
     if (NSThread.isMainThread) {
         return self.dispatchFuction(action);

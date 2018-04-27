@@ -9,20 +9,74 @@
 #import "BreedListViewController.h"
 #import "ReduxyStore.h"
 #import "ReduxyFunctionMiddleware.h"
+#import "ReduxyRecorderMiddleware.h"
 #import "ReduxyAsyncAction.h"
 #import "RandomDogViewController.h"
+#import "ReduxyRecorder.h"
+#import "ReduxyRecorderPlayer.h"
 
-ReduxyActionType ReduxyActionBreedListFetching = @"reduxy.action.breedlist.fetching";
-ReduxyActionType ReduxyActionBreedListFetched = @"reduxy.action.breedlist.fetched";
-ReduxyActionType ReduxyActionBreeFiltered = @"reduxy.action.breedlist.filtered";
-ReduxyActionType ReduxyActionUIReload = @"reduxy.action.ui.reload";
+static ReduxyActionType ReduxyActionBreedListReload = @"reduxy.action.breedlist.reload";
+static ReduxyActionType ReduxyActionBreedListFetching = @"reduxy.action.breedlist.fetching";
+static ReduxyActionType ReduxyActionBreedListFetched = @"reduxy.action.breedlist.fetched";
+static ReduxyActionType ReduxyActionBreedListFiltered = @"reduxy.action.breedlist.filtered";
+static ReduxyActionType ReduxyActionUIReload = @"reduxy.action.ui.reload";
 
 
+#pragma mark - middlewares
 
-static ReduxyMiddleware logger = ReduxyMiddlewareCreateMacro(store, next, action, {
-    NSLog(@"logger> received action: %@", action);
-    return next(action);
-});
+//static ReduxyMiddleware logger = ReduxyMiddlewareCreateMacro(store, next, action, {
+//    NSLog(@"logger> received action: %@", action);
+//    return next(action);
+//});
+
+
+static ReduxyMiddleware logger = ^ReduxyTransducer (id<ReduxyStore> store) {
+    NSLog(@"logger> 1");
+    return ^ReduxyDispatch (ReduxyDispatch next) {
+        NSLog(@"logger> 2");
+        return ^ReduxyAction (ReduxyAction action) {
+            NSLog(@"logger> received action: %@", action);
+            return next(action);
+        };
+    };
+};
+
+
+static ReduxyMiddleware playerMiddleware = ^ReduxyTransducer (id<ReduxyStore> store) {
+    NSLog(@"player> 1");
+    return ^ReduxyDispatch (ReduxyDispatch next) {
+        NSLog(@"player> 2");
+        return ^ReduxyAction (ReduxyAction action) {
+            if ([action is:ReduxyActionPlayerJump]) {
+                id<ReduxyRecorderItem> item = action.data[ReduxyActionDataKey];
+                
+                next(action);
+                return next(item.action);
+            }
+            else {
+                return next(action);
+            }
+        };
+    };
+};
+
+#pragma mark - reducers
+
+
+static ReduxyReducer (^createPlayerReducer)(ReduxyReducer) = ^ReduxyReducer(ReduxyReducer next) {
+    return ^ReduxyState (ReduxyState state, ReduxyAction action) {
+        if ([action is:ReduxyActionPlayerJump]) {
+            id<ReduxyRecorderItem> item = action.data[ReduxyActionDataKey];
+            
+            NSLog(@"player item: %@", item);
+            
+            return item.nextState;
+        }
+        else {
+            return next(state, action);
+        }
+    };
+};
 
 static ReduxyReducer breedsReducer = ^ReduxyState (ReduxyState state, ReduxyAction action) {
     if ([action is:ReduxyActionBreedListFetched]) {
@@ -35,7 +89,7 @@ static ReduxyReducer breedsReducer = ^ReduxyState (ReduxyState state, ReduxyActi
 };
 
 static ReduxyReducer filterReducer = ^ReduxyState (ReduxyState state, ReduxyAction action) {
-    if ([action is:ReduxyActionBreeFiltered]) {
+    if ([action is:ReduxyActionBreedListFiltered]) {
         NSString *filter = action.data[@"filter"];
         return filter;
     }
@@ -51,6 +105,8 @@ static ReduxyReducer rootReducer = ^ReduxyState (ReduxyState state, ReduxyAction
               @"filter": filterReducer(state[@"filter"], action)
               };
 };
+
+#pragma mark - selectors
 
 typedef id (^unary_argumented_block)(NSArray *args);
 typedef unary_argumented_block memoizable_block;
@@ -121,6 +177,9 @@ selector_block breedsSelector = ^NSDictionary *(ReduxyState state) {
     return state[@"breeds"];
 };
 
+
+#pragma mark - view controller
+
 @interface BreedListViewController ()
 <
 UITableViewDataSource,
@@ -134,6 +193,8 @@ UISearchBarDelegate
 
 @property (strong, nonatomic) ReduxyStore *store;
 @property (copy, nonatomic) selector_block filteredBreedsSelector;
+
+@property (strong, nonatomic) ReduxyRecorder *recorder;
 @end
 
 @implementation BreedListViewController
@@ -145,30 +206,7 @@ UISearchBarDelegate
 - (void)viewDidLoad {
     [super viewDidLoad];
     
-    if (@available(iOS 11.0, *)) {
-        UISearchController *sc = [[UISearchController alloc] initWithSearchResultsController:nil];
-        sc.searchResultsUpdater = self;
-        
-        if (@available(iOS 9.1, *)) {
-            sc.obscuresBackgroundDuringPresentation = NO;
-        }
-        else {
-            sc.dimsBackgroundDuringPresentation = NO;
-        }
-        
-        self.navigationItem.searchController = sc;
-    }
-    else {
-        UISearchBar *sb = [[UISearchBar alloc] init];
-        self.navigationItem.titleView = sb;
-        sb.delegate = self;
-    }
-    
-    self.store = [ReduxyStore storeWithState:rootReducer(nil, nil)
-                                     reducer:rootReducer
-                                 middlewares:@[ logger, ReduxyFunctionMiddleware ]];
-    
-    [self.store subscribe:self];
+    [self attachSearchBar];
     
     self.filteredBreedsSelector  = memoizeSelector(@[ filterSelector, breedsSelector ], ^id (NSArray *args) {
         NSString *filter = args[0];
@@ -182,6 +220,14 @@ UISearchBarDelegate
             return breeds.allKeys;
         }
     });
+    
+    [self attachReduxyStore];
+}
+
+- (void)viewWillAppear:(BOOL)animated {
+    [super viewWillAppear:animated];
+    
+    [self.store dispatch:ReduxyActionBreedListReload];
 }
 
 - (void)viewWillDisappear:(BOOL)animated {
@@ -205,6 +251,46 @@ UISearchBarDelegate
         RandomDogViewController *vc = (RandomDogViewController *)segue.destinationViewController;
         vc.breed = sender;
     }
+}
+
+#pragma mark - private
+
+- (void)attachSearchBar {
+    if (@available(iOS 11.0, *)) {
+        UISearchController *sc = [[UISearchController alloc] initWithSearchResultsController:nil];
+        sc.searchResultsUpdater = self;
+        
+        if (@available(iOS 9.1, *)) {
+            sc.obscuresBackgroundDuringPresentation = NO;
+        }
+        else {
+            sc.dimsBackgroundDuringPresentation = NO;
+        }
+        
+        self.navigationItem.searchController = sc;
+    }
+    else {
+        UISearchBar *sb = [[UISearchBar alloc] init];
+        self.navigationItem.titleView = sb;
+        sb.delegate = self;
+    }
+}
+
+- (ReduxyState)initialState {
+    return rootReducer(nil, nil);
+}
+
+- (void)attachReduxyStore {
+    self.recorder = [[ReduxyRecorder alloc] initWithRootReducer:rootReducer
+                                                ignorableActins:@[ ReduxyActionPlayerJump ]];
+    
+    self.store = [ReduxyStore storeWithState:[self initialState]
+                                     reducer:createPlayerReducer(rootReducer)
+                                 middlewares:@[ logger,
+                                                createRecorderMiddleware(self.recorder),
+                                                playerMiddleware,
+                                                ReduxyFunctionMiddleware ]];
+    [self.store subscribe:self];
 }
 
 #pragma mark - Table view data source
@@ -285,10 +371,10 @@ UISearchBarDelegate
 - (IBAction)reloadButtonDidClick:(id)sender {
     NSLog(@" reload ");
     
-    // TODO: dispatch fetching action
+    // dispatch fetching action
+    [self.store dispatch:ReduxyActionBreedListFetching];
     
     ReduxyAsyncAction *action = [ReduxyAsyncAction newWithActor:^ReduxyAsyncActionCanceller(ReduxyDispatch storeDispatch) {
-        storeDispatch(ReduxyActionBreedListFetching);
         
         NSURL *url = [NSURL URLWithString:@"https://dog.ceo/api/breeds/list/all"];
         
@@ -326,6 +412,37 @@ UISearchBarDelegate
     [self.store dispatch:action];
 }
 
+- (IBAction)recordingToggleButtonDidClick:(id)sender {
+    self.recorder.enabled = !self.recorder.enabled;
+    NSLog(@"recording: %d", self.recorder.enabled);
+}
+
+- (IBAction)saveButtonDidClick:(id)sender {
+    [self.recorder save];
+}
+
+- (IBAction)loadButtonDidClick:(id)sender {
+    [self.recorder load];
+    
+    ReduxyStore *store = self.store;
+    
+    [ReduxyRecorderPlayer.shared loadItems:self.recorder.items dispatch:^ReduxyAction(ReduxyAction action) {
+        return [store dispatch:action];
+    }];
+}
+
+- (IBAction)prevButtonDidClick:(id)sender {
+    [ReduxyRecorderPlayer.shared prev];
+}
+
+- (IBAction)nextButtonDidClick:(id)sender {
+    [ReduxyRecorderPlayer.shared next];
+}
+
+- (IBAction)resetButtonDidClick:(id)sender {
+    [ReduxyRecorderPlayer.shared reset];
+}
+
 
 #pragma mark - ReduxyStoreSubscriber
 
@@ -341,7 +458,8 @@ UISearchBarDelegate
         [self.tableView reloadData];
     }
     
-    if ([action is:ReduxyActionBreeFiltered]) {
+    if ([action is:ReduxyActionBreedListFiltered] ||
+        [action is:ReduxyActionBreedListReload]) {
         [self.tableView reloadData];
     }
 }
@@ -351,7 +469,7 @@ UISearchBarDelegate
 - (void)searchBar:(UISearchBar *)searchBar textDidChange:(NSString *)searchText {
     NSLog(@"search bar: %@", searchText);
     
-    [self.store dispatch:@{ @"type": ReduxyActionBreeFiltered,
+    [self.store dispatch:@{ @"type": ReduxyActionBreedListFiltered,
                             @"filter": searchText
                             }];
 }
@@ -363,7 +481,7 @@ UISearchBarDelegate
     
     NSLog(@"search: %@", text);
     
-    [self.store dispatch:@{ @"type": ReduxyActionBreeFiltered,
+    [self.store dispatch:@{ @"type": ReduxyActionBreedListFiltered,
                             @"filter": text
                             }];
 }
