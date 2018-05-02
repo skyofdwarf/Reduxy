@@ -22,11 +22,30 @@ static ReduxyActionType ReduxyActionBreedListFetched = @"reduxy.action.breedlist
 static ReduxyActionType ReduxyActionBreedListFiltered = @"reduxy.action.breedlist.filtered";
 static ReduxyActionType ReduxyActionUIReload = @"reduxy.action.ui.reload";
 
+static ReduxyActionType ReduxyRouterActionRoute = @"reduxy.action.router.route";
+
+
 
 #pragma mark - middlewares
 
 static ReduxyMiddleware logger = ReduxyMiddlewareCreateMacro(store, next, action, {
     NSLog(@"logger> received action: %@", action);
+    return next(action);
+});
+
+static ReduxyMiddleware ReduxyRouter = ReduxyMiddlewareCreateMacro(store, next, action, {
+    NSLog(@"router> received action: %@", action);
+    if ([action is:ReduxyRouterActionRoute]) {
+        
+        NSString *path  = action.data[@"path"];
+        NSString *context = action.data[@"context"];
+        NSString *source = action.data[@"source"];
+        
+        // TODO:
+        
+        //Router.route(path, source, context);
+    }
+    
     return next(action);
 });
 
@@ -180,6 +199,7 @@ UISearchBarDelegate
     self.store = [ReduxyStore storeWithState:[self initialState]
                                      reducer:ReduxyPlayerReducerWithRootReducer(rootReducer)
                                  middlewares:@[ logger,
+                                                ReduxyRouter,
                                                 ReduxyRecorderMiddlewareWithRecorder(self.recorder),
                                                 ReduxyFunctionMiddleware,
                                                 ReduxyPlayerMiddleware]];
@@ -253,6 +273,8 @@ UISearchBarDelegate
             id item = items[row];
             
             [self performSegueWithIdentifier:@"RandomDog" sender:item];
+            
+            [self.store dispatch:action];
             break ;
         }
     }
