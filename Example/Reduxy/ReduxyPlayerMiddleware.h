@@ -1,16 +1,23 @@
 //
-//  ReduxyPlayer.h
+//  ReduxyPlayerMiddleware.h
 //  Reduxy_Example
 //
-//  Created by yjkim on 27/04/2018.
+//  Created by yjkim on 02/05/2018.
 //  Copyright © 2018 skyofdwarf. All rights reserved.
 //
 
 #import <Foundation/Foundation.h>
-#import "ReduxyTypes.h"
-#import "ReduxyRecorderMiddleware.h"
 
-FOUNDATION_EXTERN ReduxyActionType ReduxyActionPlayerJump;
+#import "ReduxySimpleRecorder.h"
+#import "ReduxyTypes.h"
+
+
+
+FOUNDATION_EXTERN ReduxyActionType ReduxyPlayerActionJump;
+
+FOUNDATION_EXTERN ReduxyMiddleware ReduxyPlayerMiddleware;
+
+FOUNDATION_EXTERN ReduxyReducer (^ReduxyPlayerReducerWithRootReducer)(ReduxyReducer);
 
 
 @protocol ReduxyPlayer <NSObject>
@@ -26,3 +33,6 @@ FOUNDATION_EXTERN ReduxyActionType ReduxyActionPlayerJump;
 - (void)reset;
 
 @end
+
+
+

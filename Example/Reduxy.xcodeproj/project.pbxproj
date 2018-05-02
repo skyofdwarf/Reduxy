@@ -22,13 +22,13 @@
 		6003F5BC195388D20070C39A /* Tests.m in Sources */ = {isa = PBXBuildFile; fileRef = 6003F5BB195388D20070C39A /* Tests.m */; };
 		71719F9F1E33DC2100824A3D /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 71719F9D1E33DC2100824A3D /* LaunchScreen.storyboard */; };
 		873B8AEB1B1F5CCA007FD442 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 873B8AEA1B1F5CCA007FD442 /* Main.storyboard */; };
+		D558CC9220997CF30069536D /* ReduxyPlayerMiddleware.m in Sources */ = {isa = PBXBuildFile; fileRef = D558CC9120997CF30069536D /* ReduxyPlayerMiddleware.m */; };
+		D558CC952099869C0069536D /* ReduxyMemoizer.m in Sources */ = {isa = PBXBuildFile; fileRef = D558CC942099869C0069536D /* ReduxyMemoizer.m */; };
 		D5EB3F47208ED0FA003F5519 /* BreedListViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = D5EB3F46208ED0FA003F5519 /* BreedListViewController.m */; };
 		D5EB3F6320905306003F5519 /* RandomDogViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = D5EB3F6220905306003F5519 /* RandomDogViewController.m */; };
 		D5EB3F682091AAAB003F5519 /* ReduxyRecorderMiddleware.m in Sources */ = {isa = PBXBuildFile; fileRef = D5EB3F672091AAAB003F5519 /* ReduxyRecorderMiddleware.m */; };
-		D5EB3F6E2092A608003F5519 /* ReduxyRecorderPlayer.m in Sources */ = {isa = PBXBuildFile; fileRef = D5EB3F6D2092A608003F5519 /* ReduxyRecorderPlayer.m */; };
-		D5EB3F782092B83D003F5519 /* ReduxyRecorder.m in Sources */ = {isa = PBXBuildFile; fileRef = D5EB3F772092B83D003F5519 /* ReduxyRecorder.m */; };
-		D5EB3F7B2092C567003F5519 /* ReduxyForwardOnlyPlayer.m in Sources */ = {isa = PBXBuildFile; fileRef = D5EB3F7A2092C567003F5519 /* ReduxyForwardOnlyPlayer.m */; };
-		D5EB3F7E2092F6A3003F5519 /* ReduxyPlayer.m in Sources */ = {isa = PBXBuildFile; fileRef = D5EB3F7D2092F6A3003F5519 /* ReduxyPlayer.m */; };
+		D5EB3F6E2092A608003F5519 /* ReduxySimplePlayer.m in Sources */ = {isa = PBXBuildFile; fileRef = D5EB3F6D2092A608003F5519 /* ReduxySimplePlayer.m */; };
+		D5EB3F782092B83D003F5519 /* ReduxySimpleRecorder.m in Sources */ = {isa = PBXBuildFile; fileRef = D5EB3F772092B83D003F5519 /* ReduxySimpleRecorder.m */; };
 		F257E38D2B14A96DC2E1F80F /* Pods_Reduxy_Example.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 293AE4197A2966966BD51E65 /* Pods_Reduxy_Example.framework */; };
 /* End PBXBuildFile section */
 
@@ -71,20 +71,20 @@
 		AAD3CB31AC58147274D997DD /* README.md */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = net.daringfireball.markdown; name = README.md; path = ../README.md; sourceTree = "<group>"; };
 		B6B7AD2B090DD5E146C768D9 /* Pods-Reduxy_Example.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Reduxy_Example.release.xcconfig"; path = "Pods/Target Support Files/Pods-Reduxy_Example/Pods-Reduxy_Example.release.xcconfig"; sourceTree = "<group>"; };
 		D08D8B75FB54248B3EEA21B8 /* Pods-Reduxy_Tests.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Reduxy_Tests.debug.xcconfig"; path = "Pods/Target Support Files/Pods-Reduxy_Tests/Pods-Reduxy_Tests.debug.xcconfig"; sourceTree = "<group>"; };
+		D558CC9020997CDC0069536D /* ReduxyPlayerMiddleware.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ReduxyPlayerMiddleware.h; sourceTree = "<group>"; };
+		D558CC9120997CF30069536D /* ReduxyPlayerMiddleware.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = ReduxyPlayerMiddleware.m; sourceTree = "<group>"; };
+		D558CC932099869C0069536D /* ReduxyMemoizer.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ReduxyMemoizer.h; sourceTree = "<group>"; };
+		D558CC942099869C0069536D /* ReduxyMemoizer.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = ReduxyMemoizer.m; sourceTree = "<group>"; };
 		D5EB3F45208ED0FA003F5519 /* BreedListViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = BreedListViewController.h; sourceTree = "<group>"; };
 		D5EB3F46208ED0FA003F5519 /* BreedListViewController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = BreedListViewController.m; sourceTree = "<group>"; };
 		D5EB3F6120905306003F5519 /* RandomDogViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = RandomDogViewController.h; sourceTree = "<group>"; };
 		D5EB3F6220905306003F5519 /* RandomDogViewController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = RandomDogViewController.m; sourceTree = "<group>"; };
 		D5EB3F662091AA93003F5519 /* ReduxyRecorderMiddleware.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ReduxyRecorderMiddleware.h; sourceTree = "<group>"; };
 		D5EB3F672091AAAB003F5519 /* ReduxyRecorderMiddleware.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = ReduxyRecorderMiddleware.m; sourceTree = "<group>"; };
-		D5EB3F6C2092A608003F5519 /* ReduxyRecorderPlayer.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ReduxyRecorderPlayer.h; sourceTree = "<group>"; };
-		D5EB3F6D2092A608003F5519 /* ReduxyRecorderPlayer.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = ReduxyRecorderPlayer.m; sourceTree = "<group>"; };
-		D5EB3F762092B83D003F5519 /* ReduxyRecorder.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ReduxyRecorder.h; sourceTree = "<group>"; };
-		D5EB3F772092B83D003F5519 /* ReduxyRecorder.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = ReduxyRecorder.m; sourceTree = "<group>"; };
-		D5EB3F792092C567003F5519 /* ReduxyForwardOnlyPlayer.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ReduxyForwardOnlyPlayer.h; sourceTree = "<group>"; };
-		D5EB3F7A2092C567003F5519 /* ReduxyForwardOnlyPlayer.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = ReduxyForwardOnlyPlayer.m; sourceTree = "<group>"; };
-		D5EB3F7C2092E144003F5519 /* ReduxyPlayer.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ReduxyPlayer.h; sourceTree = "<group>"; };
-		D5EB3F7D2092F6A3003F5519 /* ReduxyPlayer.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = ReduxyPlayer.m; sourceTree = "<group>"; };
+		D5EB3F6C2092A608003F5519 /* ReduxySimplePlayer.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ReduxySimplePlayer.h; sourceTree = "<group>"; };
+		D5EB3F6D2092A608003F5519 /* ReduxySimplePlayer.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = ReduxySimplePlayer.m; sourceTree = "<group>"; };
+		D5EB3F762092B83D003F5519 /* ReduxySimpleRecorder.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ReduxySimpleRecorder.h; sourceTree = "<group>"; };
+		D5EB3F772092B83D003F5519 /* ReduxySimpleRecorder.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = ReduxySimpleRecorder.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -162,14 +162,14 @@
 				D5EB3F6220905306003F5519 /* RandomDogViewController.m */,
 				D5EB3F662091AA93003F5519 /* ReduxyRecorderMiddleware.h */,
 				D5EB3F672091AAAB003F5519 /* ReduxyRecorderMiddleware.m */,
-				D5EB3F762092B83D003F5519 /* ReduxyRecorder.h */,
-				D5EB3F772092B83D003F5519 /* ReduxyRecorder.m */,
-				D5EB3F7C2092E144003F5519 /* ReduxyPlayer.h */,
-				D5EB3F7D2092F6A3003F5519 /* ReduxyPlayer.m */,
-				D5EB3F6C2092A608003F5519 /* ReduxyRecorderPlayer.h */,
-				D5EB3F6D2092A608003F5519 /* ReduxyRecorderPlayer.m */,
-				D5EB3F792092C567003F5519 /* ReduxyForwardOnlyPlayer.h */,
-				D5EB3F7A2092C567003F5519 /* ReduxyForwardOnlyPlayer.m */,
+				D5EB3F762092B83D003F5519 /* ReduxySimpleRecorder.h */,
+				D5EB3F772092B83D003F5519 /* ReduxySimpleRecorder.m */,
+				D558CC9020997CDC0069536D /* ReduxyPlayerMiddleware.h */,
+				D558CC9120997CF30069536D /* ReduxyPlayerMiddleware.m */,
+				D5EB3F6C2092A608003F5519 /* ReduxySimplePlayer.h */,
+				D5EB3F6D2092A608003F5519 /* ReduxySimplePlayer.m */,
+				D558CC932099869C0069536D /* ReduxyMemoizer.h */,
+				D558CC942099869C0069536D /* ReduxyMemoizer.m */,
 			);
 			name = "Example for Reduxy";
 			path = Reduxy;
@@ -439,11 +439,11 @@
 			buildActionMask = 2147483647;
 			files = (
 				D5EB3F6320905306003F5519 /* RandomDogViewController.m in Sources */,
-				D5EB3F7E2092F6A3003F5519 /* ReduxyPlayer.m in Sources */,
-				D5EB3F7B2092C567003F5519 /* ReduxyForwardOnlyPlayer.m in Sources */,
+				D558CC9220997CF30069536D /* ReduxyPlayerMiddleware.m in Sources */,
+				D558CC952099869C0069536D /* ReduxyMemoizer.m in Sources */,
 				D5EB3F682091AAAB003F5519 /* ReduxyRecorderMiddleware.m in Sources */,
-				D5EB3F782092B83D003F5519 /* ReduxyRecorder.m in Sources */,
-				D5EB3F6E2092A608003F5519 /* ReduxyRecorderPlayer.m in Sources */,
+				D5EB3F782092B83D003F5519 /* ReduxySimpleRecorder.m in Sources */,
+				D5EB3F6E2092A608003F5519 /* ReduxySimplePlayer.m in Sources */,
 				6003F59E195388D20070C39A /* ReduxyAppDelegate.m in Sources */,
 				D5EB3F47208ED0FA003F5519 /* BreedListViewController.m in Sources */,
 				6003F59A195388D20070C39A /* main.m in Sources */,

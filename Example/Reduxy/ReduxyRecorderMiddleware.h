@@ -11,6 +11,8 @@
 
 #import "ReduxyTypes.h"
 
+
+
 @protocol ReduxyRecorderItem <NSObject>
 - (ReduxyAction)action;
 - (ReduxyState)prevState;
@@ -19,6 +21,7 @@
 
 
 @protocol ReduxyRecorder <NSObject>
+
 - (BOOL)recordWithAction:(ReduxyAction)action state:(ReduxyState)state;
 
 - (NSArray<ReduxyRecorderItem> *)items;
@@ -35,13 +38,22 @@
 - (ReduxyState)nextState;
 @end
 
-typedef ReduxyMiddleware (^RecorderMiddleware)(id<ReduxyRecorder> recorder);
 
-FOUNDATION_EXTERN RecorderMiddleware createRecorderMiddleware;
+
+typedef ReduxyMiddleware (^RecorderMiddleware)(id<ReduxyRecorder> recorder);
 
 FOUNDATION_EXTERN NSString * const ReduxyRecorderItemAction;
 FOUNDATION_EXTERN NSString * const ReduxyRecorderItemPrevState;
 FOUNDATION_EXTERN NSString * const ReduxyRecorderItemNextState;
+
+FOUNDATION_EXTERN RecorderMiddleware ReduxyRecorderMiddlewareWithRecorder;
+
+
+
+@interface RecordableItem: NSObject
++ (instancetype)newWithType:(ReduxyActionType)type prevState:(ReduxyState)prevState nextState:(ReduxyState)nextState;
+@end
+
 
 
 #endif /* ReduxyRecoderMiddleware_h */

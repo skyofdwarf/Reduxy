@@ -13,8 +13,8 @@
 
 #pragma mark - reduxy action key
 
-FOUNDATION_EXTERN NSString * const ReduxyActionTypeKey = @"type";
-FOUNDATION_EXTERN NSString * const ReduxyActionDataKey = @"data";
+NSString * const ReduxyActionTypeKey = @"type";
+NSString * const ReduxyActionDataKey = @"data";
 
 
 #pragma mark - reduxy error domain

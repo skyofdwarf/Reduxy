@@ -1,5 +1,5 @@
 //
-//  ReduxyRecorderPlayer.h
+//  ReduxySimplePlayer.h
 //  Reduxy_Example
 //
 //  Created by yjkim on 27/04/2018.
@@ -8,10 +8,9 @@
 
 #import <Foundation/Foundation.h>
 #import "ReduxyTypes.h"
-#import "ReduxyRecorderMiddleware.h"
-#import "ReduxyPlayer.h"
+#import "ReduxyPlayerMiddleware.h"
 
-@interface ReduxyRecorderPlayer : NSObject <ReduxyPlayer>
+@interface ReduxySimplePlayer : NSObject <ReduxyPlayer>
 @property (assign, nonatomic, readonly) NSInteger position;
 
 + (instancetype)shared;

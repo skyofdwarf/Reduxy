@@ -1,5 +1,5 @@
 //
-//  ReduxyRecorder.h
+//  ReduxySimpleRecorder.h
 //  Reduxy_Example
 //
 //  Created by yjkim on 27/04/2018.
@@ -10,11 +10,21 @@
 #import "ReduxyRecorderMiddleware.h"
 
 
-@interface ReduxyRecorder : NSObject <ReduxyRecorder>
+/**
+ ReduxySimpleRecorder
+ 
+ action은 내부적으로 아래 형식으로 저장됨 
+ @{
+   ReduxyRecorderItemAction: action,
+   ReduxyRecorderItemPrevState: state,
+   ReduxyRecorderItemNextState: nextState,
+ };
+ */
+@interface ReduxySimpleRecorder : NSObject <ReduxyRecorder>
 @property (assign, nonatomic) BOOL enabled;
 
 - (instancetype)initWithRootReducer:(ReduxyReducer)rootReducer;
-- (instancetype)initWithRootReducer:(ReduxyReducer)rootReducer ignorableActins:(NSArray<ReduxyActionType> *)ignorableActions;
+- (instancetype)initWithRootReducer:(ReduxyReducer)rootReducer ignorableActions:(NSArray<ReduxyActionType> *)ignorableActions;
     
 - (BOOL)recordWithAction:(ReduxyAction)action state:(ReduxyState)state;
 

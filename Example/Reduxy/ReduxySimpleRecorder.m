@@ -1,16 +1,16 @@
 //
-//  ReduxyRecorder.m
+//  ReduxySimpleRecorder.m
 //  Reduxy_Example
 //
 //  Created by yjkim on 27/04/2018.
 //  Copyright © 2018 skyofdwarf. All rights reserved.
 //
 
-#import "ReduxyRecorder.h"
+#import "ReduxySimpleRecorder.h"
 
 static NSString * const ReduxyRecorderUserDefaultKey = @"reduxy.recorder.items";
 
-@interface ReduxyRecorder ()
+@interface ReduxySimpleRecorder ()
 @property (strong, nonatomic) NSMutableArray<id<ReduxyRecorderItem>> *mutableItems;
 @property (strong, nonatomic) NSSet<ReduxyActionType> *ignorableActions;
 
@@ -18,13 +18,13 @@ static NSString * const ReduxyRecorderUserDefaultKey = @"reduxy.recorder.items";
 @end
 
 
-@implementation ReduxyRecorder
+@implementation ReduxySimpleRecorder
 
 - (instancetype)initWithRootReducer:(ReduxyReducer)rootReducer {
-    return [self initWithRootReducer:rootReducer ignorableActins:@[]];
+    return [self initWithRootReducer:rootReducer ignorableActions:@[]];
 }
 
-- (instancetype)initWithRootReducer:(ReduxyReducer)rootReducer ignorableActins:(NSArray<ReduxyActionType> *)ignorableActions {
+- (instancetype)initWithRootReducer:(ReduxyReducer)rootReducer ignorableActions:(NSArray<ReduxyActionType> *)ignorableActions {
     self = [super init];
     if (self) {
         self.ignorableActions = [NSSet setWithArray:ignorableActions];

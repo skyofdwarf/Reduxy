@@ -15,7 +15,7 @@ NSString * const ReduxyRecorderItemPrevState = @"prevState";
 NSString * const ReduxyRecorderItemNextState = @"nextState";
 
 
-RecorderMiddleware createRecorderMiddleware = ^ReduxyMiddleware(id<ReduxyRecorder> recorder) {
+RecorderMiddleware ReduxyRecorderMiddlewareWithRecorder = ^ReduxyMiddleware(id<ReduxyRecorder> recorder) {
     return ^ReduxyTransducer (id<ReduxyStore> store) {
         NSLog(@"recorder mw> 1");
         return ^ReduxyDispatch (ReduxyDispatch next) {
@@ -42,4 +42,30 @@ RecorderMiddleware createRecorderMiddleware = ^ReduxyMiddleware(id<ReduxyRecorde
     return self[ReduxyRecorderItemNextState];
 }
 @end
+
+@interface RecordableItem()
+{
+    NSDictionary *_action;
+}
+//@property (strong, nonatomic) NSDictionary *data;
+@end
+
+@implementation RecordableItem
++ (instancetype)newWithType:(ReduxyActionType)type prevState:(ReduxyState)prevState nextState:(ReduxyState)nextState {
+    return [[RecordableItem alloc] initWithType:type prevState:prevState nextState:nextState];
+}
+
+- (instancetype)initWithType:(ReduxyActionType)type prevState:(ReduxyState)prevState nextState:(ReduxyState)nextState {
+    self = [super init];
+    if (self) {
+        _action = @{};
+    }
+    return self;
+}
+
+- (NSDictionary *)action {
+    return _action;
+}
+@end
+
 

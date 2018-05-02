@@ -1,16 +1,16 @@
 //
-//  ReduxyRecorderPlayer.m
+//  ReduxySimplePlayer.m
 //  Reduxy_Example
 //
 //  Created by yjkim on 27/04/2018.
 //  Copyright © 2018 skyofdwarf. All rights reserved.
 //
 
-#import "ReduxyRecorderPlayer.h"
+#import "ReduxySimplePlayer.h"
 #import "ReduxyStore.h"
 
 
-@interface ReduxyRecorderPlayer ()
+@interface ReduxySimplePlayer ()
 @property (strong, nonatomic) NSArray<id<ReduxyRecorderItem>> *items;
 @property (assign, nonatomic) NSInteger position;
 
@@ -18,11 +18,11 @@
 @end
 
 
-@implementation ReduxyRecorderPlayer
+@implementation ReduxySimplePlayer
 
 + (instancetype)shared {
     static dispatch_once_t onceToken;
-    static ReduxyRecorderPlayer *instance;
+    static ReduxySimplePlayer *instance;
     
     dispatch_once(&onceToken, ^{
         instance = [self new];
@@ -88,7 +88,7 @@
         id<ReduxyRecorderItem> item = self.items[index];
 
         if (item) {
-            return self.dispatch(@{ ReduxyActionTypeKey: ReduxyActionPlayerJump,
+            return self.dispatch(@{ ReduxyActionTypeKey: ReduxyPlayerActionJump,
                                     ReduxyActionDataKey: item
                                     });
         }

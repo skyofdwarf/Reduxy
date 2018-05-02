@@ -12,8 +12,9 @@
 #import "ReduxyRecorderMiddleware.h"
 #import "ReduxyAsyncAction.h"
 #import "RandomDogViewController.h"
-#import "ReduxyRecorder.h"
-#import "ReduxyRecorderPlayer.h"
+#import "ReduxySimpleRecorder.h"
+#import "ReduxySimplePlayer.h"
+#import "ReduxyMemoizer.h"
 
 static ReduxyActionType ReduxyActionBreedListReload = @"reduxy.action.breedlist.reload";
 static ReduxyActionType ReduxyActionBreedListFetching = @"reduxy.action.breedlist.fetching";
@@ -24,59 +25,12 @@ static ReduxyActionType ReduxyActionUIReload = @"reduxy.action.ui.reload";
 
 #pragma mark - middlewares
 
-//static ReduxyMiddleware logger = ReduxyMiddlewareCreateMacro(store, next, action, {
-//    NSLog(@"logger> received action: %@", action);
-//    return next(action);
-//});
-
-
-static ReduxyMiddleware logger = ^ReduxyTransducer (id<ReduxyStore> store) {
-    NSLog(@"logger> 1");
-    return ^ReduxyDispatch (ReduxyDispatch next) {
-        NSLog(@"logger> 2");
-        return ^ReduxyAction (ReduxyAction action) {
-            NSLog(@"logger> received action: %@", action);
-            return next(action);
-        };
-    };
-};
-
-
-static ReduxyMiddleware playerMiddleware = ^ReduxyTransducer (id<ReduxyStore> store) {
-    NSLog(@"player> 1");
-    return ^ReduxyDispatch (ReduxyDispatch next) {
-        NSLog(@"player> 2");
-        return ^ReduxyAction (ReduxyAction action) {
-            if ([action is:ReduxyActionPlayerJump]) {
-                id<ReduxyRecorderItem> item = action.data[ReduxyActionDataKey];
-                
-                next(action);
-                return next(item.action);
-            }
-            else {
-                return next(action);
-            }
-        };
-    };
-};
+static ReduxyMiddleware logger = ReduxyMiddlewareCreateMacro(store, next, action, {
+    NSLog(@"logger> received action: %@", action);
+    return next(action);
+});
 
 #pragma mark - reducers
-
-
-static ReduxyReducer (^createPlayerReducer)(ReduxyReducer) = ^ReduxyReducer(ReduxyReducer next) {
-    return ^ReduxyState (ReduxyState state, ReduxyAction action) {
-        if ([action is:ReduxyActionPlayerJump]) {
-            id<ReduxyRecorderItem> item = action.data[ReduxyActionDataKey];
-            
-            NSLog(@"player item: %@", item);
-            
-            return item.nextState;
-        }
-        else {
-            return next(state, action);
-        }
-    };
-};
 
 static ReduxyReducer breedsReducer = ^ReduxyState (ReduxyState state, ReduxyAction action) {
     if ([action is:ReduxyActionBreedListFetched]) {
@@ -108,67 +62,6 @@ static ReduxyReducer rootReducer = ^ReduxyState (ReduxyState state, ReduxyAction
 
 #pragma mark - selectors
 
-typedef id (^unary_argumented_block)(NSArray *args);
-typedef unary_argumented_block memoizable_block;
-typedef unary_argumented_block memoized_block;
-
-memoized_block (^memoize)(memoizable_block) = ^memoized_block (memoizable_block block) {
-    __block NSArray *last_args = nil;
-    __block id last_result = nil;
-    
-    return ^id (NSArray *args) {
-        BOOL same = (last_args && args && [last_args isEqualToArray:args]);
-        if (!same) {
-            last_args = args;
-            last_result = block(args);
-        }
-        
-        NSLog(@"return cached result: %d", same);
-        
-        return last_result;
-    };
-};
-
-
-/**
- regular selector, no computations
- */
-typedef id (^selector_block) (ReduxyState);
-
-/**
- memoized resul selector, do some computations with argsuments
- */
-typedef unary_argumented_block memoized_selector_block;
-
-/**
- type of `memoizeSelector` function
- */
-typedef selector_block (^memoized_selector_generator)(NSArray<selector_block> *, memoized_selector_block);
-
-
-/**
- create memoized selector of `resultSelector`
-
- @param selectors selectors used as source of arguments of `resultSelector`
- @param resultSelector selector which be memoized
- @return memoized selector of `resultSelector`
- */
-memoized_selector_generator memoizeSelector = ^selector_block (NSArray<selector_block> *selectors, memoized_selector_block resultSelector) {
-    memoized_block memoizedResultSelector = memoize(resultSelector);
-    
-    return ^id (ReduxyState state) {
-        NSMutableArray *args = [NSMutableArray new];
-        
-        for (selector_block selector in selectors) {
-            id r = selector(state);
-            
-            [args addObject:r];
-        }
-        
-        return memoizedResultSelector(args);
-    };
-};
-
 selector_block filterSelector = ^NSString *(ReduxyState state) {
     return state[@"filter"];
 };
@@ -194,7 +87,7 @@ UISearchBarDelegate
 @property (strong, nonatomic) ReduxyStore *store;
 @property (copy, nonatomic) selector_block filteredBreedsSelector;
 
-@property (strong, nonatomic) ReduxyRecorder *recorder;
+@property (strong, nonatomic) ReduxySimpleRecorder *recorder;
 @end
 
 @implementation BreedListViewController
@@ -281,15 +174,15 @@ UISearchBarDelegate
 }
 
 - (void)attachReduxyStore {
-    self.recorder = [[ReduxyRecorder alloc] initWithRootReducer:rootReducer
-                                                ignorableActins:@[ ReduxyActionPlayerJump ]];
+    self.recorder = [[ReduxySimpleRecorder alloc] initWithRootReducer:rootReducer
+                                                     ignorableActions:@[ ReduxyPlayerActionJump ]];
     
     self.store = [ReduxyStore storeWithState:[self initialState]
-                                     reducer:createPlayerReducer(rootReducer)
+                                     reducer:ReduxyPlayerReducerWithRootReducer(rootReducer)
                                  middlewares:@[ logger,
-                                                createRecorderMiddleware(self.recorder),
-                                                playerMiddleware,
-                                                ReduxyFunctionMiddleware ]];
+                                                ReduxyRecorderMiddlewareWithRecorder(self.recorder),
+                                                ReduxyFunctionMiddleware,
+                                                ReduxyPlayerMiddleware]];
     [self.store subscribe:self];
 }
 
@@ -426,21 +319,21 @@ UISearchBarDelegate
     
     ReduxyStore *store = self.store;
     
-    [ReduxyRecorderPlayer.shared loadItems:self.recorder.items dispatch:^ReduxyAction(ReduxyAction action) {
+    [ReduxySimplePlayer.shared loadItems:self.recorder.items dispatch:^ReduxyAction(ReduxyAction action) {
         return [store dispatch:action];
     }];
 }
 
 - (IBAction)prevButtonDidClick:(id)sender {
-    [ReduxyRecorderPlayer.shared prev];
+    [ReduxySimplePlayer.shared prev];
 }
 
 - (IBAction)nextButtonDidClick:(id)sender {
-    [ReduxyRecorderPlayer.shared next];
+    [ReduxySimplePlayer.shared next];
 }
 
 - (IBAction)resetButtonDidClick:(id)sender {
-    [ReduxyRecorderPlayer.shared reset];
+    [ReduxySimplePlayer.shared reset];
 }
 
 
