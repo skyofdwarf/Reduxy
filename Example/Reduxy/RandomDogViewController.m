@@ -10,6 +10,10 @@
 #import "ReduxyStore.h"
 #import "ReduxyFunctionMiddleware.h"
 #import "ReduxyAsyncAction.h"
+#import "ReduxyRouter.h"
+
+
+#define LOG_HERE NSLog(@"%s", __PRETTY_FUNCTION__);
 
 
 static ReduxyActionType ReduxyActionRandomDogFetching = @"reduxy.action.randomdog.fetching";
@@ -55,8 +59,13 @@ static ReduxyReducer rootReducer = ^ReduxyState (ReduxyState state, ReduxyAction
 
 @implementation RandomDogViewController
 
+- (void)dealloc {
+    LOG_HERE
+}
 
 - (void)viewDidLoad {
+    LOG_HERE
+    
     [super viewDidLoad];
     // Do any additional setup after loading the view.
     
@@ -79,18 +88,26 @@ static ReduxyReducer rootReducer = ^ReduxyState (ReduxyState state, ReduxyAction
 }
 
 - (void)viewWillAppear:(BOOL)animated {
+    LOG_HERE
+    
     [super viewWillAppear:animated];
 }
 
 
 - (void)viewDidAppear:(BOOL)animated {
+    LOG_HERE
+    
     [super viewDidAppear:animated];
+    
+    NSLog(@"vcs: %@", ReduxyRouter.shared.vcs);
     
     [self reload];
 }
 
 
 - (void)viewWillDisappear:(BOOL)animated {
+    LOG_HERE
+    
     [super viewWillDisappear:animated];
     
     if (self.canceller) {
@@ -98,6 +115,19 @@ static ReduxyReducer rootReducer = ^ReduxyState (ReduxyState state, ReduxyAction
         self.canceller = nil;
     }
 }
+
+- (void)viewDidDisappear:(BOOL)animated {
+    LOG_HERE
+    
+    [super viewDidDisappear:animated];
+}
+
+- (void)willMoveToParentViewController:(UIViewController *)parent {
+    LOG_HERE
+    
+    [ReduxyRouter.shared viewController:self willMoveToParentViewController:parent];
+}
+
 
 #pragma mark - network
 

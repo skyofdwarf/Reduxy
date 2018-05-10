@@ -15,6 +15,13 @@
 #import "ReduxySimpleRecorder.h"
 #import "ReduxySimplePlayer.h"
 #import "ReduxyMemoizer.h"
+#import "ReduxyRouter.h"
+
+#define REDUXY_ROUTER 1
+
+#define LOG_HERE NSLog(@"%s", __PRETTY_FUNCTION__);
+
+
 
 static ReduxyActionType ReduxyActionBreedListReload = @"reduxy.action.breedlist.reload";
 static ReduxyActionType ReduxyActionBreedListFetching = @"reduxy.action.breedlist.fetching";
@@ -22,7 +29,7 @@ static ReduxyActionType ReduxyActionBreedListFetched = @"reduxy.action.breedlist
 static ReduxyActionType ReduxyActionBreedListFiltered = @"reduxy.action.breedlist.filtered";
 static ReduxyActionType ReduxyActionUIReload = @"reduxy.action.ui.reload";
 
-static ReduxyActionType ReduxyRouterActionRoute = @"reduxy.action.router.route";
+
 
 
 
@@ -33,21 +40,6 @@ static ReduxyMiddleware logger = ReduxyMiddlewareCreateMacro(store, next, action
     return next(action);
 });
 
-static ReduxyMiddleware ReduxyRouter = ReduxyMiddlewareCreateMacro(store, next, action, {
-    NSLog(@"router> received action: %@", action);
-    if ([action is:ReduxyRouterActionRoute]) {
-        
-        NSString *path  = action.data[@"path"];
-        NSString *context = action.data[@"context"];
-        NSString *source = action.data[@"source"];
-        
-        // TODO:
-        
-        //Router.route(path, source, context);
-    }
-    
-    return next(action);
-});
 
 #pragma mark - reducers
 
@@ -69,14 +61,6 @@ static ReduxyReducer filterReducer = ^ReduxyState (ReduxyState state, ReduxyActi
     else {
         return (state? state: @"");
     }
-};
-
-
-static ReduxyReducer rootReducer = ^ReduxyState (ReduxyState state, ReduxyAction action) {
-    return @{ @"fixed-menu": @[ @"Random dog" ],
-              @"breeds": breedsReducer(state[@"breeds"], action),
-              @"filter": filterReducer(state[@"filter"], action)
-              };
 };
 
 #pragma mark - selectors
@@ -134,15 +118,30 @@ UISearchBarDelegate
     });
     
     [self attachReduxyStore];
+    
+    [self buildRoutes];
 }
 
 - (void)viewWillAppear:(BOOL)animated {
+    LOG_HERE
+    
     [super viewWillAppear:animated];
     
     [self.store dispatch:ReduxyActionBreedListReload];
 }
 
+- (void)viewDidAppear:(BOOL)animated {
+    LOG_HERE
+    
+    [super viewDidAppear:animated];
+    
+    NSLog(@"vcs: %@", ReduxyRouter.shared.vcs);
+}
+
+
 - (void)viewWillDisappear:(BOOL)animated {
+    LOG_HERE
+    
     [super viewWillDisappear:animated];
 
     if (@available(iOS 11.0, *)) {
@@ -153,16 +152,25 @@ UISearchBarDelegate
     }
 }
 
+- (void)viewDidDisappear:(BOOL)animated {
+    LOG_HERE
+    
+    [super viewDidDisappear:animated];
+}
+
+
 - (void)didReceiveMemoryWarning {
     [super didReceiveMemoryWarning];
     // Dispose of any resources that can be recreated.
 }
 
 - (void)prepareForSegue:(UIStoryboardSegue *)segue sender:(id)sender {
+#if !REDUXY_ROUTER
     if ([segue.identifier isEqualToString:@"RandomDog"]) {
         RandomDogViewController *vc = (RandomDogViewController *)segue.destinationViewController;
         vc.breed = sender;
     }
+#endif
 }
 
 #pragma mark - private
@@ -188,22 +196,53 @@ UISearchBarDelegate
     }
 }
 
-- (ReduxyState)initialState {
-    return rootReducer(nil, nil);
-}
-
 - (void)attachReduxyStore {
+    ReduxyReducer routerReducer = [ReduxyRouter.shared reducerWithRootViewController:self
+                                                                             forPath:@"home"];
+    
+    ReduxyReducer rootReducer = ^ReduxyState (ReduxyState state, ReduxyAction action) {
+        return @{ ReduxyRouterStateKey: routerReducer(state[ReduxyRouterStateKey], action),
+                  @"fixed-menu": @[ @"Random dog" ],
+                  @"breeds": breedsReducer(state[@"breeds"], action),
+                  @"filter": filterReducer(state[@"filter"], action)
+                  };
+    };
+    
     self.recorder = [[ReduxySimpleRecorder alloc] initWithRootReducer:rootReducer
                                                      ignorableActions:@[ ReduxyPlayerActionJump ]];
     
-    self.store = [ReduxyStore storeWithState:[self initialState]
+    self.store = [ReduxyStore storeWithState:rootReducer(nil, nil)
                                      reducer:ReduxyPlayerReducerWithRootReducer(rootReducer)
                                  middlewares:@[ logger,
-                                                ReduxyRouter,
+                                                ReduxyRouter.shared.middleware,
                                                 ReduxyRecorderMiddlewareWithRecorder(self.recorder),
                                                 ReduxyFunctionMiddleware,
                                                 ReduxyPlayerMiddleware]];
     [self.store subscribe:self];
+}
+
+- (void)buildRoutes {
+    UIStoryboard *storyboard = self.storyboard;
+    
+    [ReduxyRouter.shared attachStore:self.store];
+    
+    [ReduxyRouter.shared add:@"randomdog" route:^UIViewController *(UIViewController *src, NSString *breed) {
+        RandomDogViewController *rdvc = [storyboard instantiateViewControllerWithIdentifier:@"randomdog"];
+        
+        rdvc.breed = breed;
+        
+        [src showViewController:rdvc sender:nil];
+        
+        return rdvc;
+    }];
+    
+    [ReduxyRouter.shared add:@"about" route:^UIViewController *(UIViewController *src, id context) {
+        UIViewController *about = [storyboard instantiateViewControllerWithIdentifier:@"about"];
+        
+        [src showViewController:about sender:nil];
+        
+        return about;
+    }];
 }
 
 #pragma mark - Table view data source
@@ -265,16 +304,28 @@ UISearchBarDelegate
 
     switch (section) {
         case 0: {
+#if REDUXY_ROUTER
+            [self.store dispatch:@{ @"type": ReduxyRouterActionRoute,
+                                    @"path": @"randomdog"
+                                    }];
+#else
             [self performSegueWithIdentifier:@"RandomDog" sender:nil];
+#endif
+            
             break ;
         }
         case 1: {
             NSArray *items = self.filteredBreedsSelector(state);
             id item = items[row];
-            
+#if REDUXY_ROUTER
+            [self.store dispatch:@{ @"type": ReduxyRouterActionRoute,
+                                    @"path": @"randomdog",
+                                    @"context": item
+                                   }];
+#else
             [self performSegueWithIdentifier:@"RandomDog" sender:item];
+#endif
             
-            [self.store dispatch:action];
             break ;
         }
     }
@@ -282,6 +333,16 @@ UISearchBarDelegate
 
 
 #pragma mark - actions
+
+- (IBAction)aboutButtonDidClick:(id)sender {
+#if REDUXY_ROUTER
+    [self.store dispatch:@{ @"type": ReduxyRouterActionRoute,
+                            @"path": @"about"
+                            }];
+#else
+    [self performSegueWithIdentifier:@"About" sender:nil];
+#endif
+}
 
 - (IBAction)reloadButtonDidClick:(id)sender {
     NSLog(@" reload ");
@@ -328,8 +389,9 @@ UISearchBarDelegate
 }
 
 - (IBAction)recordingToggleButtonDidClick:(id)sender {
-    self.recorder.enabled = !self.recorder.enabled;
-    NSLog(@"recording: %d", self.recorder.enabled);
+//    self.recorder.enabled = !self.recorder.enabled;
+//    NSLog(@"recording: %d", self.recorder.enabled);
+    NSLog(@"vcs: %@", ReduxyRouter.shared.vcs);
 }
 
 - (IBAction)saveButtonDidClick:(id)sender {

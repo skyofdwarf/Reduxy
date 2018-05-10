@@ -19,8 +19,6 @@
 }
 
 
-
-
 #pragma mark - forward declarations of protocols
 
 @protocol ReduxyAction;

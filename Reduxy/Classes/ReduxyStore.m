@@ -19,7 +19,7 @@
 @property (copy, nonatomic) ReduxyReducer reducer;
 @property (copy, nonatomic) ReduxyDispatch dispatchFuction;
 
-@property (strong, nonatomic) NSMutableSet<id<ReduxyStoreSubscriber>> *subscribers;
+@property (strong, nonatomic) NSHashTable<id<ReduxyStoreSubscriber>> *subscribers;
 @end
 
 
@@ -60,7 +60,7 @@
 - (instancetype)initWithState:(ReduxyState)state reducer:(ReduxyReducer)reducer middlewares:(NSArray<ReduxyMiddleware> *)middlewares {
     self = [super init];
     if (self) {
-        self.subscribers = [NSMutableSet set];
+        self.subscribers = [NSHashTable weakObjectsHashTable];
         
         self.state = [state copy];
         self.reducer = reducer;

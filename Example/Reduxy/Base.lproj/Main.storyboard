@@ -13,7 +13,7 @@
         <!--About-->
         <scene sceneID="Iql-zp-ChC">
             <objects>
-                <viewController title="About" id="Dem-PX-pSc" sceneMemberID="viewController">
+                <viewController storyboardIdentifier="about" title="About" id="Dem-PX-pSc" customClass="AboutViewController" sceneMemberID="viewController">
                     <layoutGuides>
                         <viewControllerLayoutGuide type="top" id="BPs-DP-03f"/>
                         <viewControllerLayoutGuide type="bottom" id="bfj-7z-i5f"/>
@@ -48,7 +48,7 @@ http://dog.ceo/dog-api</string>
         <!--dog.ceo-->
         <scene sceneID="Y6A-QW-AYh">
             <objects>
-                <viewController automaticallyAdjustsScrollViewInsets="NO" id="WCh-Zn-tPy" customClass="BreedListViewController" sceneMemberID="viewController">
+                <viewController storyboardIdentifier="dog.ceo" automaticallyAdjustsScrollViewInsets="NO" id="WCh-Zn-tPy" customClass="BreedListViewController" sceneMemberID="viewController">
                     <layoutGuides>
                         <viewControllerLayoutGuide type="top" id="jKa-WS-hdc"/>
                         <viewControllerLayoutGuide type="bottom" id="MLf-f0-ke5"/>
@@ -109,7 +109,7 @@ http://dog.ceo/dog-api</string>
                                     <rect key="frame" x="16" y="11" width="22" height="22"/>
                                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                                     <connections>
-                                        <segue destination="Dem-PX-pSc" kind="show" id="lp8-uv-kmJ"/>
+                                        <action selector="aboutButtonDidClick:" destination="WCh-Zn-tPy" eventType="touchUpInside" id="IIY-UG-afE"/>
                                     </connections>
                                 </button>
                             </barButtonItem>
@@ -156,6 +156,7 @@ http://dog.ceo/dog-api</string>
                         <outlet property="indicatorView" destination="CgD-Kb-KYU" id="SXt-fn-sWi"/>
                         <outlet property="tableView" destination="eEI-Hl-mtO" id="lfx-ju-BSq"/>
                         <segue destination="7BS-0c-BeB" kind="show" identifier="RandomDog" id="fV9-bb-EHc"/>
+                        <segue destination="Dem-PX-pSc" kind="show" identifier="About" id="Wuy-u8-Tj6"/>
                     </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="CDI-y4-Ny7" userLabel="First Responder" sceneMemberID="firstResponder"/>
@@ -165,7 +166,7 @@ http://dog.ceo/dog-api</string>
         <!--dog-->
         <scene sceneID="Y0w-5O-bnQ">
             <objects>
-                <viewController id="7BS-0c-BeB" customClass="RandomDogViewController" sceneMemberID="viewController">
+                <viewController storyboardIdentifier="randomdog" id="7BS-0c-BeB" customClass="RandomDogViewController" sceneMemberID="viewController">
                     <layoutGuides>
                         <viewControllerLayoutGuide type="top" id="8aB-J9-t1a"/>
                         <viewControllerLayoutGuide type="bottom" id="xnd-92-7Jg"/>
@@ -211,7 +212,7 @@ http://dog.ceo/dog-api</string>
         <!--Navigation Controller-->
         <scene sceneID="HgS-Gq-iXN">
             <objects>
-                <navigationController id="Jc2-kp-E9m" sceneMemberID="viewController">
+                <navigationController storyboardIdentifier="main" id="Jc2-kp-E9m" sceneMemberID="viewController">
                     <navigationBar key="navigationBar" contentMode="scaleToFill" insetsLayoutMarginsFromSafeArea="NO" id="QcZ-GB-Mze">
                         <rect key="frame" x="0.0" y="20" width="320" height="44"/>
                         <autoresizingMask key="autoresizingMask"/>
