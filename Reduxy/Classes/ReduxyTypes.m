@@ -23,6 +23,22 @@ NSErrorDomain const ReduxyErrorDomain = @"ReduxyErrorDomain";
 
 
 
+#pragma mark - reducer helper
+
+ReduxyReducer ReduxyKeyValueReducerForAction(ReduxyActionType type, NSString *key, id defaultValue) {
+    return ^ReduxyState (ReduxyState state, ReduxyAction action) {
+        if ([action is:type]) {
+            id value = action.data[key];
+            return value;
+        }
+        else {
+            return (state? state: defaultValue);
+        }
+    };
+};
+
+
+
 #pragma mark - default implementations of ReduxyAction protocol
 
 @implementation NSObject (ReduxyAction)

@@ -7,6 +7,9 @@
 //
 
 #import <UIKit/UIKit.h>
+#import "ReduxyTypes.h"
+
+
 
 @interface RandomDogViewController : UIViewController
 @property (strong, nonatomic, nullable) NSString *breed;

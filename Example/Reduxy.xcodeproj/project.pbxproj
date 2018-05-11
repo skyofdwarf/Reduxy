@@ -26,7 +26,8 @@
 		D558CC952099869C0069536D /* ReduxyMemoizer.m in Sources */ = {isa = PBXBuildFile; fileRef = D558CC942099869C0069536D /* ReduxyMemoizer.m */; };
 		D558CC9820999FB40069536D /* ReduxyRouter.m in Sources */ = {isa = PBXBuildFile; fileRef = D558CC9720999FB40069536D /* ReduxyRouter.m */; };
 		D558CC9E209AD9B80069536D /* AboutViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = D558CC9D209AD9B80069536D /* AboutViewController.m */; };
-		D558CCA1209AE3590069536D /* AppStore.m in Sources */ = {isa = PBXBuildFile; fileRef = D558CCA0209AE3590069536D /* AppStore.m */; };
+		D558CCA1209AE3590069536D /* Store.m in Sources */ = {isa = PBXBuildFile; fileRef = D558CCA0209AE3590069536D /* Store.m */; };
+		D5B0366020A4298500F7C2D3 /* Actions.m in Sources */ = {isa = PBXBuildFile; fileRef = D5B0365F20A4298500F7C2D3 /* Actions.m */; };
 		D5EB3F47208ED0FA003F5519 /* BreedListViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = D5EB3F46208ED0FA003F5519 /* BreedListViewController.m */; };
 		D5EB3F6320905306003F5519 /* RandomDogViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = D5EB3F6220905306003F5519 /* RandomDogViewController.m */; };
 		D5EB3F682091AAAB003F5519 /* ReduxyRecorderMiddleware.m in Sources */ = {isa = PBXBuildFile; fileRef = D5EB3F672091AAAB003F5519 /* ReduxyRecorderMiddleware.m */; };
@@ -82,8 +83,10 @@
 		D558CC9720999FB40069536D /* ReduxyRouter.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = ReduxyRouter.m; sourceTree = "<group>"; };
 		D558CC9C209AD9B80069536D /* AboutViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AboutViewController.h; sourceTree = "<group>"; };
 		D558CC9D209AD9B80069536D /* AboutViewController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = AboutViewController.m; sourceTree = "<group>"; };
-		D558CC9F209AE3590069536D /* AppStore.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AppStore.h; sourceTree = "<group>"; };
-		D558CCA0209AE3590069536D /* AppStore.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = AppStore.m; sourceTree = "<group>"; };
+		D558CC9F209AE3590069536D /* Store.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Store.h; sourceTree = "<group>"; };
+		D558CCA0209AE3590069536D /* Store.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = Store.m; sourceTree = "<group>"; };
+		D5B0365E20A4297400F7C2D3 /* Actions.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Actions.h; sourceTree = "<group>"; };
+		D5B0365F20A4298500F7C2D3 /* Actions.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = Actions.m; sourceTree = "<group>"; };
 		D5EB3F45208ED0FA003F5519 /* BreedListViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = BreedListViewController.h; sourceTree = "<group>"; };
 		D5EB3F46208ED0FA003F5519 /* BreedListViewController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = BreedListViewController.m; sourceTree = "<group>"; };
 		D5EB3F6120905306003F5519 /* RandomDogViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = RandomDogViewController.h; sourceTree = "<group>"; };
@@ -183,8 +186,10 @@
 				D558CC9720999FB40069536D /* ReduxyRouter.m */,
 				D558CC9C209AD9B80069536D /* AboutViewController.h */,
 				D558CC9D209AD9B80069536D /* AboutViewController.m */,
-				D558CC9F209AE3590069536D /* AppStore.h */,
-				D558CCA0209AE3590069536D /* AppStore.m */,
+				D558CC9F209AE3590069536D /* Store.h */,
+				D558CCA0209AE3590069536D /* Store.m */,
+				D5B0365E20A4297400F7C2D3 /* Actions.h */,
+				D5B0365F20A4298500F7C2D3 /* Actions.m */,
 			);
 			name = "Example for Reduxy";
 			path = Reduxy;
@@ -456,7 +461,7 @@
 				D5EB3F6320905306003F5519 /* RandomDogViewController.m in Sources */,
 				D558CC9220997CF30069536D /* ReduxyPlayerMiddleware.m in Sources */,
 				D558CC952099869C0069536D /* ReduxyMemoizer.m in Sources */,
-				D558CCA1209AE3590069536D /* AppStore.m in Sources */,
+				D558CCA1209AE3590069536D /* Store.m in Sources */,
 				D5EB3F682091AAAB003F5519 /* ReduxyRecorderMiddleware.m in Sources */,
 				D5EB3F782092B83D003F5519 /* ReduxySimpleRecorder.m in Sources */,
 				D558CC9820999FB40069536D /* ReduxyRouter.m in Sources */,
@@ -465,6 +470,7 @@
 				D558CC9E209AD9B80069536D /* AboutViewController.m in Sources */,
 				D5EB3F47208ED0FA003F5519 /* BreedListViewController.m in Sources */,
 				6003F59A195388D20070C39A /* main.m in Sources */,
+				D5B0366020A4298500F7C2D3 /* Actions.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -618,6 +624,7 @@
 			baseConfigurationReference = 8BE8262C697AF4330CB4632C /* Pods-Reduxy_Example.debug.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ENABLE_STRICT_OBJC_MSGSEND = NO;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "Reduxy/Reduxy-Prefix.pch";
 				INFOPLIST_FILE = "Reduxy/Reduxy-Info.plist";
@@ -633,6 +640,7 @@
 			baseConfigurationReference = B6B7AD2B090DD5E146C768D9 /* Pods-Reduxy_Example.release.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ENABLE_STRICT_OBJC_MSGSEND = NO;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "Reduxy/Reduxy-Prefix.pch";
 				INFOPLIST_FILE = "Reduxy/Reduxy-Info.plist";

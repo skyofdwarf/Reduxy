@@ -10,6 +10,16 @@
 
 #import "ReduxyTypes.h"
 
+
+
+
+/*
+ TODO: add -[subscriber:selector:]
+ */
+
+
+
+
 /*! Reduxy(Redux[Obj]C) is a implementation of redux with ObjC.
  */
 

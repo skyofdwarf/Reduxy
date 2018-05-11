@@ -17,11 +17,9 @@ NSString * const ReduxyRecorderItemNextState = @"nextState";
 
 RecorderMiddleware ReduxyRecorderMiddlewareWithRecorder = ^ReduxyMiddleware(id<ReduxyRecorder> recorder) {
     return ^ReduxyTransducer (id<ReduxyStore> store) {
-        NSLog(@"recorder mw> 1");
         return ^ReduxyDispatch (ReduxyDispatch next) {
-            NSLog(@"recorder mw> 2");
             return ^ReduxyAction (ReduxyAction action) {
-                NSLog(@"recorder mw> record action: %@", action);
+                LOG(@"recorder mw> record action: %@", action);
                 [recorder recordWithAction:action state:[store getState]];
                 
                 return next(action);

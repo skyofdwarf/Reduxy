@@ -22,6 +22,13 @@
 
 @protocol ReduxyRecorder <NSObject>
 
+/**
+ action과 state를 기록한다.
+
+ @param action 액션
+ @param state 해당 액션의 결과인 state
+ @return 기록 성공 시 YES
+ */
 - (BOOL)recordWithAction:(ReduxyAction)action state:(ReduxyState)state;
 
 - (NSArray<ReduxyRecorderItem> *)items;

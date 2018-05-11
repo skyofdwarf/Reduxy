@@ -40,6 +40,20 @@ http://dog.ceo/dog-api</string>
                             <constraint firstItem="Fir-wy-J5B" firstAttribute="leading" secondItem="gwe-LC-kbN" secondAttribute="leading" id="uoJ-Z9-co2"/>
                         </constraints>
                     </view>
+                    <navigationItem key="navigationItem" id="5BY-6s-LEz">
+                        <rightBarButtonItems>
+                            <barButtonItem title="NEXT" id="EvA-un-hXa">
+                                <connections>
+                                    <action selector="nextButtonDidClick:" destination="Dem-PX-pSc" id="3b8-4T-Y5I"/>
+                                </connections>
+                            </barButtonItem>
+                            <barButtonItem title="POP" id="Tf6-AT-0NU">
+                                <connections>
+                                    <action selector="popButtonDidClick:" destination="Dem-PX-pSc" id="sDa-kd-bBT"/>
+                                </connections>
+                            </barButtonItem>
+                        </rightBarButtonItems>
+                    </navigationItem>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="vY2-CN-lM3" userLabel="First Responder" sceneMemberID="firstResponder"/>
             </objects>
@@ -194,11 +208,18 @@ http://dog.ceo/dog-api</string>
                         </constraints>
                     </view>
                     <navigationItem key="navigationItem" title="dog" id="QM6-WU-Ojf">
-                        <barButtonItem key="rightBarButtonItem" systemItem="refresh" id="rVv-25-ghy">
-                            <connections>
-                                <action selector="reloadButtonDidClick:" destination="7BS-0c-BeB" id="rHr-b5-XVx"/>
-                            </connections>
-                        </barButtonItem>
+                        <rightBarButtonItems>
+                            <barButtonItem systemItem="refresh" id="rVv-25-ghy">
+                                <connections>
+                                    <action selector="reloadButtonDidClick:" destination="7BS-0c-BeB" id="rHr-b5-XVx"/>
+                                </connections>
+                            </barButtonItem>
+                            <barButtonItem title="NEXT" id="J8u-Ch-EMk">
+                                <connections>
+                                    <action selector="nextButtonDidClick:" destination="7BS-0c-BeB" id="hbY-Vh-FEA"/>
+                                </connections>
+                            </barButtonItem>
+                        </rightBarButtonItems>
                     </navigationItem>
                     <connections>
                         <outlet property="imageView" destination="rNG-3K-8J4" id="gy6-bq-Nzj"/>

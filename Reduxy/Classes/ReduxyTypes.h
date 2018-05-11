@@ -64,6 +64,11 @@ typedef NS_ENUM(NSUInteger, ReduxyError) {
     ReduxyErrorMultipleDispatching = 100,
 };
 
+#pragma mark - reducer helper
+
+FOUNDATION_EXTERN ReduxyReducer ReduxyKeyValueReducerForAction(ReduxyActionType type, NSString *key, id defaultValue);
+
+
 
 #pragma mark - middleware helper macro
 

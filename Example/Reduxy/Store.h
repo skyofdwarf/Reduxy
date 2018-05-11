@@ -1,5 +1,5 @@
 //
-//  AppStore.h
+//  Store.h
 //  Reduxy_Example
 //
 //  Created by yjkim on 03/05/2018.
@@ -7,10 +7,13 @@
 //
 
 #import "ReduxyStore.h"
+#import "ReduxySimpleRecorder.h"
 
-@interface AppStore : ReduxyStore
 
+@interface Store : ReduxyStore
 
-+ (instancetype)shared;
++ (ReduxyStore *)main;
++ (ReduxySimpleRecorder *)recorder;
+
 
 @end

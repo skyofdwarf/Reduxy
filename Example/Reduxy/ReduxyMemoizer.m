@@ -20,7 +20,7 @@ memoized_block (^memoize)(memoizable_block) = ^memoized_block (memoizable_block 
             last_result = block(args);
         }
         
-        NSLog(@"return cached result: %d", same);
+        LOG(@"return cached result: %d", same);
         
         return last_result;
     };

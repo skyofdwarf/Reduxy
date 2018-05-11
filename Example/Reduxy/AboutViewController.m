@@ -8,8 +8,8 @@
 
 #import "AboutViewController.h"
 #import "ReduxyRouter.h"
+#import "ReduxySimplePlayer.h"
 
-#define LOG_HERE NSLog(@"%s", __PRETTY_FUNCTION__);
 
 @interface AboutViewController ()
 
@@ -40,7 +40,7 @@
     
     [super viewDidAppear:animated];
     
-    NSLog(@"vcs: %@", ReduxyRouter.shared.vcs);
+    LOG(@"vcs: %@", ReduxyRouter.shared.vcs);
 }
 
 
@@ -58,9 +58,21 @@
 
 - (void)willMoveToParentViewController:(UIViewController *)parent {
     LOG_HERE
-    NSLog(@"AboutViewController> parent: %@", parent);
+    LOG(@"AboutViewController> parent: %@", parent);
     
     [ReduxyRouter.shared viewController:self willMoveToParentViewController:parent];
+}
+
+- (IBAction)nextButtonDidClick:(id)sender {
+    [ReduxySimplePlayer.shared next];
+}
+
+- (IBAction)popButtonDidClick:(id)sender {
+    LOG(@"dispatch back in pop button");
+    
+    [Store.main dispatch:@{ @"type": raction_x(router.unroute),
+                            @"path": @"about"
+                            }];
 }
 
 

@@ -11,10 +11,6 @@
 #import "ReduxyStore.h"
 
 
-
-ReduxyActionType ReduxyRouterActionRoute = @"reduxy.action.router.route";
-ReduxyActionType ReduxyRouterActionBack = @"reduxy.action.router.back";
-
 NSString * const ReduxyRouterStateKey = @"reduxy.routes";
 
 
@@ -30,15 +26,17 @@ static selector_block topRouteSelector = ^NSString * _Nullable (ReduxyState stat
 
 
 
+#pragma mark - ReduxyRouter
+
 
 @interface ReduxyRouter ()
 @property (strong, nonatomic) id<ReduxyStore> store;
 
 @property (strong, nonatomic) NSMutableDictionary<NSString */*path*/, RouteAction> *routes;
+@property (strong, nonatomic) NSMutableDictionary<NSString */*path*/, RouteAction> *unroutes;
 @property (strong, nonatomic) NSMapTable<NSString */*path*/, UIViewController */*vc*/> *viewControllers;
 
 @end
-
 
 @implementation ReduxyRouter
 
@@ -55,7 +53,11 @@ static selector_block topRouteSelector = ^NSString * _Nullable (ReduxyState stat
     self = [super init];
     if (self) {
         self.routes = @{}.mutableCopy;
+        self.unroutes = @{}.mutableCopy;
         self.viewControllers = [NSMapTable strongToWeakObjectsMapTable];
+        
+        raction_add(router.route);
+        raction_add(router.unroute);
     }
     return self;
 }
@@ -69,11 +71,18 @@ static selector_block topRouteSelector = ^NSString * _Nullable (ReduxyState stat
 #pragma mark - routing
 
 - (void)add:(NSString *)path route:(RouteAction)route {
+    //self.routes[path] = route;
+    [self add:path route:route unroute:nil];
+}
+
+- (void)add:(NSString *)path route:(RouteAction)route unroute:(RouteAction)unroute {
     self.routes[path] = route;
+    self.unroutes[path] = unroute;
 }
 
 - (void)remove:(NSString *)path {
     self.routes[path] = nil;
+    self.unroutes[path] = nil;
 }
 
 - (void)route:(NSString *)path source:(UIViewController *)source context:(id)context {
@@ -87,6 +96,21 @@ static selector_block topRouteSelector = ^NSString * _Nullable (ReduxyState stat
     }
 }
 
+- (void)unroute:(NSString *)path source:(UIViewController *)source {
+    if (!source) {
+        return ;
+    }
+    
+    RouteAction unroute = self.unroutes[path];
+    if (unroute) {
+        // at first, remove a vc of the path to prevent auto dispatching unroute action from -[viewController:willMoveToParentViewController:]
+        [self setViewController:nil forPath:path];
+        
+        // do manual unroute
+        unroute(source, nil);
+    }
+}
+
 #pragma mark - redux
 
 - (ReduxyMiddleware)middleware {
@@ -94,9 +118,13 @@ static selector_block topRouteSelector = ^NSString * _Nullable (ReduxyState stat
     ReduxyRouter *router = self;
     
     return ReduxyMiddlewareCreateMacro(store, next, action, {
-        NSLog(@"router> received action: %@", action);
-        if ([action is:ReduxyRouterActionRoute]) {
+        LOG(@"router> received action: %@", action);
+        
+        if ([action is:raction_x(router.route)]) {
             [router route:action state:[store getState]];
+        }
+        else if ([action is:raction_x(router.unroute)]) {
+            [router unroute:action state:[store getState]];
         }
         
         return next(action);
@@ -105,46 +133,53 @@ static selector_block topRouteSelector = ^NSString * _Nullable (ReduxyState stat
 
 
 - (ReduxyReducer)reducer {
-    return [self reducerWithRootViewController:nil forPath:nil];
+    return [self reducerWithInitialViewControllers:@[] forPaths:@[]];
 }
 
-- (ReduxyReducer)reducerWithRootViewController:(UIViewController *)rvc forPath:(NSString *)path {
+- (ReduxyReducer)reducerWithInitialViewControllers:(NSArray<UIViewController *> *)vcs forPaths:(NSArray<NSString *> *)paths {
+    // builds root routing state
+    NSMutableArray *defaultState = @[].mutableCopy;
+    for (NSInteger index = 0; index < paths.count; ++index) {
+        NSString *path = paths[index];
+        UIViewController *vc = vcs[index];
+        
+        [self setViewController:vc forPath:path];
+        
+        [defaultState addObject:@{ @"path": path }];
+    }
     
-    NSArray *defaultState = ([self setViewController:rvc forPath:path]?
-                             @[ @{ @"path": path } ]:
-                             @[]);
-    
+    // returns a reducer for route state
     return ^ReduxyState (ReduxyState state, ReduxyAction action) {
-        if ([action is:ReduxyRouterActionRoute]) {
-            NSLog(@"route> %@, add: %@", state, action.data);
+        if ([action is:raction_x(router.route)]) {
+            LOG(@"route> %@, add: %@", state, action.data);
             NSMutableArray *routes = [NSMutableArray arrayWithArray:state];
             
             [routes addObject:action.data];
             return routes.copy;
         }
-        else if ([action is:ReduxyRouterActionBack]) {
-            NSLog(@"route> %@, remove: %@", state, action.data[@"path"]);
+        else if ([action is:raction_x(router.unroute)]) {
+            LOG(@"route> %@, remove: %@", state, action.data[@"path"]);
             
             NSMutableArray<NSDictionary *> *routes = [NSMutableArray arrayWithArray:state];
             
-            NSString *path = action.data[@"path"];
+            NSString *pathToPop = action.data[@"path"];
             
-            NSDictionary *lastPathInfo = routes.lastObject;
-            NSString *lastPath = lastPathInfo[@"path"];
+            NSDictionary *topPathInfo = routes.lastObject;
+            NSString *topPath = topPathInfo[@"path"];
             
-            if ([lastPath isEqualToString:path]) {
+            LOG(@"route reducer> will pop the path: %@", pathToPop);
+            if ([topPath isEqualToString:pathToPop]) {
+                LOG(@"route reducer> pop the path: %@", pathToPop);
                 [routes removeLastObject];
                 return routes.copy;
             }
             else {
-                @throw [NSError errorWithDomain:@"ReduxyRouterDomain"
-                                           code:0x00F0
-                                       userInfo:@{ NSLocalizedDescriptionKey: @"routes에 path 없는디?" }];
+                LOG(@"route reducer> not found the path: %@", pathToPop);
             }
         }
-        else {
-            return (state? state: defaultState);
-        }
+        
+        // else
+        return (state? state: defaultState);
     };
 }
 
@@ -153,11 +188,19 @@ static selector_block topRouteSelector = ^NSString * _Nullable (ReduxyState stat
 
 - (void)route:(ReduxyAction)action state:(ReduxyState)state  {
     NSString *path  = action.data[@"path"];
-    NSString *context = action.data[@"context"];
+    NSString *breed = action.data[@"breed"];
     
     UIViewController *source = [self topViewControllerWithState:state];
     
-    [self route:path source:source context:context];
+    [self route:path source:source context:breed];
+}
+
+- (void)unroute:(ReduxyAction)action state:(ReduxyState)state  {
+    NSString *path  = action.data[@"path"];
+    
+    UIViewController *source = [self topViewControllerWithState:state];
+    
+    [self unroute:path source:source];
 }
 
 - (UIViewController *)topViewControllerWithState:(ReduxyState)state {
@@ -170,13 +213,13 @@ static selector_block topRouteSelector = ^NSString * _Nullable (ReduxyState stat
     return [self.viewControllers objectForKey:path];
 }
 
-- (BOOL)setViewController:(UIViewController *)vc forPath:(NSString *)path {
-    if (path && vc) {
+- (void)setViewController:(UIViewController *)vc forPath:(NSString *)path {
+    if (vc) {
         [self.viewControllers setObject:vc forKey:path];
-        return YES;
     }
-    
-    return NO;
+    else {
+        [self.viewControllers removeObjectForKey:path];
+    }
 }
 
 - (NSString *)pathForViewController:(UIViewController *)vc {
@@ -197,12 +240,15 @@ static selector_block topRouteSelector = ^NSString * _Nullable (ReduxyState stat
     if (detached) {
         NSString *path = [self pathForViewController:vc];
         if (path) {
-            // removes the path from routes
-            [self.viewControllers removeObjectForKey:path];
+            // if the path isn't unrouted manually(navigation back button or interactive pop gesture),
+            // we dispatch unroute action at here to synchronize routing states.
             
-            // dispatches disappearing action to remove top path from state
-            [self.store dispatch:@{ @"type": ReduxyRouterActionBack,
-                                    @"path": path,
+            // removes the path from routes
+            [self setViewController:nil forPath:path];
+            
+            // dispatches unroute action to remove top path from state
+            [self.store dispatch:@{ @"type": raction_x(router.unroute),
+                                    @"path": path
                                     }];
         }
     }

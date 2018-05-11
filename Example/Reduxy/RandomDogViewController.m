@@ -11,24 +11,19 @@
 #import "ReduxyFunctionMiddleware.h"
 #import "ReduxyAsyncAction.h"
 #import "ReduxyRouter.h"
+#import "Actions.h"
+#import "ReduxySimplePlayer.h"
 
-
-#define LOG_HERE NSLog(@"%s", __PRETTY_FUNCTION__);
-
-
-static ReduxyActionType ReduxyActionRandomDogFetching = @"reduxy.action.randomdog.fetching";
-static ReduxyActionType ReduxyActionRandomDogFetched = @"reduxy.action.randomdog.fetched";
-static ReduxyActionType ReduxyActionUIReload = @"reduxy.action.ui.reload";
 
 
 
 static ReduxyMiddleware logger = ReduxyMiddlewareCreateMacro(store, next, action, {
-    NSLog(@"logger> received action: %@", action);
+    LOG(@"logger> received action: %@", action);
     return next(action);
 });
 
 static ReduxyReducer randomdogReducer = ^ReduxyState (ReduxyState state, ReduxyAction action) {
-    if ([action is:ReduxyActionRandomDogFetched]) {
+    if ([action is:raction_x(randomdog.fetched)]) {
         UIImage *randomdog = action.data[@"randomdog"];
         return (randomdog? randomdog: NSNull.null);
     }
@@ -99,8 +94,6 @@ static ReduxyReducer rootReducer = ^ReduxyState (ReduxyState state, ReduxyAction
     
     [super viewDidAppear:animated];
     
-    NSLog(@"vcs: %@", ReduxyRouter.shared.vcs);
-    
     [self reload];
 }
 
@@ -133,14 +126,13 @@ static ReduxyReducer rootReducer = ^ReduxyState (ReduxyState state, ReduxyAction
 
 - (void)reload {
     NSString *urlString = @"https://dog.ceo/api/breeds/image/random"; ///< all random
-    if (self.breed)
+    if (self.breed) {
         urlString = [NSString stringWithFormat:@"https://dog.ceo/api/breed/%@/images/random", self.breed];
-    
-    NSLog(@"request url: %@", urlString);
+    }
     
     __weak typeof(self) wself = self;
     
-    [self.store dispatch:ReduxyActionRandomDogFetching];
+    [self.store dispatch:raction_x(indicator.start)];
     
     ReduxyAsyncAction *action = [ReduxyAsyncAction newWithActor:^ReduxyAsyncActionCanceller(ReduxyDispatch storeDispatch) {
         NSURL *url = [NSURL URLWithString:urlString];
@@ -167,13 +159,13 @@ static ReduxyReducer rootReducer = ^ReduxyState (ReduxyState state, ReduxyAction
                                                                    }
                                                                    
                                                                    // fail
-                                                                   storeDispatch(@{ @"type": ReduxyActionRandomDogFetched });
+                                                                   storeDispatch(@{ @"type": raction_x(randomdog.fetched) });
                                                                    
                                                                }];
         [task resume];
         
         return ^() {
-            NSLog(@"reload is cancelled");
+            LOG(@"reload is cancelled");
             [task cancel];
         };
     }];
@@ -194,21 +186,23 @@ static ReduxyReducer rootReducer = ^ReduxyState (ReduxyState state, ReduxyAction
                                                                    if (!error) {
                                                                        UIImage *image = [UIImage imageWithData:data];
                                                                        if (image) {
-                                                                           storeDispatch(@{ @"type": ReduxyActionRandomDogFetched,
+                                                                           storeDispatch(@{ @"type": raction_x(randomdog.fetched),
                                                                                             @"randomdog": image
                                                                                             });
+                                                                           storeDispatch(raction_x(indicator.stop));
                                                                            // success
                                                                            return ;
                                                                        }
                                                                    }
                                                                    
                                                                    // fail
-                                                                   storeDispatch(@{ @"type": ReduxyActionRandomDogFetched });
+                                                                   storeDispatch(@{ @"type": raction_x(randomdog.fetched) });
+                                                                   storeDispatch(raction_x(indicator.stop));
                                                                }];
         [task resume];
         
         return ^() {
-            NSLog(@"image loading is cancelled");
+            LOG(@"image loading is cancelled");
             [task cancel];
         };
     }];
@@ -222,16 +216,25 @@ static ReduxyReducer rootReducer = ^ReduxyState (ReduxyState state, ReduxyAction
     [self reload];
 }
 
+- (IBAction)nextButtonDidClick:(id)sender {
+    [ReduxySimplePlayer.shared next];
+}
+
+
 #pragma mark - ReduxyStoreSubscriber
 
 - (void)reduxyStore:(id<ReduxyStore>)store didChangeState:(ReduxyState)state byAction:(ReduxyAction)action {
-    NSLog(@"state did change by action: %@\nstate: %@", action, state);
+    LOG(@"state did change by action: %@\nstate: %@", action, state);
     
-    if ([action is:ReduxyActionRandomDogFetching]) {
+    if ([action is:raction_x(indicator.start)]) {
         [self.indicatorView startAnimating];
     }
-    if ([action is:ReduxyActionRandomDogFetched]) {
+    
+    if ([action is:raction_x(indicator.stop)]) {
         [self.indicatorView stopAnimating];
+    }
+    
+    if ([action is:raction_x(randomdog.fetched)]) {
         self.imageView.image = action.data[@"randomdog"];
     }
 }

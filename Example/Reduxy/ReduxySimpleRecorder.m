@@ -42,8 +42,6 @@ static NSString * const ReduxyRecorderUserDefaultKey = @"reduxy.recorder.items";
     }
     
     if (self.enabled && [action conformsToProtocol:@protocol(NSCopying)]) {
-        NSLog(@"recoder> recode action: %@", action);
-        
         ReduxyState nextState = self.rootReducer(state, action);
         
         id item = @{ ReduxyRecorderItemAction: action,
@@ -75,7 +73,7 @@ static NSString * const ReduxyRecorderUserDefaultKey = @"reduxy.recorder.items";
     
     [ud synchronize];
     
-    NSLog(@"recoder> save: %@", self.mutableItems);
+    LOG(@"recoder> save: %@", self.mutableItems);
 }
 
 - (void)load {
@@ -83,7 +81,7 @@ static NSString * const ReduxyRecorderUserDefaultKey = @"reduxy.recorder.items";
     
     NSArray *items = [ud objectForKey:ReduxyRecorderUserDefaultKey];
     
-    NSLog(@"recoder> load: %@", items);
+    LOG(@"recoder> load: %@", items);
     
     [self.mutableItems setArray:items];
 }
