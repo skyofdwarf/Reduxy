@@ -10,20 +10,23 @@
 
 
 @implementation ReduxyAsyncAction
-+ (instancetype)newWithActor:(ReduxyAsyncActor)actor {
-    return [[ReduxyAsyncAction alloc] initWithActor:actor];
++ (instancetype)newWithTag:(NSString *)tag actor:(ReduxyAsyncActor)actor {
+    return [[ReduxyAsyncAction alloc] initWithTag:tag actor:actor];
 }
 
-- (instancetype)initWithActor:(ReduxyAsyncActor)actor {
-    self = [super init];
-    if (self) {
-        self.call = ^id (id<ReduxyStore> store, ReduxyDispatch next, ReduxyAction action) {
-            ReduxyDispatch storeDispatch = ^ReduxyAction(ReduxyAction action) {
-                return [store dispatch:action];
-            };
-            
-            return actor(storeDispatch);
+- (instancetype)initWithTag:(NSString *)tag actor:(ReduxyAsyncActor)actor {
+    
+    ReduxyFunctionActor functionActor = ^id(id<ReduxyStore> store, ReduxyDispatch next, ReduxyAction action) {
+        ReduxyDispatch storeDispatch = ^ReduxyAction(ReduxyAction action) {
+            return [store dispatch:action];
         };
+        
+        return actor(storeDispatch);
+    };
+    
+    self = [super initWithTag:tag actor:functionActor];
+    
+    if (self) {
     }
     return self;
 }

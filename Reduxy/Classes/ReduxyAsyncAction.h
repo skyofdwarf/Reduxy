@@ -30,7 +30,7 @@ typedef ReduxyAsyncActionCanceller (^ReduxyAsyncActor)(ReduxyDispatch storeDispa
  */
 @interface ReduxyAsyncAction : ReduxyFunctionAction
 
-+ (instancetype)newWithActor:(ReduxyAsyncActor)actor;
-- (instancetype)initWithActor:(ReduxyAsyncActor)actor;
++ (instancetype)newWithTag:(NSString *)tag actor:(ReduxyAsyncActor)actor;
+- (instancetype)initWithTag:(NSString *)tag actor:(ReduxyAsyncActor)actor;
 @end
 

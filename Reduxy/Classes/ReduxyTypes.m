@@ -14,7 +14,7 @@
 #pragma mark - reduxy action key
 
 NSString * const ReduxyActionTypeKey = @"type";
-NSString * const ReduxyActionDataKey = @"data";
+NSString * const ReduxyActionPayloadKey = @"payload";
 
 
 #pragma mark - reduxy error domain
@@ -25,10 +25,15 @@ NSErrorDomain const ReduxyErrorDomain = @"ReduxyErrorDomain";
 
 #pragma mark - reducer helper
 
-ReduxyReducer ReduxyKeyValueReducerForAction(ReduxyActionType type, NSString *key, id defaultValue) {
+ReduxyReducer ReduxyKeyPathReducerForAction(ReduxyActionType type, NSString *keypath, id defaultValue) {
     return ^ReduxyState (ReduxyState state, ReduxyAction action) {
         if ([action is:type]) {
-            id value = action.data[key];
+            id value = [action.payload valueForKeyPath:keypath];
+            
+            if (!value)
+                @throw [NSException exceptionWithName:NSInternalInconsistencyException
+                                               reason:[NSString stringWithFormat:@"No payload value for keypath: `%@` of acton type: %@", keypath, type]
+                                             userInfo:nil];
             return value;
         }
         else {
@@ -37,14 +42,16 @@ ReduxyReducer ReduxyKeyValueReducerForAction(ReduxyActionType type, NSString *ke
     };
 };
 
-
-
 #pragma mark - default implementations of ReduxyAction protocol
 
 @implementation NSObject (ReduxyAction)
 - (NSString *)type {
     // must be overriden
     return self.description;
+}
+
+- (NSString *)payload {
+    return nil;
 }
 
 - (BOOL)is:(ReduxyActionType)type {
@@ -58,13 +65,10 @@ ReduxyReducer ReduxyKeyValueReducerForAction(ReduxyActionType type, NSString *ke
     return self;
 }
 
-- (NSString *)data {
+- (NSString *)payload {
     return self;
 }
 
-- (BOOL)is:(ReduxyActionType)type {
-    return [self isEqualToString:type];
-}
 @end
 
 
@@ -73,12 +77,9 @@ ReduxyReducer ReduxyKeyValueReducerForAction(ReduxyActionType type, NSString *ke
     return [self objectForKey:ReduxyActionTypeKey];
 }
 
-- (NSDictionary *)data {
-    return self;
+- (NSDictionary *)payload {
+    return [self objectForKey:ReduxyActionPayloadKey];
 }
 
-- (BOOL)is:(ReduxyActionType)type {
-    return [self.type isEqualToString:type];
-}
 @end
 

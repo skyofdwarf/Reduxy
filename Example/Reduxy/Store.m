@@ -19,8 +19,24 @@
 #pragma mark - middlewares
 
 static ReduxyMiddleware logger = ReduxyMiddlewareCreateMacro(store, next, action, {
-    LOG(@"logger> received action: %@", action);
+    LOG(@"logger mw> received action: %@", action.type);
     return next(action);
+});
+
+static ReduxyMiddleware mainQueue = ReduxyMiddlewareCreateMacro(store, next, action, {
+    LOG(@"mainQueue mw> received action: %@", action.type);
+    
+    if ([NSThread isMainThread]) {
+        LOG(@"mainQueue mw> in main-queue");
+        return next(action);
+    }
+    else {
+        LOG(@"mainQueue mw> not in main-queue, call next(acton) in async");
+        dispatch_async(dispatch_get_main_queue(), ^{
+            next(action);
+        });
+        return action;
+    }
 });
 
 
@@ -37,13 +53,13 @@ static ReduxyMiddleware logger = ReduxyMiddlewareCreateMacro(store, next, action
 
 + (Store *)shared {
     static dispatch_once_t onceToken;
-    static Store *store;
+    static Store *instance;
     
     dispatch_once(&onceToken, ^{
-        store = [self new];
+        instance = [self new];
     });
     
-    return store;
+    return instance;
 }
 
 - (instancetype)init {
@@ -61,17 +77,17 @@ static ReduxyMiddleware logger = ReduxyMiddlewareCreateMacro(store, next, action
     UIViewController *vc = nv.topViewController;
     
     // normal reducers
-    ReduxyReducer breedsReducer = ReduxyKeyValueReducerForAction(raction_x(breedlist.fetched), @"breeds", @{});
-    ReduxyReducer filterReducer = ReduxyKeyValueReducerForAction(raction_x(breedlist.filtered), @"filter", @"");
-    ReduxyReducer randomDogReducer = ReduxyKeyValueReducerForAction(raction_x(randomdog.fetched), @"randomdog", @"");
+    ReduxyReducer breedsReducer = ReduxyKeyPathReducerForAction(ratype(breedlist.reload), @"breeds", @{});
+    ReduxyReducer filterReducer = ReduxyKeyPathReducerForAction(ratype(breedlist.filtered), @"filter", @"");
+    ReduxyReducer randomDogReducer = ReduxyKeyPathReducerForAction(ratype(randomdog.reload), @"randomdog", @"");
     
     // router reducers
-    ReduxyReducer routerReducer = [ReduxyRouter.shared reducerWithInitialViewControllers:@[ nv, vc ]
-                                                                                forPaths:@[ @"navigation", @"list" ]];
+    ReduxyReducer routerReducer = [ReduxyRouter.shared reducerWithInitialRoutables:@[ nv, vc ]
+                                                                          forPaths:@[ @"navigation", @"breedlist" ]];
     
     // root reducer
     return ^ReduxyState (ReduxyState state, ReduxyAction action) {
-        return @{ ReduxyRouterStateKey: routerReducer(state[ReduxyRouterStateKey], action),
+        return @{ ReduxyRouter.stateKey: routerReducer(state[ReduxyRouter.stateKey], action),
                   @"fixed-menu": @[ @"Random dog" ], ///< fixed state
                   @"breeds": breedsReducer(state[@"breeds"], action),
                   @"filter": filterReducer(state[@"filter"], action),
@@ -89,10 +105,10 @@ static ReduxyMiddleware logger = ReduxyMiddlewareCreateMacro(store, next, action
     return [ReduxyStore storeWithState:rootReducer(nil, nil)
                                reducer:rootReducer
                            middlewares:@[ logger,
+                                          ReduxyFunctionMiddleware,
                                           ReduxyRecorderMiddlewareWithRecorder(recorder),
                                           ReduxyPlayerMiddleware,
-                                          ReduxyFunctionMiddleware,
-                                          ReduxyRouter.shared.middleware
+                                          mainQueue
                                           ]];
     
 }

@@ -10,111 +10,72 @@
 #import <objc/runtime.h>
 #import "Actions.h"
 
+@interface ReduxyActionManager()
+@property (strong, nonatomic) NSMutableArray<ReduxyActionType> *actions;
+@end
 
-UIKIT_STATIC_INLINE id action_selector(id self, SEL _cmd) {
-    NSMutableArray *names = @[].mutableCopy;
+@implementation ReduxyActionManager
+
++ (instancetype)shared {
+    static dispatch_once_t onceToken;
+    static ReduxyActionManager *instance;
     
-    const char *className = class_getName(self);
-    const char *selectorName = sel_getName(_cmd);
+    dispatch_once(&onceToken, ^{
+        instance = [self new];
+    });
     
-    [names addObject:[NSString stringWithCString:selectorName encoding:NSString.defaultCStringEncoding]];
-    [names addObject:[NSString stringWithCString:className encoding:NSString.defaultCStringEncoding]];
-    
-    Class cls = self;
-    
-    while ((cls = class_getSuperclass(cls))) {
-        const char *className = class_getName(cls);
-        
-        // ignore NSObject class
-        if (class_getSuperclass(cls)) {
-            [names addObject:[NSString stringWithCString:className encoding:NSString.defaultCStringEncoding]];
-        }
-        else {
-        }
+    return instance;
+}
+
+- (instancetype)init {
+    self = [super init];
+    if (self) {
+        self.actions = [NSMutableArray new];
     }
-    
-    return [names.reverseObjectEnumerator.allObjects componentsJoinedByString:@"."];
+    return self;
 }
 
-static id action_obj_selector(id self, SEL _cmd) {
-    return objc_getClass(sel_getName(_cmd));
-}
-
-static Class create_action_class(const char *name, Class superClass) {
-    Class actionClass = objc_getClass(name);
-    
-    if (!actionClass) {
-        actionClass = objc_allocateClassPair(superClass, name, 0);
-        objc_registerClassPair(actionClass);
+- (void)register:(ReduxyActionType)actionType {
+    if ([self.actions containsObject:actionType]) {
+        @throw [NSException exceptionWithName:NSInternalInconsistencyException
+                                       reason:[NSString stringWithFormat:@"already reigistered action type: %@", actionType]
+                                     userInfo:@{ @"type": actionType }];
     }
     else {
-    }
-    return actionClass;
-}
-
-
-@implementation raction
-+ (void)register:(NSString *)keypath {
-    NSArray<NSString *> *tokens = [keypath componentsSeparatedByString:@"."];
-    if (tokens.count == 1) {
-        const char *selectorName = [tokens.firstObject cStringUsingEncoding:NSString.defaultCStringEncoding];
-        SEL selector = sel_getUid(selectorName);
-        class_addMethod(object_getClass(self), selector, (IMP)action_selector, "@:@");
-    }
-    else if (tokens.count > 1) {
-        const char *selectorName = [tokens.firstObject cStringUsingEncoding:NSString.defaultCStringEncoding];
-        
-        Class actionClass = create_action_class(selectorName, self);
-        
-        SEL selector = sel_getUid(selectorName);
-        class_addMethod(object_getClass(self), selector, (IMP)action_obj_selector, "@:@");
-        
-        NSArray<NSString *> *rest = [tokens subarrayWithRange:NSMakeRange(1, tokens.count - 1)];
-        
-        [actionClass register:[rest componentsJoinedByString:@"."]];
+        [self.actions addObject:actionType];
     }
 }
 
-+ (ReduxyActionType)expand:(NSString *)keypath {
-    NSArray<NSString *> *tokens = [keypath componentsSeparatedByString:@"."];
+- (void)unregister:(ReduxyActionType)actionType {
+    [self.actions removeObject:actionType];
+}
+
+- (ReduxyActionType)type:(ReduxyActionType)actionType {
+    // TODO: JSON schema ?
     
-    if (tokens.count == 1) {
-        const char *selectorName = [tokens.firstObject cStringUsingEncoding:NSString.defaultCStringEncoding];
-        
-        SEL sel = sel_getUid(selectorName);
-        
-        if (class_respondsToSelector(object_getClass(self), sel)) {
-            return objc_msgSend(self, sel);
-        }
-        else {
-            [NSException raise:NSInvalidArgumentException
-                        format:@"unregistered action sent: %@(%@)", tokens.firstObject, keypath];
-            return nil;
-        }
+    if ([self.actions containsObject:actionType]) {
+        return actionType;
     }
-    else if (tokens.count > 1) {
-        const char *selectorName = [tokens.firstObject cStringUsingEncoding:NSString.defaultCStringEncoding];
-        NSArray<NSString *> *restComponents = [tokens subarrayWithRange:NSMakeRange(1, tokens.count - 1)];
-        
-        NSString *rest = [restComponents componentsJoinedByString:@"."];
-        
-        SEL sel = sel_getUid(selectorName);
-        
-        if (class_respondsToSelector(object_getClass(self), sel)) {
-            Class cls = objc_msgSend(self, sel);
-            return [cls expand:rest];
-        }
-        else {
-            [NSException raise:NSInvalidArgumentException
-                        format:@"unregistered action object sent: %@(%@)", tokens.firstObject, keypath];
-            return nil;
-        }
+    else {
+        @throw [NSException exceptionWithName:NSInternalInconsistencyException
+                                       reason:[NSString stringWithFormat:@"No reigistered action type: %@", actionType]
+                                     userInfo:@{ @"type": actionType }];
     }
-    
-    [NSException raise:NSInvalidArgumentException
-                format:@"invalid keypath sent: %@", keypath];
-    
-    return nil;
+}
+
+- (ReduxyAction)actionWithType:(ReduxyActionType)actionType payload:(id)payload {
+    if ([self.actions containsObject:actionType]) {
+        return (payload?
+                @{ ReduxyActionTypeKey: actionType,
+                   ReduxyActionPayloadKey: payload }:
+                
+                @{ ReduxyActionTypeKey: actionType });
+    }
+    else {
+        @throw [NSException exceptionWithName:NSInternalInconsistencyException
+                                       reason:[NSString stringWithFormat:@"No reigistered action type: %@", actionType]
+                                     userInfo:@{ @"type": actionType }];
+    }
 }
 
 @end

@@ -36,7 +36,7 @@ static NSString * const ReduxyRecorderUserDefaultKey = @"reduxy.recorder.items";
     return self;
 }
 
-- (BOOL)recordWithAction:(ReduxyAction)action state:(ReduxyState)state {
+- (BOOL)record:(ReduxyAction)action state:(ReduxyState)state {
     if ([self.ignorableActions containsObject:action.type]) {
         return NO;
     }
@@ -73,17 +73,39 @@ static NSString * const ReduxyRecorderUserDefaultKey = @"reduxy.recorder.items";
     
     [ud synchronize];
     
-    LOG(@"recoder> save: %@", self.mutableItems);
+#if DEBUG
+    NSData *data = [NSJSONSerialization dataWithJSONObject:self.mutableItems
+                                                   options:NSJSONWritingPrettyPrinted
+                                                     error:nil];
+    if (data) {
+        NSString *json = [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
+        LOG(@"recoder> save: %@", json);
+    }
+    else {
+        LOG(@"recoder> save: %@", self.mutableItems);
+    }
+#endif
 }
 
 - (void)load {
     NSUserDefaults *ud = [NSUserDefaults standardUserDefaults];
     
     NSArray *items = [ud objectForKey:ReduxyRecorderUserDefaultKey];
-    
-    LOG(@"recoder> load: %@", items);
-    
+
     [self.mutableItems setArray:items];
+    
+#if DEBUG
+    NSData *data = [NSJSONSerialization dataWithJSONObject:items
+                                                   options:NSJSONWritingPrettyPrinted
+                                                     error:nil];
+    if (data) {
+        NSString *json = [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
+        LOG(@"recoder> load: %@", json);
+    }
+    else {
+        LOG(@"recoder> load: %@", items);
+    }
+#endif
 }
 
 @end

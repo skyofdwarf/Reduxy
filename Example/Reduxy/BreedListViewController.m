@@ -17,7 +17,7 @@
 #import "ReduxyMemoizer.h"
 #import "ReduxyRouter.h"
 #import "Actions.h"
-
+#import "AboutViewController.h"
 
 
 #define REDUXY_ROUTER 1
@@ -44,7 +44,8 @@ UITableViewDataSource,
 UITableViewDelegate,
 ReduxyStoreSubscriber,
 UISearchResultsUpdating,
-UISearchBarDelegate
+UISearchBarDelegate,
+ReduxyRoutable
 >
 @property (weak, nonatomic) IBOutlet UITableView *tableView;
 @property (weak, nonatomic) IBOutlet UIActivityIndicatorView *indicatorView;
@@ -53,6 +54,10 @@ UISearchBarDelegate
 @end
 
 @implementation BreedListViewController
+
++ (NSString *)path {
+    return @"breedlist";
+}
 
 - (void)dealloc {
     [Store.main unsubscribe:self];
@@ -85,8 +90,6 @@ UISearchBarDelegate
     LOG_HERE
     
     [super viewWillAppear:animated];
-    
-    [Store.main dispatch:raction_x(reload)];
 }
 
 - (void)viewDidAppear:(BOOL)animated {
@@ -154,30 +157,35 @@ UISearchBarDelegate
 }
 
 - (void)buildRoutes {
-    UIStoryboard *storyboard = self.storyboard;
-    
     [ReduxyRouter.shared attachStore:Store.main];
+
+    [ReduxyRouter.shared add:RandomDogViewController.path
+                       route:^id<ReduxyRoutable> (id<ReduxyRoutable> src, NSDictionary *context) {
+                           UIViewController *vc = src.vc;
+                           
+                           RandomDogViewController *rdvc = [vc.storyboard instantiateViewControllerWithIdentifier:@"randomdog"];
+                           
+                           rdvc.breed = context[@"breed"];
+                           
+                           [vc showViewController:rdvc sender:nil];
+                           
+                           return rdvc;
+                       } unroute:^void (id<ReduxyRoutable> src, id context) {
+                           [src.vc.navigationController popViewControllerAnimated:YES];
+                       }];
     
-    [ReduxyRouter.shared add:@"randomdog" route:^UIViewController *(UIViewController *src, NSString *breed) {
-        RandomDogViewController *rdvc = [storyboard instantiateViewControllerWithIdentifier:@"randomdog"];
-        
-        rdvc.breed = breed;
-        
-        [src showViewController:rdvc sender:nil];
-        
-        return rdvc;
-    }];
-    
-    [ReduxyRouter.shared add:@"about" route:^UIViewController *(UIViewController *src, id context) {
-        UIViewController *about = [storyboard instantiateViewControllerWithIdentifier:@"about"];
-        
-        [src showViewController:about sender:nil];
-        
-        return about;
-    } unroute:^UIViewController *(UIViewController *src, id context) {
-        [src.navigationController popViewControllerAnimated:YES];
-        return nil;
-    }];
+    [ReduxyRouter.shared add:AboutViewController.path
+                       route:^id<ReduxyRoutable> (id<ReduxyRoutable> src, id context) {
+                           UIViewController *vc = src.vc;
+                           
+                           UIViewController *about = [vc.storyboard instantiateViewControllerWithIdentifier:@"about"];
+                           
+                           [vc showViewController:about sender:nil];
+                           
+                           return about;
+                       } unroute:^void (id<ReduxyRoutable> src, id context) {
+                           [src.vc.navigationController popViewControllerAnimated:YES];
+                       }];
 }
 
 #pragma mark - Table view data source
@@ -240,9 +248,7 @@ UISearchBarDelegate
     switch (section) {
         case 0: {
 #if REDUXY_ROUTER
-            [Store.main dispatch:@{ @"type": raction_x(router.route),
-                                    @"path": @"randomdog"
-                                    }];
+            [ReduxyRouter.shared dispatchRoute:@{ @"path": @"randomdog" }];
 #else
             [self performSegueWithIdentifier:@"RandomDog" sender:nil];
 #endif
@@ -253,10 +259,9 @@ UISearchBarDelegate
             NSArray *items = self.filteredBreedsSelector(state);
             id item = items[row];
 #if REDUXY_ROUTER
-            [Store.main dispatch:@{ @"type": raction_x(router.route),
-                                    @"path": @"randomdog",
-                                    @"breed": item
-                                    }];
+            [ReduxyRouter.shared dispatchRoute:@{ @"path": @"randomdog",
+                                          @"breed": item
+                                          }];
 #else
             [self performSegueWithIdentifier:@"RandomDog" sender:item];
 #endif
@@ -271,9 +276,7 @@ UISearchBarDelegate
 
 - (IBAction)aboutButtonDidClick:(id)sender {
 #if REDUXY_ROUTER
-    [Store.main dispatch:@{ @"type": raction_x(router.route),
-                            @"path": @"about"
-                            }];
+    [ReduxyRouter.shared dispatchRoute:@{ @"path": @"about" }];
 #else
     [self performSegueWithIdentifier:@"About" sender:nil];
 #endif
@@ -283,44 +286,44 @@ UISearchBarDelegate
     LOG_HERE
     
     // dispatch fetching action
-    [Store.main dispatch:raction_x(indicator.start)];
+    [Store.main dispatch:raction(indicator.start)];
     
-    ReduxyAsyncAction *action = [ReduxyAsyncAction newWithActor:^ReduxyAsyncActionCanceller(ReduxyDispatch storeDispatch) {
-        
-        NSURL *url = [NSURL URLWithString:@"https://dog.ceo/api/breeds/list/all"];
-        
-        NSURLSessionDataTask *task = [NSURLSession.sharedSession dataTaskWithURL:url
-                                                               completionHandler:^(NSData * _Nullable data, NSURLResponse * _Nullable response, NSError * _Nullable error) {
-                                                                   if (!error) {
-                                                                       NSError *jsonError = nil;
-                                                                       NSDictionary *json = [NSJSONSerialization JSONObjectWithData:data
-                                                                                                                            options:0
-                                                                                                                              error:&jsonError];
-                                                                       if (!jsonError) {
-                                                                           NSString *status = json[@"status"];
-                                                                           if ([status isEqualToString:@"success"]) {
-                                                                               NSDictionary *breeds = json[@"message"];
-                                                                               
-                                                                               storeDispatch(@{ @"type": raction_x(breedlist.fetched),
-                                                                                                @"breeds": breeds});
-                                                                               storeDispatch(raction_x(indicator.stop));
-                                                                               // success
-                                                                               return ;
-                                                                           }
-                                                                       }
-                                                                   }
-                                                                   
-                                                                   // fail
-                                                                   storeDispatch(@{ @"type": raction_x(breedlist.fetched),
-                                                                                    @"breeds": @[] });
-                                                                   storeDispatch(raction_x(indicator.stop));
-                                                               }];
-        [task resume];
-        
-        return ^() {
-            [task cancel];
-        };
-    }];
+    ReduxyAsyncAction *action =
+    [ReduxyAsyncAction newWithTag:@"breedlist.reload"
+                            actor:^ReduxyAsyncActionCanceller(ReduxyDispatch storeDispatch) {
+                                
+                                NSURL *url = [NSURL URLWithString:@"https://dog.ceo/api/breeds/list/all"];
+                                
+                                NSURLSessionDataTask *task = [NSURLSession.sharedSession dataTaskWithURL:url
+                                                                                       completionHandler:^(NSData * _Nullable data, NSURLResponse * _Nullable response, NSError * _Nullable error) {
+                                                                                           if (!error) {
+                                                                                               NSError *jsonError = nil;
+                                                                                               NSDictionary *json = [NSJSONSerialization JSONObjectWithData:data
+                                                                                                                                                    options:0
+                                                                                                                                                      error:&jsonError];
+                                                                                               if (!jsonError) {
+                                                                                                   NSString *status = json[@"status"];
+                                                                                                   if ([status isEqualToString:@"success"]) {
+                                                                                                       NSDictionary *breeds = json[@"message"];
+                                                                                                       
+                                                                                                       storeDispatch(raction_payload(breedlist.reload, @{ @"breeds": breeds }));
+                                                                                                       storeDispatch(raction(indicator.stop));
+                                                                                                       // success
+                                                                                                       return ;
+                                                                                                   }
+                                                                                               }
+                                                                                           }
+                                                                                           
+                                                                                           // fail
+                                                                                           storeDispatch(raction_payload(breedlist.reload, @{ @"breeds": @[] }));
+                                                                                           storeDispatch(raction(indicator.stop));
+                                                                                       }];
+                                [task resume];
+                                
+                                return ^() {
+                                    [task cancel];
+                                };
+                            }];
     
     [Store.main dispatch:action];
 }
@@ -336,9 +339,12 @@ UISearchBarDelegate
 - (IBAction)loadButtonDidClick:(id)sender {
     [Store.recorder load];
     
-    [ReduxySimplePlayer.shared loadItems:Store.recorder.items dispatch:^ReduxyAction(ReduxyAction action) {
-        return [Store.main dispatch:action];
-    }];
+    ReduxyRouter.shared.routesAutoway = YES;
+    
+    [ReduxySimplePlayer.shared loadItems:Store.recorder.items
+                                dispatch:^ReduxyAction(ReduxyAction action) {
+                                    return [Store.main dispatch:action];
+                                }];
 }
 
 - (IBAction)prevButtonDidClick:(id)sender {
@@ -359,19 +365,15 @@ UISearchBarDelegate
 - (void)reduxyStore:(id<ReduxyStore>)store didChangeState:(ReduxyState)state byAction:(ReduxyAction)action {
     LOG(@"state did change by action: %@\nstate: %@", action, state);
 
-    if ([action is:raction_x(indicator.start)]) {
+    if ([action is:ratype(indicator.start)]) {
         [self.indicatorView startAnimating];
     }
-    if ([action is:raction_x(indicator.stop)]) {
+    if ([action is:ratype(indicator.stop)]) {
         [self.indicatorView stopAnimating];
     }
 
-    if ([action is:raction_x(breedlist.fetched)]) {
-        [self.tableView reloadData];
-    }
-    
-    if ([action is:raction_x(breedlist.filtered)] ||
-        [action is:raction_x(reload)]) {
+    if ([action is:ratype(breedlist.filtered)] ||
+        [action is:ratype(breedlist.reload)]) {
         [self.tableView reloadData];
     }
 }
@@ -381,8 +383,8 @@ UISearchBarDelegate
 - (void)searchBar:(UISearchBar *)searchBar textDidChange:(NSString *)searchText {
     LOG(@"search bar text did change: %@", searchText);
     
-    [Store.main dispatch:@{ @"type": raction_x(breedlist.filtered),
-                            @"filter": searchText
+    [Store.main dispatch:ratype(breedlist.filtered)
+                 payload:@{ @"filter": searchText
                             }];
 }
 
@@ -391,8 +393,8 @@ UISearchBarDelegate
 - (void)updateSearchResultsForSearchController:(UISearchController *)searchController {
     NSString *text = searchController.searchBar.text;
     
-    [Store.main dispatch:@{ @"type": raction_x(breedlist.filtered),
-                            @"filter": text
+    [Store.main dispatch:ratype(breedlist.filtered)
+                 payload:@{ @"filter": text
                             }];
 }
 @end

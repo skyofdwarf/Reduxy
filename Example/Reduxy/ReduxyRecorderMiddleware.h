@@ -23,13 +23,13 @@
 @protocol ReduxyRecorder <NSObject>
 
 /**
- action과 state를 기록한다.
+ records action and current state
 
- @param action 액션
- @param state 해당 액션의 결과인 state
- @return 기록 성공 시 YES
+ @param action action to record
+ @param state current state to record
+ @return YES if recorded, else NO
  */
-- (BOOL)recordWithAction:(ReduxyAction)action state:(ReduxyState)state;
+- (BOOL)record:(ReduxyAction)action state:(ReduxyState)state;
 
 - (NSArray<ReduxyRecorderItem> *)items;
 - (void)clear;
@@ -54,13 +54,6 @@ FOUNDATION_EXTERN NSString * const ReduxyRecorderItemPrevState;
 FOUNDATION_EXTERN NSString * const ReduxyRecorderItemNextState;
 
 FOUNDATION_EXTERN RecorderMiddleware ReduxyRecorderMiddlewareWithRecorder;
-
-
-
-@interface RecordableItem: NSObject
-+ (instancetype)newWithType:(ReduxyActionType)type prevState:(ReduxyState)prevState nextState:(ReduxyState)nextState;
-@end
-
 
 
 #endif /* ReduxyRecoderMiddleware_h */

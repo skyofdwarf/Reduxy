@@ -22,9 +22,26 @@ static ReduxyMiddleware logger = ReduxyMiddlewareCreateMacro(store, next, action
     return next(action);
 });
 
+static ReduxyMiddleware mainQueue = ReduxyMiddlewareCreateMacro(store, next, action, {
+    LOG(@"mainQueue mw> received action: %@", action.type);
+    
+    if ([NSThread isMainThread]) {
+        LOG(@"mainQueue mw> in main-queue");
+        return next(action);
+    }
+    else {
+        LOG(@"mainQueue mw> not in main-queue, call next(acton) in async");
+        dispatch_async(dispatch_get_main_queue(), ^{
+            next(action);
+        });
+        return action;
+    }
+});
+
+
 static ReduxyReducer randomdogReducer = ^ReduxyState (ReduxyState state, ReduxyAction action) {
-    if ([action is:raction_x(randomdog.fetched)]) {
-        UIImage *randomdog = action.data[@"randomdog"];
+    if ([action is:ratype(randomdog.reload)]) {
+        UIImage *randomdog = action.payload[@"randomdog"];
         return (randomdog? randomdog: NSNull.null);
     }
     else {
@@ -42,7 +59,11 @@ static ReduxyReducer rootReducer = ^ReduxyState (ReduxyState state, ReduxyAction
 
 
 
-@interface RandomDogViewController () <ReduxyStoreSubscriber>
+@interface RandomDogViewController ()
+<
+ReduxyStoreSubscriber,
+ReduxyRoutable
+>
 @property (weak, nonatomic) IBOutlet UIImageView *imageView;
 @property (weak, nonatomic) IBOutlet UIActivityIndicatorView *indicatorView;
 
@@ -53,6 +74,10 @@ static ReduxyReducer rootReducer = ^ReduxyState (ReduxyState state, ReduxyAction
 @end
 
 @implementation RandomDogViewController
+
++ (NSString *)path {
+    return @"randomdog";
+}
 
 - (void)dealloc {
     LOG_HERE
@@ -71,9 +96,11 @@ static ReduxyReducer rootReducer = ^ReduxyState (ReduxyState state, ReduxyAction
     self.store = [ReduxyStore storeWithState:@{ @"breed": self.title,
                                                 }
                                      reducer:rootReducer
-                                 middlewares:@[ logger, ReduxyFunctionMiddleware ]];
+                                 middlewares:@[ logger, ReduxyFunctionMiddleware, mainQueue ]];
     
     [self.store subscribe:self];
+    
+    self.indicatorView.hidesWhenStopped = YES;
 }
 
 
@@ -115,13 +142,6 @@ static ReduxyReducer rootReducer = ^ReduxyState (ReduxyState state, ReduxyAction
     [super viewDidDisappear:animated];
 }
 
-- (void)willMoveToParentViewController:(UIViewController *)parent {
-    LOG_HERE
-    
-    [ReduxyRouter.shared viewController:self willMoveToParentViewController:parent];
-}
-
-
 #pragma mark - network
 
 - (void)reload {
@@ -132,43 +152,46 @@ static ReduxyReducer rootReducer = ^ReduxyState (ReduxyState state, ReduxyAction
     
     __weak typeof(self) wself = self;
     
-    [self.store dispatch:raction_x(indicator.start)];
+    [self.store dispatch:raction(indicator.start)];
     
-    ReduxyAsyncAction *action = [ReduxyAsyncAction newWithActor:^ReduxyAsyncActionCanceller(ReduxyDispatch storeDispatch) {
-        NSURL *url = [NSURL URLWithString:urlString];
-        
-        NSURLSessionDataTask *task = [NSURLSession.sharedSession dataTaskWithURL:url
-                                                               completionHandler:^(NSData * _Nullable data, NSURLResponse * _Nullable response, NSError * _Nullable error) {
-                                                                   wself.canceller = nil;
-                                                                   
-                                                                   if (!error) {
-                                                                       NSError *jsonError = nil;
-                                                                       NSDictionary *json = [NSJSONSerialization JSONObjectWithData:data
-                                                                                                                            options:0
-                                                                                                                              error:&jsonError];
-                                                                       if (!jsonError) {
-                                                                           NSString *status = json[@"status"];
-                                                                           if ([status isEqualToString:@"success"]) {
-                                                                               NSString *imageUrl = json[@"message"];
-                                                                               
-                                                                               [wself loadImageWithUrlString:imageUrl];
-                                                                               // success
-                                                                               return ;
+    ReduxyAsyncAction *action = [ReduxyAsyncAction newWithTag:@"randomdog.fetch-random"
+                                                        actor:^ReduxyAsyncActionCanceller(ReduxyDispatch storeDispatch)
+                                 {
+                                     NSURL *url = [NSURL URLWithString:urlString];
+                                     
+                                     NSURLSessionDataTask *task = [NSURLSession.sharedSession dataTaskWithURL:url
+                                                                                            completionHandler:^(NSData * _Nullable data, NSURLResponse * _Nullable response, NSError * _Nullable error)
+                                                                   {
+                                                                       wself.canceller = nil;
+                                                                       
+                                                                       if (!error) {
+                                                                           NSError *jsonError = nil;
+                                                                           NSDictionary *json = [NSJSONSerialization JSONObjectWithData:data
+                                                                                                                                options:0
+                                                                                                                                  error:&jsonError];
+                                                                           if (!jsonError) {
+                                                                               NSString *status = json[@"status"];
+                                                                               if ([status isEqualToString:@"success"]) {
+                                                                                   NSString *imageUrl = json[@"message"];
+                                                                                   
+                                                                                   storeDispatch(raction_payload(randomdog.fetched, @{ @"url": imageUrl }));
+                                                                                   // success
+                                                                                   return ;
+                                                                               }
                                                                            }
                                                                        }
-                                                                   }
-                                                                   
-                                                                   // fail
-                                                                   storeDispatch(@{ @"type": raction_x(randomdog.fetched) });
-                                                                   
-                                                               }];
-        [task resume];
-        
-        return ^() {
-            LOG(@"reload is cancelled");
-            [task cancel];
-        };
-    }];
+                                                                       
+                                                                       // fail
+                                                                       storeDispatch(raction(randomdog.reload));
+                                                                       storeDispatch(raction(indicator.stop));
+                                                                   }];
+                                     [task resume];
+                                     
+                                     return ^() {
+                                         LOG(@"reload is cancelled");
+                                         [task cancel];
+                                     };
+                                 }];
     
     self.canceller = [self.store dispatch:action];
 }
@@ -176,36 +199,37 @@ static ReduxyReducer rootReducer = ^ReduxyState (ReduxyState state, ReduxyAction
 - (void)loadImageWithUrlString:(NSString *)urlString {
     __weak typeof(self) wself = self;
     
-    ReduxyAsyncAction *action = [ReduxyAsyncAction newWithActor:^ReduxyAsyncActionCanceller(ReduxyDispatch storeDispatch) {
-        NSURL *url = [NSURL URLWithString:urlString];
-        
-        NSURLSessionDataTask *task = [NSURLSession.sharedSession dataTaskWithURL:url
-                                                               completionHandler:^(NSData * _Nullable data, NSURLResponse * _Nullable response, NSError * _Nullable error) {
-                                                                   wself.canceller = nil;
-                                                                   
-                                                                   if (!error) {
-                                                                       UIImage *image = [UIImage imageWithData:data];
-                                                                       if (image) {
-                                                                           storeDispatch(@{ @"type": raction_x(randomdog.fetched),
-                                                                                            @"randomdog": image
-                                                                                            });
-                                                                           storeDispatch(raction_x(indicator.stop));
-                                                                           // success
-                                                                           return ;
+    ReduxyAsyncAction *action = [ReduxyAsyncAction newWithTag:@"randomdog.load-image"
+                                                        actor:^ReduxyAsyncActionCanceller(ReduxyDispatch storeDispatch)
+                                 {
+                                     NSURL *url = [NSURL URLWithString:urlString];
+                                     
+                                     NSURLSessionDataTask *task = [NSURLSession.sharedSession dataTaskWithURL:url
+                                                                                            completionHandler:^(NSData * _Nullable data, NSURLResponse * _Nullable response, NSError * _Nullable error)
+                                                                   {
+                                                                       wself.canceller = nil;
+                                                                       
+                                                                       if (!error) {
+                                                                           UIImage *image = [UIImage imageWithData:data];
+                                                                           if (image) {
+                                                                               storeDispatch(raction_payload(randomdog.reload, @{ @"randomdog": image }));
+                                                                               storeDispatch(raction(indicator.stop));
+                                                                               // success
+                                                                               return ;
+                                                                           }
                                                                        }
-                                                                   }
-                                                                   
-                                                                   // fail
-                                                                   storeDispatch(@{ @"type": raction_x(randomdog.fetched) });
-                                                                   storeDispatch(raction_x(indicator.stop));
-                                                               }];
-        [task resume];
-        
-        return ^() {
-            LOG(@"image loading is cancelled");
-            [task cancel];
-        };
-    }];
+                                                                       
+                                                                       // fail
+                                                                       storeDispatch(raction(randomdog.reload));
+                                                                       storeDispatch(raction(indicator.stop));
+                                                                   }];
+                                     [task resume];
+                                     
+                                     return ^() {
+                                         LOG(@"image loading is cancelled");
+                                         [task cancel];
+                                     };
+                                 }];
     
     self.canceller = [self.store dispatch:action];
 }
@@ -226,16 +250,20 @@ static ReduxyReducer rootReducer = ^ReduxyState (ReduxyState state, ReduxyAction
 - (void)reduxyStore:(id<ReduxyStore>)store didChangeState:(ReduxyState)state byAction:(ReduxyAction)action {
     LOG(@"state did change by action: %@\nstate: %@", action, state);
     
-    if ([action is:raction_x(indicator.start)]) {
+    if ([action is:ratype(indicator.start)]) {
         [self.indicatorView startAnimating];
     }
     
-    if ([action is:raction_x(indicator.stop)]) {
+    if ([action is:ratype(indicator.stop)]) {
         [self.indicatorView stopAnimating];
     }
     
-    if ([action is:raction_x(randomdog.fetched)]) {
-        self.imageView.image = action.data[@"randomdog"];
+    if ([action is:ratype(randomdog.fetched)]) {
+        [self loadImageWithUrlString:action.payload[@"url"]];
+    }
+    
+    if ([action is:ratype(randomdog.reload)]) {
+        self.imageView.image = action.payload[@"randomdog"];
     }
 }
 

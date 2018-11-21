@@ -21,7 +21,7 @@
 
 #pragma mark - forward declarations of protocols
 
-@protocol ReduxyAction;
+@protocol ReduxyActionable;
 @protocol ReduxyStore;
 @protocol ReduxyStoreSubscriber;
 
@@ -29,7 +29,7 @@
 
 
 #pragma mark - types
-typedef id<ReduxyAction> ReduxyAction;
+typedef id<ReduxyActionable> ReduxyAction;
 typedef id ReduxyState;
 
 typedef NSString * const ReduxyActionType;
@@ -50,7 +50,7 @@ typedef ReduxyTransducer (^ReduxyMiddleware)(id<ReduxyStore> store);
 #pragma mark - reduxy action key
 
 FOUNDATION_EXTERN NSString * const ReduxyActionTypeKey;
-FOUNDATION_EXTERN NSString * const ReduxyActionDataKey;
+FOUNDATION_EXTERN NSString * const ReduxyActionPayloadKey;
 
 #pragma mark - reduxy error domain
 
@@ -66,7 +66,7 @@ typedef NS_ENUM(NSUInteger, ReduxyError) {
 
 #pragma mark - reducer helper
 
-FOUNDATION_EXTERN ReduxyReducer ReduxyKeyValueReducerForAction(ReduxyActionType type, NSString *key, id defaultValue);
+FOUNDATION_EXTERN ReduxyReducer ReduxyKeyPathReducerForAction(ReduxyActionType type, NSString *key, id defaultValue);
 
 
 
@@ -96,13 +96,13 @@ FOUNDATION_EXTERN ReduxyReducer ReduxyKeyValueReducerForAction(ReduxyActionType 
 
 #pragma mark - reduxy protocols
 
-@protocol ReduxyAction <NSObject>
+@protocol ReduxyActionable <NSObject>
 @required
 - (ReduxyActionType)type;
 - (BOOL)is:(ReduxyActionType)type;
 
 @optional
-- (id)data;
+- (id)payload;
 @end
 
 @protocol ReduxyStoreSubscriber <NSObject>
@@ -114,6 +114,7 @@ FOUNDATION_EXTERN ReduxyReducer ReduxyKeyValueReducerForAction(ReduxyActionType 
 @protocol ReduxyStore <NSObject>
 - (ReduxyState)getState;
 - (ReduxyAction)dispatch:(ReduxyAction)action;
+- (ReduxyAction)dispatch:(ReduxyActionType)action payload:(id)payload;
 
 - (void)subscribe:(id<ReduxyStoreSubscriber>)subscriber;
 - (void)unsubscribe:(id<ReduxyStoreSubscriber>)subscriber;
@@ -122,24 +123,21 @@ FOUNDATION_EXTERN ReduxyReducer ReduxyKeyValueReducerForAction(ReduxyActionType 
 
 #pragma mark - default implementations of ReduxyAction protocol
 
-@interface NSObject (ReduxyAction) <ReduxyAction>
+@interface NSObject (ReduxyAction) <ReduxyActionable>
 - (ReduxyActionType)type;
+- (id)payload;
 
 - (BOOL)is:(ReduxyActionType)type;
 @end
 
-@interface NSString (ReduxyAction) <ReduxyAction>
+@interface NSString (ReduxyAction) <ReduxyActionable>
 - (ReduxyActionType)type;
-- (NSString *)data;
-
-- (BOOL)is:(ReduxyActionType)type;
+- (NSString *)payload;
 @end
 
-@interface NSDictionary (ReduxyAction) <ReduxyAction>
+@interface NSDictionary (ReduxyAction) <ReduxyActionable>
 - (ReduxyActionType)type;
-- (NSDictionary *)data;
-
-- (BOOL)is:(ReduxyActionType)type;
+- (NSDictionary *)payload;
 @end
 
 

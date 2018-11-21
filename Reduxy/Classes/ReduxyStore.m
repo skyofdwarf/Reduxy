@@ -82,18 +82,13 @@
                 return action;
             }
             
-            NSLog(@"in default dispatch");
-            NSLog(@"\tcall reducer");
-            
             sself.isDispatching = YES;
             {
                 sself.state = sself.reducer(sself.state, action);
             }
             sself.isDispatching = NO;
             
-            NSLog(@"\twill publish new state");
             [sself publishState:sself.state action:action];
-            NSLog(@"\tdid publish new state");
         }
         
         return action;
@@ -125,12 +120,6 @@
     return [self.state copy];
 }
 
-- (id)dispatch:(ReduxyActionType)type data:(id)data {
-    return [self dispatch:(data?
-                           @{ ReduxyActionTypeKey: type, ReduxyActionDataKey: data }:
-                           @{ ReduxyActionTypeKey: type })];
-}
-
 - (id)dispatch:(ReduxyAction)action {
     if (NSThread.isMainThread) {
         return self.dispatchFuction(action);
@@ -145,6 +134,14 @@
         
         return result;
     }
+}
+
+- (id)dispatch:(ReduxyActionType)type payload:(id)payload {
+    NSDictionary *action = (payload?
+                            @{ ReduxyActionTypeKey: type, ReduxyActionPayloadKey: payload }:
+                            @{ ReduxyActionTypeKey: type });
+    
+    return [self dispatch:action];
 }
 
 - (void)subscribe:(id<ReduxyStoreSubscriber>)subscriber {

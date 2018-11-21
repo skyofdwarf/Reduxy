@@ -29,7 +29,7 @@ FOUNDATION_EXTERN memoized_block (^memoize)(memoizable_block);
 typedef id (^selector_block) (ReduxyState);
 
 /**
- memoized resul selector, do some computations with argsuments
+ memoized result selector, do some computations with argsuments
  */
 typedef unary_argumented_block memoized_selector_block;
 

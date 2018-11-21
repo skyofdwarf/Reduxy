@@ -40,7 +40,7 @@
 
 
 #pragma mark - ReduxyRecorder protocol
-- (BOOL)recordWithAction:(ReduxyAction)action state:(ReduxyState)state;
+- (BOOL)record:(ReduxyAction)action state:(ReduxyState)state;
 
 - (NSArray<ReduxyRecorderItem> *)items;
 - (void)clear;

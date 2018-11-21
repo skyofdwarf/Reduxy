@@ -13,6 +13,7 @@
 @interface Store : ReduxyStore
 
 + (ReduxyStore *)main;
+
 + (ReduxySimpleRecorder *)recorder;
 
 

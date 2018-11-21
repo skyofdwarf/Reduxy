@@ -16,7 +16,9 @@ ReduxyMiddleware ReduxyPlayerMiddleware = ^ReduxyTransducer (id<ReduxyStore> sto
     return ^ReduxyDispatch (ReduxyDispatch next) {
         return ^ReduxyAction (ReduxyAction action) {
             if ([action is:ReduxyPlayerActionJump]) {
-                id<ReduxyRecorderItem> item = action.data[ReduxyActionDataKey];
+                LOG(@"player mw> player action: %@", action.type);
+                
+                id<ReduxyRecorderItem> item = action.payload;
                 
                 return next(item.action);
             }

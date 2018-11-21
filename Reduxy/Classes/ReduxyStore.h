@@ -54,7 +54,7 @@
 - (ReduxyState)getState;
 
 - (id)dispatch:(ReduxyAction)action;
-- (id)dispatch:(ReduxyActionType)type data:(id)data;
+- (id)dispatch:(ReduxyActionType)type payload:(id)payload;
 
 - (void)subscribe:(id<ReduxyStoreSubscriber>)subscriber;
 - (void)unsubscribe:(id<ReduxyStoreSubscriber>)subscriber;

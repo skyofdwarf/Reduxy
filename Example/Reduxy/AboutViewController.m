@@ -12,10 +12,18 @@
 
 
 @interface AboutViewController ()
+<
+ReduxyRoutable
+>
 
 @end
 
 @implementation AboutViewController
+
++ (NSString *)path {
+    return @"about";
+}
+
 
 - (void)dealloc {
     LOG_HERE
@@ -56,13 +64,6 @@
     [super viewDidDisappear:animated];
 }
 
-- (void)willMoveToParentViewController:(UIViewController *)parent {
-    LOG_HERE
-    LOG(@"AboutViewController> parent: %@", parent);
-    
-    [ReduxyRouter.shared viewController:self willMoveToParentViewController:parent];
-}
-
 - (IBAction)nextButtonDidClick:(id)sender {
     [ReduxySimplePlayer.shared next];
 }
@@ -70,9 +71,7 @@
 - (IBAction)popButtonDidClick:(id)sender {
     LOG(@"dispatch back in pop button");
     
-    [Store.main dispatch:@{ @"type": raction_x(router.unroute),
-                            @"path": @"about"
-                            }];
+    [ReduxyRouter.shared dispatchUnroute:@{ @"path": @"about" }];
 }
 
 

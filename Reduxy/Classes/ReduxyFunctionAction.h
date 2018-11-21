@@ -19,10 +19,11 @@ typedef id (^ReduxyFunctionActor)(id<ReduxyStore> store, ReduxyDispatch next, Re
  the action type used for ReduxyFunctionMiddleware.
  ReduxyFunctionAction is wrapper class for ReduxyFunctionActor function.
  */
-@interface ReduxyFunctionAction : NSObject <ReduxyAction>
-@property (copy, nonatomic) ReduxyFunctionActor call;
+@interface ReduxyFunctionAction : NSObject <ReduxyActionable>
+@property (copy, nonatomic, readonly) ReduxyFunctionActor call;
+@property (copy, nonatomic, readonly) NSString *tag;
 
-+ (instancetype)newWithActor:(ReduxyFunctionActor)actor;
-- (instancetype)initWithActor:(ReduxyFunctionActor)actor;
++ (instancetype)newWithTag:(NSString *)tag actor:(ReduxyFunctionActor)actor;
+- (instancetype)initWithTag:(NSString *)tag actor:(ReduxyFunctionActor)actor;
 @end
 

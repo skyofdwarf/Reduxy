@@ -89,9 +89,12 @@
 
         if (item) {
             return self.dispatch(@{ ReduxyActionTypeKey: ReduxyPlayerActionJump,
-                                    ReduxyActionDataKey: item
+                                    ReduxyActionPayloadKey: item
                                     });
         }
+    }
+    else {
+        LOG(@"not playable: (%ld / %lu)", (long)index, (unsigned long)self.items.count);
     }
     return nil;
 }

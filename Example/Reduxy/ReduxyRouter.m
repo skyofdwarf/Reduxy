@@ -10,13 +10,12 @@
 #import "ReduxyMemoizer.h"
 #import "ReduxyStore.h"
 
-
-NSString * const ReduxyRouterStateKey = @"reduxy.routes";
-
+#define ReduxyRouterActionRouteTypeRaw      router.route
+#define ReduxyRouterActionUnrouteTypeRaw    router.unroute
 
 
 static selector_block routesSelector = ^NSArray<NSString *> * _Nonnull (ReduxyState state) {
-    return state[ReduxyRouterStateKey];
+    return state[ReduxyRouter.stateKey];
 };
 
 static selector_block topRouteSelector = ^NSString * _Nullable (ReduxyState state) {
@@ -26,19 +25,61 @@ static selector_block topRouteSelector = ^NSString * _Nullable (ReduxyState stat
 
 
 
+@implementation UIViewController (ReduxyRoutable)
+
++ (NSString *)path {
+    return @"unknown";
+}
+
+- (UIViewController *)vc {
+    return self;
+}
+
+- (void)routableDidRoute {
+    [ReduxyRouter.shared didRoute:self];
+}
+
+- (void)willMoveToParentViewController:(UIViewController *)parent {
+    LOG_HERE
+    
+    if ([self conformsToProtocol:@protocol(ReduxyRoutable)]) {
+        [ReduxyRouter.shared viewController:self willMoveToParentViewController:parent];
+    }
+}
+
+- (void)didMoveToParentViewController:(UIViewController *)parent {
+    LOG_HERE
+    
+    if ([self conformsToProtocol:@protocol(ReduxyRoutable)]) {
+        [ReduxyRouter.shared viewController:self didMoveToParentViewController:parent];
+    }
+}
+
+@end
+
+
 #pragma mark - ReduxyRouter
 
 
-@interface ReduxyRouter ()
+@interface ReduxyRouter () <ReduxyStoreSubscriber>
 @property (strong, nonatomic) id<ReduxyStore> store;
 
 @property (strong, nonatomic) NSMutableDictionary<NSString */*path*/, RouteAction> *routes;
-@property (strong, nonatomic) NSMutableDictionary<NSString */*path*/, RouteAction> *unroutes;
-@property (strong, nonatomic) NSMapTable<NSString */*path*/, UIViewController */*vc*/> *viewControllers;
+@property (strong, nonatomic) NSMutableDictionary<NSString */*path*/, UnrouteAction> *unroutes;
+@property (strong, nonatomic) NSMutableArray<NSDictionary *> *routables;
+
+@property (copy, nonatomic) NSDictionary *routingInfo;
+@property (copy, nonatomic) NSDictionary *unroutingInfo;
 
 @end
 
 @implementation ReduxyRouter
+
+static NSString * const _stateKey = @"reduxy.routes";
+
++ (NSString *)stateKey {
+    return _stateKey;
+}
 
 + (instancetype)shared {
     static dispatch_once_t onceToken;
@@ -54,7 +95,7 @@ static selector_block topRouteSelector = ^NSString * _Nullable (ReduxyState stat
     if (self) {
         self.routes = @{}.mutableCopy;
         self.unroutes = @{}.mutableCopy;
-        self.viewControllers = [NSMapTable strongToWeakObjectsMapTable];
+        self.routables = [NSMutableArray array];
         
         raction_add(router.route);
         raction_add(router.unroute);
@@ -65,17 +106,17 @@ static selector_block topRouteSelector = ^NSString * _Nullable (ReduxyState stat
 #pragma mark - store
 
 - (void)attachStore:(id<ReduxyStore>)store {
+    if (self.store) {
+        [self.store unsubscribe:self];
+    }
+    
     self.store = store;
+    [store subscribe:self];
 }
 
 #pragma mark - routing
 
-- (void)add:(NSString *)path route:(RouteAction)route {
-    //self.routes[path] = route;
-    [self add:path route:route unroute:nil];
-}
-
-- (void)add:(NSString *)path route:(RouteAction)route unroute:(RouteAction)unroute {
+- (void)add:(NSString *)path route:(RouteAction)route unroute:(UnrouteAction)unroute {
     self.routes[path] = route;
     self.unroutes[path] = unroute;
 }
@@ -85,46 +126,45 @@ static selector_block topRouteSelector = ^NSString * _Nullable (ReduxyState stat
     self.unroutes[path] = nil;
 }
 
-- (void)route:(NSString *)path source:(UIViewController *)source context:(id)context {
+- (void)route:(NSString *)path source:(id<ReduxyRoutable>)routable context:(id)context {
     RouteAction route = self.routes[path];
     if (route) {
-        UIViewController *dest = route(source, context);
+        [self willRouteForPath:path from:routable];
         
-        if (dest) {
-            [self setViewController:dest forPath:path];
-        }
+        route(routable, context);
     }
 }
 
-- (void)unroute:(NSString *)path source:(UIViewController *)source {
-    if (!source) {
+- (void)unroute:(NSString *)path source:(id<ReduxyRoutable>)routable context:(id)context {
+    if (!routable) {
         return ;
     }
     
-    RouteAction unroute = self.unroutes[path];
+    UnrouteAction unroute = self.unroutes[path];
     if (unroute) {
-        // at first, remove a vc of the path to prevent auto dispatching unroute action from -[viewController:willMoveToParentViewController:]
-        [self setViewController:nil forPath:path];
+        [self willUnrouteForPath:path from:routable];
         
         // do manual unroute
-        unroute(source, nil);
+        unroute(routable, context);
     }
 }
 
 #pragma mark - redux
 
-- (ReduxyMiddleware)middleware {
-    
-    ReduxyRouter *router = self;
++ (ReduxyMiddleware)middleware {
     
     return ReduxyMiddlewareCreateMacro(store, next, action, {
-        LOG(@"router> received action: %@", action);
+        LOG(@"router mw> received action: %@", action.type);
         
-        if ([action is:raction_x(router.route)]) {
-            [router route:action state:[store getState]];
+        NSString *path = action.payload[@"path"];
+        
+        if ([action is:ratype(router.route)]) {
+            LOG(@"router mw> route action: %@", path);
+            [ReduxyRouter.shared route:action state:[store getState]];
         }
-        else if ([action is:raction_x(router.unroute)]) {
-            [router unroute:action state:[store getState]];
+        else if ([action is:ratype(router.unroute)]) {
+            LOG(@"router mw> unroute action: %@", path);
+            [ReduxyRouter.shared unroute:action state:[store getState]];
         }
         
         return next(action);
@@ -133,36 +173,36 @@ static selector_block topRouteSelector = ^NSString * _Nullable (ReduxyState stat
 
 
 - (ReduxyReducer)reducer {
-    return [self reducerWithInitialViewControllers:@[] forPaths:@[]];
+    return [self reducerWithInitialRoutables:@[] forPaths:@[]];
 }
 
-- (ReduxyReducer)reducerWithInitialViewControllers:(NSArray<UIViewController *> *)vcs forPaths:(NSArray<NSString *> *)paths {
+- (ReduxyReducer)reducerWithInitialRoutables:(NSArray<id<ReduxyRoutable>> *)vcs forPaths:(NSArray<NSString *> *)paths {
     // builds root routing state
     NSMutableArray *defaultState = @[].mutableCopy;
     for (NSInteger index = 0; index < paths.count; ++index) {
         NSString *path = paths[index];
-        UIViewController *vc = vcs[index];
+        id<ReduxyRoutable> routable = vcs[index];
         
-        [self setViewController:vc forPath:path];
+        [self pushRoutable:routable path:path];
         
         [defaultState addObject:@{ @"path": path }];
     }
     
     // returns a reducer for route state
     return ^ReduxyState (ReduxyState state, ReduxyAction action) {
-        if ([action is:raction_x(router.route)]) {
-            LOG(@"route> %@, add: %@", state, action.data);
+        if ([action is:ratype(router.route)]) {
+            LOG(@"route> %@, add: %@", state, action.payload);
             NSMutableArray *routes = [NSMutableArray arrayWithArray:state];
             
-            [routes addObject:action.data];
+            [routes addObject:action.payload];
             return routes.copy;
         }
-        else if ([action is:raction_x(router.unroute)]) {
-            LOG(@"route> %@, remove: %@", state, action.data[@"path"]);
+        else if ([action is:ratype(router.unroute)]) {
+            LOG(@"route> %@, remove: %@", state, action.payload[@"path"]);
             
             NSMutableArray<NSDictionary *> *routes = [NSMutableArray arrayWithArray:state];
             
-            NSString *pathToPop = action.data[@"path"];
+            NSString *pathToPop = action.payload[@"path"];
             
             NSDictionary *topPathInfo = routes.lastObject;
             NSString *topPath = topPathInfo[@"path"];
@@ -187,83 +227,246 @@ static selector_block topRouteSelector = ^NSString * _Nullable (ReduxyState stat
 #pragma mark - private
 
 - (void)route:(ReduxyAction)action state:(ReduxyState)state  {
-    NSString *path  = action.data[@"path"];
-    NSString *breed = action.data[@"breed"];
+    NSString *path  = action.payload[@"path"];
+    NSString *way  = action.payload[@"way"];
     
-    UIViewController *source = [self topViewControllerWithState:state];
-    
-    [self route:path source:source context:breed];
+    if (self.routesAutoway || !way) {
+        id<ReduxyRoutable> routable = [self topRoutable];
+        [self route:path source:routable context:action.payload];
+    }
 }
 
 - (void)unroute:(ReduxyAction)action state:(ReduxyState)state  {
-    NSString *path  = action.data[@"path"];
+    NSString *path  = action.payload[@"path"];
+    NSString *way  = action.payload[@"way"];
     
-    UIViewController *source = [self topViewControllerWithState:state];
-    
-    [self unroute:path source:source];
-}
-
-- (UIViewController *)topViewControllerWithState:(ReduxyState)state {
-    NSDictionary *route = topRouteSelector(state);
-    
-    return [self viewControllerForPath:route[@"path"]];
-}
-
-- (UIViewController *)viewControllerForPath:(NSString *)path {
-    return [self.viewControllers objectForKey:path];
-}
-
-- (void)setViewController:(UIViewController *)vc forPath:(NSString *)path {
-    if (vc) {
-        [self.viewControllers setObject:vc forKey:path];
-    }
-    else {
-        [self.viewControllers removeObjectForKey:path];
+    if (self.routesAutoway || !way) {
+        id<ReduxyRoutable> routable = [self topRoutable];
+        [self unroute:path source:routable context:action.payload];
     }
 }
 
-- (NSString *)pathForViewController:(UIViewController *)vc {
-    for (NSString *path in self.viewControllers) {
-        UIViewController *value = [self.viewControllers objectForKey:path];
-        
-        if ([vc isEqual:value]) {
-            return path;
-        }
+- (id<ReduxyRoutable>)topRoutable {
+    NSDictionary *routableInfo = self.routables.lastObject;
+    return routableInfo[@"routable"];
+}
+
+
+- (void)pushRoutable:(id<ReduxyRoutable>)routable path:(NSString *)path {
+    [self.routables addObject:@{ @"path": path,
+                                 @"routable": routable,
+                                 @"hash": @(routable.hash) }];
+}
+
+- (void)popRoutable {
+    [self.routables removeLastObject];
+}
+
+- (BOOL)popRoutableWithRoutable:(id<ReduxyRoutable>)routable {
+    NSDictionary *info = self.routables.lastObject;
+    NSNumber *hash = info[@"hash"];
+    
+    if ([hash isEqualToNumber:@(routable.hash)]) {
+        [self popRoutable];
+        return YES;
     }
-    return nil;
+    
+    return NO;
+}
+
+- (BOOL)popRoutableWithPath:(NSString *)path {
+    NSDictionary *info = self.routables.lastObject;
+    NSString *topPtah = info[@"path"];
+    
+    if ([topPtah isEqualToString:path]) {
+        [self popRoutable];
+        return YES;
+    }
+    
+    return NO;
+}
+
+#pragma mark - dispatch
+
+- (void)dispatchRoute:(id)payload {
+    [self.store dispatch:ratype(router.route)
+                 payload:payload];
+}
+
+- (void)dispatchUnroute:(id)payload {
+    [self.store dispatch:ratype(router.unroute)
+                 payload:payload];
 }
 
 #pragma mark - event
 
-- (void)viewController:(UIViewController *)vc willMoveToParentViewController:(UIViewController *)parent {
+- (void)viewController:(UIViewController<ReduxyRoutable> *)vc willMoveToParentViewController:(UIViewController *)parent {
+    LOG(@"'%@' will move to parent: %@", [vc.class path], parent);
+    
     BOOL detached = (parent == nil);
     if (detached) {
-        NSString *path = [self pathForViewController:vc];
-        if (path) {
-            // if the path isn't unrouted manually(navigation back button or interactive pop gesture),
-            // we dispatch unroute action at here to synchronize routing states.
+    }
+}
+
+- (void)viewController:(UIViewController<ReduxyRoutable> *)vc didMoveToParentViewController:(UIViewController *)parent {
+    LOG(@"'%@' did move to parent: %@", [vc.class path], parent);
+    
+    // NOTE: 이 메시지는 한번 이상 호출 될 수 있다.
+    
+    /**
+     TODO: 로직 검증 필요
+     * setViewControllers: 라던가 여러단계의 뷰전환이 일어나는 상황에서 정상 동작하는가?
+     * 제스쳐나 포스터치로의 자동 뷰 전환에서 모두 정상동작 하는가?
+     */
+
+    /// call didRoute:/didUnroute: to complete non-manual routing
+    BOOL attached = (parent != nil);
+    if (attached) {
+        [self didRoute:vc];
+    }
+    else {
+        [self didUnroute:vc];
+    }
+}
+
+- (void)willUnrouteForPath:(NSString *)path from:(id<ReduxyRoutable>)routable {
+    LOG_HERE
+    
+#if DEBUG
+    LOG(@"will unroute, path: %@", path);
+#endif
+
+    self.unroutingInfo = @{ @"path": path,
+                            @"hash": @(routable.hash) };
+}
+
+- (BOOL)didUnroute:(id<ReduxyRoutable>)routable {
+    LOG_HERE
+    
+    id<ReduxyRoutable> top = [self topRoutable];
+    NSString *topPath = [top.class path];
+    NSString *path = [routable.class path];
+    
+#if DEBUG
+    LOG(@"did unroute, path: %@", path);
+#endif
+    
+    BOOL manualUnrouting = (self.unroutingInfo != nil);
+    BOOL onTopYet = (top.hash == routable.hash &&
+                     [topPath isEqualToString:path]);
+    
+    if (manualUnrouting) {
+        if (onTopYet) {
+            [self popRoutable];
+        }
+        
+        self.unroutingInfo = nil;
+    }
+    else {
+        if (onTopYet) {
+            [self popRoutable];
             
-            // removes the path from routes
-            [self setViewController:nil forPath:path];
-            
-            // dispatches unroute action to remove top path from state
-            [self.store dispatch:@{ @"type": raction_x(router.unroute),
-                                    @"path": path
-                                    }];
+            [self.store dispatch:ratype(router.unroute)
+                         payload:@{ @"path":  path,
+                                    @"way": @"auto" }];
+        }
+        else {
+            NSAssert(NO, @"Unavailable reach here");
+        }
+    }
+    
+    return YES;
+}
+
+- (void)willRouteForPath:(NSString *)path from:(id<ReduxyRoutable>)routable {
+    LOG_HERE
+
+#if DEBUG
+    LOG(@"will route, path: %@", path);
+#endif
+
+    self.routingInfo = @{ @"path": path,
+                          @"hash": @(routable.hash) };
+
+}
+
+- (BOOL)didRoute:(id<ReduxyRoutable>)routable {
+    LOG_HERE
+    
+    NSString *routedPath = [routable.class path];
+    
+#if DEBUG
+    LOG(@"did route, path: %@", routedPath);
+#endif
+    
+    BOOL manualRouting = (self.routingInfo != nil);
+    BOOL alreadyInStack = NO;
+    
+    for (NSDictionary *info in self.routables) {
+        NSString *path = info[@"path"];
+        NSNumber *hash = info[@"hash"];
+        
+        alreadyInStack = ([hash isEqualToNumber:@(routable.hash)] &&
+                          [path isEqualToString:routedPath]);
+        if (alreadyInStack)
+            break ;
+    }
+    
+    if (manualRouting) {
+        NSString *routingPath = self.routingInfo[@"path"];
+        
+        if ([routingPath isEqualToString:routedPath]) {
+            [self pushRoutable:routable path:routedPath];
+            self.routingInfo = nil;
+        }
+        else {
+            LOG(@"ignore");
         }
     }
     else {
-        
+        if (alreadyInStack) {
+            // ignore
+            LOG(@"ignore when routable is already on top");
+        }
+        else {
+            [self pushRoutable:routable path:routedPath];
+            
+            [self.store dispatch:ratype(router.route)
+                         payload:@{ @"path":  routedPath,
+                                    @"way": @"auto" }];
+        }
     }
+    
+    return YES;
 }
-
 
 #if DEBUG
 
-- (NSMapTable<NSString *, UIViewController *> *)vcs {
-    return self.viewControllers;
+- (NSArray<NSDictionary *> *)vcs {
+    return self.routables.copy;
 }
 
 #endif
+
+#pragma mark - ReduxyStoreSubscriber
+
+- (void)reduxyStore:(id<ReduxyStore>)store didChangeState:(ReduxyState)state byAction:(ReduxyAction)action {
+    
+    if ([action is:ratype(router.route)]) {
+        NSString *path = action.payload[@"path"];
+        
+        LOG(@"router mw> route action: %@", path);
+        
+        [ReduxyRouter.shared route:action state:[store getState]];
+    }
+    else
+    if ([action is:ratype(router.unroute)]) {
+        NSString *path = action.payload[@"path"];
+        
+        LOG(@"router mw> unroute action: %@", path);
+        
+        [ReduxyRouter.shared unroute:action state:[store getState]];
+    }
+}
 
 @end

@@ -19,8 +19,9 @@ RecorderMiddleware ReduxyRecorderMiddlewareWithRecorder = ^ReduxyMiddleware(id<R
     return ^ReduxyTransducer (id<ReduxyStore> store) {
         return ^ReduxyDispatch (ReduxyDispatch next) {
             return ^ReduxyAction (ReduxyAction action) {
-                LOG(@"recorder mw> record action: %@", action);
-                [recorder recordWithAction:action state:[store getState]];
+                LOG(@"recorder mw> record action: %@", action.type);
+                
+                [recorder record:action state:[store getState]];
                 
                 return next(action);
             };
@@ -38,31 +39,6 @@ RecorderMiddleware ReduxyRecorderMiddlewareWithRecorder = ^ReduxyMiddleware(id<R
 }
 - (ReduxyState)nextState {
     return self[ReduxyRecorderItemNextState];
-}
-@end
-
-@interface RecordableItem()
-{
-    NSDictionary *_action;
-}
-//@property (strong, nonatomic) NSDictionary *data;
-@end
-
-@implementation RecordableItem
-+ (instancetype)newWithType:(ReduxyActionType)type prevState:(ReduxyState)prevState nextState:(ReduxyState)nextState {
-    return [[RecordableItem alloc] initWithType:type prevState:prevState nextState:nextState];
-}
-
-- (instancetype)initWithType:(ReduxyActionType)type prevState:(ReduxyState)prevState nextState:(ReduxyState)nextState {
-    self = [super init];
-    if (self) {
-        _action = @{};
-    }
-    return self;
-}
-
-- (NSDictionary *)action {
-    return _action;
 }
 @end
 

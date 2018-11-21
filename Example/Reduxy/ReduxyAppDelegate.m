@@ -23,11 +23,12 @@
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions
 {
     // Override point for customization after application launch.
-    raction_add(breedlist.fetched, "note");
     raction_add(breedlist.filtered, "note: ...");
-    raction_add(randomdog.fetched);
+    raction_add(breedlist.reload);
     
-    raction_add(reload);
+    raction_add(randomdog.fetched);
+    raction_add(randomdog.reload);
+    
     raction_add(indicator.start);
     raction_add(indicator.stop);
     
