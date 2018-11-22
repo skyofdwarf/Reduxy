@@ -226,19 +226,19 @@ ReduxyRoutable
                                                                    {
                                                                        wself.canceller = nil;
                                                                        
-                                                                       if (!error) {
-                                                                           UIImage *image = [UIImage imageWithData:data];
-                                                                           if (image) {
-                                                                               storeDispatch(raction_payload(local.randomdog.reload, @{ @"image": image }));
-                                                                               storeDispatch(raction_payload(local.indicator, @NO));
-                                                                               // success
-                                                                               return ;
-                                                                           }
-                                                                       }
+                                                                       UIImage *image = [UIImage imageWithData:data];
                                                                        
-                                                                       // fail
-                                                                       storeDispatch(raction(local.randomdog.reload));
-                                                                       storeDispatch(raction_payload(local.indicator, @NO));
+                                                                       if (!error && image) {
+                                                                           // success
+                                                                           
+                                                                           storeDispatch(raction_payload(local.randomdog.reload, @{ @"image": image }));
+                                                                           storeDispatch(raction_payload(local.indicator, @NO));
+                                                                       }
+                                                                       else {
+                                                                           // fail
+                                                                           storeDispatch(raction(local.randomdog.reload));
+                                                                           storeDispatch(raction_payload(local.indicator, @NO));
+                                                                       }
                                                                    }];
                                      [task resume];
                                      
@@ -265,20 +265,9 @@ ReduxyRoutable
 #pragma mark - ReduxyStoreSubscriber
 
 - (void)store:(id<ReduxyStore>)store didChangeState:(ReduxyState)state byAction:(ReduxyAction)action {
-    LOG(@"state did change by action: %@\nstate: %@", action, state);
     
-#if 1 // refresh by state
-    NSNumber *indicator = indicatorSelector(state);
-    if (indicator.boolValue) {
-        [self.indicatorView startAnimating];
-    }
-    else {
-        [self.indicatorView stopAnimating];
-    }
+    // NOTE: updates with action, values of payload do not need to be kind for peroperty-list.
     
-    self.imageView.image = imageSelector(state);
-    
-#else // refresh by action
     if ([action is:ratype(local.indicator)]) {
         NSNumber *visible = action.payload;
         if (visible.boolValue) {
@@ -292,7 +281,6 @@ ReduxyRoutable
     if ([action is:ratype(local.randomdog.reload)]) {
         self.imageView.image = action.payload[@"image"];
     }
-#endif
 }
 
 

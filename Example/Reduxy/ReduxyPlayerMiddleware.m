@@ -19,14 +19,17 @@ ReduxyActionType ReduxyPlayerActionStep = @"reduxy.mw.player.step";
 ReduxyMiddleware ReduxyPlayerMiddleware = ^ReduxyTransducer (id<ReduxyStore> store) {
     return ^ReduxyDispatch (ReduxyDispatch next) {
         return ^ReduxyAction (ReduxyAction action) {
-            if ([action is:ReduxyPlayerActionStep] ||
-                [action is:ReduxyPlayerActionJump])
-            {
+            if ([action is:ReduxyPlayerActionJump]) {
                 LOG(@"player mw> player action: %@", action.type);
                 
                 id<ReduxyRecorderItem> item = action.payload;
                 
                 return next(item.action);
+            }
+            else if ([action is:ReduxyPlayerActionStep]) {
+                @throw [NSException exceptionWithName:NSInternalInconsistencyException
+                                               reason:@"TODO: not implemented yet"
+                                             userInfo:action.payload];
             }
             else {
                 return next(action);
@@ -39,7 +42,7 @@ ReduxyReducerTransducer ReduxyPlayerReducer = ^ReduxyReducer (ReduxyReducer next
     return ^ReduxyState (ReduxyState state, ReduxyAction action) {
         if ([action is:ReduxyPlayerActionJump]) {
             id<ReduxyRecorderItem> item = action.payload;
-            return item.nextState;
+            return item.state;
         }
         else {
             return next(state, action);

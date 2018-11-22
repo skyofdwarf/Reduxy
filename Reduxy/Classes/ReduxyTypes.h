@@ -25,9 +25,6 @@
 @protocol ReduxyStore;
 @protocol ReduxyStoreSubscriber;
 
-@class ReduxyStore;
-
-
 #pragma mark - types
 typedef id<ReduxyActionable> ReduxyAction;
 typedef id ReduxyState;

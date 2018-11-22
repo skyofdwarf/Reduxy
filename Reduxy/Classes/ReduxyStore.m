@@ -10,6 +10,7 @@
 
 
 #define LOG_HERE  NSLog(@"%s", __PRETTY_FUNCTION__);
+#define LOG(...)  NSLog(__VA_ARGS__)
 
 
 @interface ReduxyStore ()
@@ -105,6 +106,8 @@
 }
 
 - (void)publishState:(ReduxyState)state action:(ReduxyAction)action {
+    LOG(@"publish action: %@, state: %@", action, state);
+    
     for (id<ReduxyStoreSubscriber> subscriber in self.subscribers) {
         [self publishState:state to:subscriber action:action];
     }
@@ -145,18 +148,27 @@
 }
 
 - (void)subscribe:(id<ReduxyStoreSubscriber>)subscriber {
-    if (![self.subscribers containsObject:subscriber]) {
+    if ([self.subscribers containsObject:subscriber]) {
+        LOG(@"already subscribed: %@", subscriber);
+    }
+    else {
         [self.subscribers addObject:subscriber];
         
+        // TODO: ? - publish state to new subscriber
 //        [self publishState:self.state to:subscriber action:ReduxyActionStoreSubscription];
+        
+        LOG(@"subscribed: %@", subscriber);
     }
 }
 
 - (void)unsubscribe:(id<ReduxyStoreSubscriber>)subscriber {
     [self.subscribers removeObject:subscriber];
+    
+    LOG(@"unsubscribed: %@", subscriber);
 }
 
 - (void)unsubscribeAll {
+    LOG_HERE
     [self.subscribers removeAllObjects];
 }
 

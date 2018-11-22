@@ -69,7 +69,7 @@ ReduxyRoutable
 }
 
 - (void)dealloc {
-    [Store.main unsubscribe:self];
+    [Store.shared unsubscribe:self];
 }
 
 - (void)viewDidLoad {
@@ -92,7 +92,7 @@ ReduxyRoutable
     
     [self buildRoutes];
     
-    [Store.main subscribe:self];
+    [Store.shared subscribe:self];
 }
 
 - (void)viewWillAppear:(BOOL)animated {
@@ -170,7 +170,7 @@ ReduxyRoutable
 }
 
 - (void)buildRoutes {
-    [ReduxyRouter.shared attachStore:Store.main];
+    [ReduxyRouter.shared attachStore:Store.shared];
 
     [ReduxyRouter.shared add:RandomDogViewController.path
                        route:^id<ReduxyRoutable> (id<ReduxyRoutable> src, NSDictionary *context) {
@@ -178,7 +178,7 @@ ReduxyRoutable
                            
                            RandomDogViewController *rdvc = [vc.storyboard instantiateViewControllerWithIdentifier:@"randomdog"];
                            
-                           rdvc.store = Store.main;
+                           rdvc.store = Store.shared;
                            rdvc.breed = context[@"breed"];
                            
                            [vc showViewController:rdvc sender:nil];
@@ -222,7 +222,7 @@ ReduxyRoutable
 }
 
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section {
-    NSDictionary *state = [Store.main getState];
+    NSDictionary *state = [Store.shared getState];
     
     switch (section) {
         case 0: {
@@ -241,7 +241,7 @@ ReduxyRoutable
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
     UITableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:@"BreedCell" forIndexPath:indexPath];
     
-    NSDictionary *state = [Store.main getState];
+    NSDictionary *state = [Store.shared getState];
     
     NSInteger section = indexPath.section;
     NSInteger row = indexPath.row;
@@ -267,7 +267,7 @@ ReduxyRoutable
 #pragma mark - Table view delegate
 
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
-    NSDictionary *state = [Store.main getState];
+    NSDictionary *state = [Store.shared getState];
 
     NSInteger section = indexPath.section;
     NSInteger row = indexPath.row;
@@ -316,7 +316,7 @@ ReduxyRoutable
     LOG_HERE
     
     // dispatch fetching action
-    [Store.main dispatch:raction_payload(indicator, @YES)];
+    [Store.shared dispatch:raction_payload(indicator, @YES)];
     
     ReduxyAsyncAction *action =
     [ReduxyAsyncAction newWithTag:@"breedlist.reload"
@@ -355,25 +355,25 @@ ReduxyRoutable
                                 };
                             }];
     
-    [Store.main dispatch:action];
+    [Store.shared dispatch:action];
 }
 
 - (IBAction)recordingToggleButtonDidClick:(id)sender {
-    Store.recorder.enabled = !Store.recorder.enabled;
+    Store.shared.recorder.enabled = !Store.shared.recorder.enabled;
 }
 
 - (IBAction)saveButtonDidClick:(id)sender {
-    [Store.recorder save];
+    [Store.shared.recorder save];
 }
 
 - (IBAction)loadButtonDidClick:(id)sender {
-    [Store.recorder load];
+    [Store.shared.recorder load];
     
     ReduxyRouter.shared.routesAutoway = YES;
     
-    [ReduxySimplePlayer.shared loadItems:Store.recorder.items
+    [ReduxySimplePlayer.shared loadItems:Store.shared.recorder.items
                                 dispatch:^ReduxyAction(ReduxyAction action) {
-                                    return [Store.main dispatch:action];
+                                    return [Store.shared dispatch:action];
                                 }];
 }
 
@@ -393,7 +393,6 @@ ReduxyRoutable
 #pragma mark - ReduxyStoreSubscriber
 
 - (void)store:(id<ReduxyStore>)store didChangeState:(ReduxyState)state byAction:(ReduxyAction)action {
-    LOG(@"state did change by action: %@\nstate: %@", action, state);
 
 #if 1 // refresh by state
     
@@ -429,7 +428,7 @@ ReduxyRoutable
 - (void)searchBar:(UISearchBar *)searchBar textDidChange:(NSString *)searchText {
     LOG(@"search bar text did change: %@", searchText);
     
-    [Store.main dispatch:ratype(breedlist.filtered)
+    [Store.shared dispatch:ratype(breedlist.filtered)
                  payload:@{ @"filter": searchText
                             }];
 }
@@ -439,7 +438,7 @@ ReduxyRoutable
 - (void)updateSearchResultsForSearchController:(UISearchController *)searchController {
     NSString *text = searchController.searchBar.text;
     
-    [Store.main dispatch:ratype(breedlist.filtered)
+    [Store.shared dispatch:ratype(breedlist.filtered)
                  payload:@{ @"filter": text
                             }];
 }

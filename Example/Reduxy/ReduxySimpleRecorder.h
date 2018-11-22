@@ -34,9 +34,9 @@
  @param ignorableActions 기록을 무시할 액션 목록
  @return recorder instance
  */
-- (instancetype)initWithRootReducer:(ReduxyReducer)rootReducer ignorableActions:(NSArray<ReduxyActionType> *)ignorableActions;
+- (instancetype)initWithStore:(id<ReduxyStore>)store actionTypesToIgnore:(NSArray<ReduxyActionType> *)typesToIgnore;
 
-- (instancetype)initWithRootReducer:(ReduxyReducer)rootReducer;
+- (instancetype)initWithStore:(id<ReduxyStore>)store;
 
 
 #pragma mark - ReduxyRecorder protocol

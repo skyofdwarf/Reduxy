@@ -11,10 +11,8 @@
 
 
 @interface Store : ReduxyStore
+@property (strong, nonatomic, readonly) ReduxySimpleRecorder *recorder;
 
-+ (ReduxyStore *)main;
-
-+ (ReduxySimpleRecorder *)recorder;
-
++ (Store *)shared;
 
 @end

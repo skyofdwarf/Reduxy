@@ -216,7 +216,7 @@ static NSString * const _stateKey = @"reduxy.routes";
                 return [mstate copy];
             }
             else if ([action is:ratype(router.unroute)]) {
-                LOG(@"route reducer> unroute: %@, from: %@", routes, action.payload);
+                LOG(@"route reducer> unroute: %@, from: %@", action.payload, routes);
                 
                 NSMutableArray *mroutes = [NSMutableArray arrayWithArray:routes];
                 

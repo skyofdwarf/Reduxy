@@ -42,12 +42,8 @@ static ReduxyMiddleware mainQueue = ReduxyMiddlewareCreateMacro(store, next, act
 
 
 @interface Store ()
-@property (copy, nonatomic) ReduxyReducer rootReducer;
 @property (strong, nonatomic) ReduxySimpleRecorder *recorder;
-
-@property (strong, nonatomic) ReduxyStore *store;
 @end
-
 
 @implementation Store
 
@@ -63,12 +59,19 @@ static ReduxyMiddleware mainQueue = ReduxyMiddlewareCreateMacro(store, next, act
 }
 
 - (instancetype)init {
-    self = [super init];
+    ReduxyReducer rootReducer = [self createRootReducer];
+    
+    self = [super initWithState:rootReducer(nil, nil)
+                        reducer:rootReducer
+                    middlewares:@[ logger,
+                                   ReduxyFunctionMiddleware,
+                                   ReduxyPlayerMiddleware,
+                                   mainQueue
+                                   ]];
     if (self) {
-        self.rootReducer = [self createRootReducer];
-        self.recorder = [self createRecorderWithRootReducer:self.rootReducer];
-        self.store = [self createMainStoreWithRootReducer:self.rootReducer recorder:self.recorder];
+        self.recorder = [self createRecorderWithStore:self];
     }
+    
     return self;
 }
 
@@ -106,32 +109,20 @@ static ReduxyMiddleware mainQueue = ReduxyMiddlewareCreateMacro(store, next, act
     }));
 }
     
-- (ReduxySimpleRecorder *)createRecorderWithRootReducer:(ReduxyReducer)rootReducer {
-    return [[ReduxySimpleRecorder alloc] initWithRootReducer:rootReducer
-                                     ignorableActions:@[ ReduxyPlayerActionJump, ReduxyPlayerActionStep ]];
+- (ReduxySimpleRecorder *)createRecorderWithStore:(id<ReduxyStore>)store {
+    return [[ReduxySimpleRecorder alloc] initWithStore:store actionTypesToIgnore:@[ ReduxyPlayerActionJump,
+                                                                                                              ReduxyPlayerActionStep ]];
 }
 
-- (ReduxyStore *)createMainStoreWithRootReducer:(ReduxyReducer)rootReducer recorder:(id<ReduxyRecorder>)recorder {
+- (ReduxyStore *)createMainStoreWithRootReducer:(ReduxyReducer)rootReducer {
     return [ReduxyStore storeWithState:rootReducer(nil, nil)
                                reducer:rootReducer
                            middlewares:@[ logger,
                                           ReduxyFunctionMiddleware,
-                                          ReduxyRecorderMiddlewareWithRecorder(recorder),
                                           ReduxyPlayerMiddleware,
                                           mainQueue
                                           ]];
     
-}
-
-
-#pragma mark - proxy helpers
-
-+ (ReduxyStore *)main {
-    return Store.shared.store;
-}
-
-+ (ReduxySimpleRecorder *)recorder {
-    return Store.shared.recorder;
 }
 
 

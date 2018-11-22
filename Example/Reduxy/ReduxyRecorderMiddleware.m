@@ -11,8 +11,7 @@
 
 
 NSString * const ReduxyRecorderItemAction = @"action";
-NSString * const ReduxyRecorderItemPrevState = @"prevState";
-NSString * const ReduxyRecorderItemNextState = @"nextState";
+NSString * const ReduxyRecorderItemState = @"state";
 
 
 RecorderMiddleware ReduxyRecorderMiddlewareWithRecorder = ^ReduxyMiddleware(id<ReduxyRecorder> recorder) {
@@ -34,11 +33,8 @@ RecorderMiddleware ReduxyRecorderMiddlewareWithRecorder = ^ReduxyMiddleware(id<R
 - (ReduxyAction)action {
     return self[ReduxyRecorderItemAction];
 }
-- (ReduxyState)prevState {
-    return self[ReduxyRecorderItemPrevState];
-}
-- (ReduxyState)nextState {
-    return self[ReduxyRecorderItemNextState];
+- (ReduxyState)state {
+    return self[ReduxyRecorderItemState];
 }
 @end
 

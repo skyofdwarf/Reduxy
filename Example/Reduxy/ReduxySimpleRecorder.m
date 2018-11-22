@@ -11,50 +11,53 @@
 static NSString * const ReduxyRecorderUserDefaultKey = @"reduxy.recorder.items";
 
 @interface ReduxySimpleRecorder ()
+<
+ReduxyStoreSubscriber
+>
 @property (strong, nonatomic) NSMutableArray<id<ReduxyRecorderItem>> *mutableItems;
-@property (strong, nonatomic) NSSet<ReduxyActionType> *ignorableActions;
+@property (strong, nonatomic) NSSet<ReduxyActionType> *actionTypesToIgnore;
 
-@property (copy, nonatomic) ReduxyReducer rootReducer;
+@property (strong, nonatomic) id<ReduxyStore> store;
 @end
 
 
 @implementation ReduxySimpleRecorder
 
-- (instancetype)initWithRootReducer:(ReduxyReducer)rootReducer {
-    return [self initWithRootReducer:rootReducer ignorableActions:@[]];
+- (void)dealloc {
+    [self.store unsubscribe:self];
 }
 
-- (instancetype)initWithRootReducer:(ReduxyReducer)rootReducer ignorableActions:(NSArray<ReduxyActionType> *)ignorableActions {
+- (instancetype)initWithStore:(id<ReduxyStore>)store {
+    return [self initWithStore:store actionTypesToIgnore:@[]];
+}
+
+- (instancetype)initWithStore:(id<ReduxyStore>)store actionTypesToIgnore:(NSArray<ReduxyActionType> *)typesToIgnore {
     self = [super init];
     if (self) {
-        self.ignorableActions = [NSSet setWithArray:ignorableActions];
-        self.rootReducer = rootReducer;
+        self.store = store;
+        self.actionTypesToIgnore = [NSSet setWithArray:typesToIgnore];
+        
         self.enabled = YES;
         
         [self clear];
+        [self.store subscribe:self];
     }
     return self;
 }
 
 - (BOOL)record:(ReduxyAction)action state:(ReduxyState)state {
-    if ([self.ignorableActions containsObject:action.type]) {
+    if (!self.enabled) {
         return NO;
     }
     
-    if (self.enabled && [action conformsToProtocol:@protocol(NSCopying)]) {
-        ReduxyState nextState = self.rootReducer(state, action);
-        
-        id item = @{ ReduxyRecorderItemAction: action,
-                     ReduxyRecorderItemPrevState: state,
-                     ReduxyRecorderItemNextState: nextState,
-                     };
-        
-        [self.mutableItems addObject:item];
-        
-        return YES;
+    if ([self.actionTypesToIgnore containsObject:action.type]) {
+        return NO;
     }
     
-    return NO;
+    [self.mutableItems addObject:@{ ReduxyRecorderItemAction: action,
+                                    ReduxyRecorderItemState: state,
+                                    }];
+    return YES;
 }
 
 - (NSArray<ReduxyRecorderItem> *)items {
@@ -108,6 +111,14 @@ static NSString * const ReduxyRecorderUserDefaultKey = @"reduxy.recorder.items";
     }
 #endif
     LOG(@"recoder> loaded %lu items", (unsigned long)items.count);
+}
+
+#pragma mark - ReduxyStoreSubscriber
+
+- (void)store:(id<ReduxyStore>)store didChangeState:(ReduxyState)state byAction:(ReduxyAction)action {
+    LOG(@"recorder subscriber> record action: %@ with state: %@", action.type, state);
+    
+    [self record:action state:state];
 }
 
 @end

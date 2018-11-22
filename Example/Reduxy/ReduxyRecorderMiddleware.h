@@ -15,8 +15,7 @@
 
 @protocol ReduxyRecorderItem <NSObject>
 - (ReduxyAction)action;
-- (ReduxyState)prevState;
-- (ReduxyState)nextState;
+- (ReduxyState)state;
 @end
 
 
@@ -41,8 +40,7 @@
 
 @interface NSDictionary (ReduxyRecorderItem) <ReduxyRecorderItem>
 - (ReduxyAction)action;
-- (ReduxyState)prevState;
-- (ReduxyState)nextState;
+- (ReduxyState)state;
 @end
 
 
@@ -50,8 +48,7 @@
 typedef ReduxyMiddleware (^RecorderMiddleware)(id<ReduxyRecorder> recorder);
 
 FOUNDATION_EXTERN NSString * const ReduxyRecorderItemAction;
-FOUNDATION_EXTERN NSString * const ReduxyRecorderItemPrevState;
-FOUNDATION_EXTERN NSString * const ReduxyRecorderItemNextState;
+FOUNDATION_EXTERN NSString * const ReduxyRecorderItemState;
 
 FOUNDATION_EXTERN RecorderMiddleware ReduxyRecorderMiddlewareWithRecorder;
 
