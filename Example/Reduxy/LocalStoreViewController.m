@@ -1,12 +1,12 @@
 //
-//  RandomDogViewController.m
+//  LocalStoreViewController.m
 //  Reduxy_Example
 //
-//  Created by yjkim on 25/04/2018.
+//  Created by yjkim on 22/11/2018.
 //  Copyright © 2018 skyofdwarf. All rights reserved.
 //
 
-#import "RandomDogViewController.h"
+#import "LocalStoreViewController.h"
 #import "ReduxyStore.h"
 #import "ReduxyFunctionMiddleware.h"
 #import "ReduxyAsyncAction.h"
@@ -16,16 +16,57 @@
 
 
 static selector_block indicatorSelector = ^id (ReduxyState state) {
-    return state[@"indicator"];
+    return state[@"local.indicator"];
 };
 
 static selector_block imageSelector = ^id (ReduxyState state) {
-    return state[@"randomdog"][@"image"];
+    return state[@"local.randomdog"][@"image"];
 };
 
 
+static ReduxyMiddleware logger = ReduxyMiddlewareCreateMacro(store, next, action, {
+    LOG(@"logger> received action: %@", action);
+    return next(action);
+});
 
-@interface RandomDogViewController ()
+static ReduxyMiddleware mainQueue = ReduxyMiddlewareCreateMacro(store, next, action, {
+    LOG(@"mainQueue mw> received action: %@", action.type);
+    
+    if ([NSThread isMainThread]) {
+        LOG(@"mainQueue mw> in main-queue");
+        return next(action);
+    }
+    else {
+        LOG(@"mainQueue mw> not in main-queue, call next(acton) in async");
+        dispatch_async(dispatch_get_main_queue(), ^{
+            next(action);
+        });
+        return action;
+    }
+});
+
+static ReduxyReducer rootReducer = ^ReduxyState (ReduxyState state, ReduxyAction action) {
+    ReduxyReducer indicatorReducer = ReduxyValueReducerForAction(ratype(local.indicator), @NO);
+    
+    ReduxyReducer randomdogReducer = ^ReduxyState (ReduxyState state, ReduxyAction action) {
+        if ([action is:ratype(local.randomdog.reload)]) {
+            UIImage *image = action.payload[@"image"];
+            return (image? @{ @"image": image }: @{});
+        }
+        else {
+            return (state? state: @{});
+        }
+    };
+    
+    
+    return @{ @"local.breed": state[@"local.breed"],
+              @"local.randomdog": randomdogReducer(state[@"local.randomdog"], action),
+              @"local.indicator": indicatorReducer(state[@"local.indicator"], action),
+              };
+};
+
+
+@interface LocalStoreViewController ()
 <
 ReduxyStoreSubscriber,
 ReduxyRoutable
@@ -33,20 +74,25 @@ ReduxyRoutable
 @property (weak, nonatomic) IBOutlet UIImageView *imageView;
 @property (weak, nonatomic) IBOutlet UIActivityIndicatorView *indicatorView;
 
+@property (strong, nonatomic) ReduxyStore *store;
+
 @property (copy, nonatomic) ReduxyAsyncActionCanceller canceller;
 
 @end
 
-@implementation RandomDogViewController
+@implementation LocalStoreViewController
 
 + (NSString *)path {
-    return @"randomdog";
+    return @"localstore";
 }
 
 - (void)dealloc {
     LOG_HERE
     
     [self.store unsubscribe:self];
+    
+    raction_remove(local.randomdog.reload);
+    raction_remove(local.indicator);
 }
 
 - (void)viewDidLoad {
@@ -55,11 +101,19 @@ ReduxyRoutable
     [super viewDidLoad];
     // Do any additional setup after loading the view.
     
-    NSAssert(self.store, @"No store");
-    
     self.title = (self.breed?
                   self.breed:
-                  @"random dog");
+                  @"local.randomdog");
+    
+    raction_add(local.randomdog.reload);
+    raction_add(local.indicator);
+    
+    self.store = [ReduxyStore storeWithState:@{ @"local.breed": self.title,
+                                                @"local.randomdog": @{},
+                                                @"local.indicator": @NO
+                                                }
+                                     reducer:rootReducer
+                                 middlewares:@[ logger, ReduxyFunctionMiddleware, mainQueue ]];
     
     [self.store subscribe:self];
     
@@ -115,9 +169,9 @@ ReduxyRoutable
     
     __weak typeof(self) wself = self;
     
-    [self.store dispatch:raction_payload(indicator, @YES)];
+    [self.store dispatch:raction_payload(local.indicator, @YES)];
     
-    ReduxyAsyncAction *action = [ReduxyAsyncAction newWithTag:@"randomdog.fetch-random"
+    ReduxyAsyncAction *action = [ReduxyAsyncAction newWithTag:@"local.randomdog.fetch-random"
                                                         actor:^ReduxyAsyncActionCanceller(ReduxyDispatch storeDispatch)
                                  {
                                      NSURL *url = [NSURL URLWithString:urlString];
@@ -145,8 +199,8 @@ ReduxyRoutable
                                                                        }
                                                                        
                                                                        // fail
-                                                                       storeDispatch(raction(randomdog.reload));
-                                                                       storeDispatch(raction_payload(indicator, @NO));
+                                                                       storeDispatch(raction(local.randomdog.reload));
+                                                                       storeDispatch(raction_payload(local.indicator, @NO));
                                                                    }];
                                      [task resume];
                                      
@@ -156,13 +210,13 @@ ReduxyRoutable
                                      };
                                  }];
     
-    self.canceller = (ReduxyAsyncActionCanceller)[self.store dispatch:action];
+    self.canceller = [self.store dispatch:action];
 }
 
 - (void)loadImageWithUrlString:(NSString *)urlString {
     __weak typeof(self) wself = self;
     
-    ReduxyAsyncAction *action = [ReduxyAsyncAction newWithTag:@"randomdog.load-image"
+    ReduxyAsyncAction *action = [ReduxyAsyncAction newWithTag:@"local.randomdog.load-image"
                                                         actor:^ReduxyAsyncActionCanceller(ReduxyDispatch storeDispatch)
                                  {
                                      NSURL *url = [NSURL URLWithString:urlString];
@@ -175,16 +229,16 @@ ReduxyRoutable
                                                                        if (!error) {
                                                                            UIImage *image = [UIImage imageWithData:data];
                                                                            if (image) {
-                                                                               storeDispatch(raction_payload(randomdog.reload, @{ @"image": image }));
-                                                                               storeDispatch(raction_payload(indicator, @NO));
+                                                                               storeDispatch(raction_payload(local.randomdog.reload, @{ @"image": image }));
+                                                                               storeDispatch(raction_payload(local.indicator, @NO));
                                                                                // success
                                                                                return ;
                                                                            }
                                                                        }
                                                                        
                                                                        // fail
-                                                                       storeDispatch(raction(randomdog.reload));
-                                                                       storeDispatch(raction_payload(indicator, @NO));
+                                                                       storeDispatch(raction(local.randomdog.reload));
+                                                                       storeDispatch(raction_payload(local.indicator, @NO));
                                                                    }];
                                      [task resume];
                                      
@@ -194,7 +248,7 @@ ReduxyRoutable
                                      };
                                  }];
     
-    self.canceller = (ReduxyAsyncActionCanceller)[self.store dispatch:action];
+    self.canceller = [self.store dispatch:action];
 }
 
 #pragma mark - actions
@@ -225,7 +279,7 @@ ReduxyRoutable
     self.imageView.image = imageSelector(state);
     
 #else // refresh by action
-    if ([action is:ratype(indicator)]) {
+    if ([action is:ratype(local.indicator)]) {
         NSNumber *visible = action.payload;
         if (visible.boolValue) {
             [self.indicatorView startAnimating];
@@ -235,8 +289,8 @@ ReduxyRoutable
         }
     }
     
-    if ([action is:ratype(randomdog.reload)]) {
-        self.imageView.image = action.payload[@"image];
+    if ([action is:ratype(local.randomdog.reload)]) {
+        self.imageView.image = action.payload[@"image"];
     }
 #endif
 }

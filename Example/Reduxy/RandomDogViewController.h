@@ -13,4 +13,5 @@
 
 @interface RandomDogViewController : UIViewController
 @property (strong, nonatomic, nullable) NSString *breed;
+@property (strong, nonatomic, nullable) id<ReduxyStore> store;
 @end

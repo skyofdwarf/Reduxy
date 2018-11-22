@@ -79,8 +79,17 @@ static ReduxyMiddleware mainQueue = ReduxyMiddlewareCreateMacro(store, next, act
     // normal reducers
     ReduxyReducer breedsReducer = ReduxyKeyPathReducerForAction(ratype(breedlist.reload), @"breeds", @{});
     ReduxyReducer filterReducer = ReduxyKeyPathReducerForAction(ratype(breedlist.filtered), @"filter", @"");
-    ReduxyReducer randomDogReducer = ReduxyKeyPathReducerForAction(ratype(randomdog.reload), @"randomdog", @"");
     ReduxyReducer indicatorReducer = ReduxyValueReducerForAction(ratype(indicator), @NO);
+    
+    ReduxyReducer randomdogReducer = ^ReduxyState (ReduxyState state, ReduxyAction action) {
+        if ([action is:ratype(randomdog.reload)]) {
+            UIImage *image = action.payload[@"image"];
+            return (image? @{ @"image": image }: @{});
+        }
+        else {
+            return (state? state: @{});
+        }
+    };
     
     // router reducers
     ReduxyReducerTransducer routerReducer = [ReduxyRouter.shared reducerWithInitialRoutables:@[ nv, vc ]
@@ -88,10 +97,10 @@ static ReduxyMiddleware mainQueue = ReduxyMiddlewareCreateMacro(store, next, act
     
     // root reducer
     return routerReducer(ReduxyPlayerReducer(^ReduxyState (ReduxyState state, ReduxyAction action) {
-        return @{ @"fixed-menu": @[ @"Random dog" ], ///< fixed state
+        return @{ @"fixed-menu": @[ @"randomdog", @"localstore" ], ///< fixed state
                   @"breeds": breedsReducer(state[@"breeds"], action),
                   @"filter": filterReducer(state[@"filter"], action),
-                  @"randomdog": randomDogReducer(state[@"randomdog"], action),
+                  @"randomdog": randomdogReducer(state[@"randomdog"], action),
                   @"indicator": indicatorReducer(state[@"indicator"], action),
                   };
     }));

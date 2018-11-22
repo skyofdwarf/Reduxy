@@ -18,6 +18,7 @@
 #import "ReduxyRouter.h"
 #import "Actions.h"
 #import "AboutViewController.h"
+#import "LocalStoreViewController.h"
 
 
 #define REDUXY_ROUTER 1
@@ -26,6 +27,10 @@
 
 
 #pragma mark - selectors
+
+static selector_block fixedMenuSelector = ^id (ReduxyState state) {
+    return state[@"fixed-menu"];
+};
 
 static selector_block indicatorSelector = ^id (ReduxyState state) {
     return state[@"indicator"];
@@ -130,8 +135,12 @@ ReduxyRoutable
 
 - (void)prepareForSegue:(UIStoryboardSegue *)segue sender:(id)sender {
 #if !REDUXY_ROUTER
-    if ([segue.identifier isEqualToString:@"RandomDog"]) {
+    if ([segue.identifier isEqualToString:@"randomdog"]) {
         RandomDogViewController *vc = (RandomDogViewController *)segue.destinationViewController;
+        vc.breed = sender;
+    }
+    else if ([segue.identifier isEqualToString:@"localstore"]) {
+        LocalStoreViewController *vc = (LocalStoreViewController *)segue.destinationViewController;
         vc.breed = sender;
     }
 #endif
@@ -169,11 +178,25 @@ ReduxyRoutable
                            
                            RandomDogViewController *rdvc = [vc.storyboard instantiateViewControllerWithIdentifier:@"randomdog"];
                            
+                           rdvc.store = Store.main;
                            rdvc.breed = context[@"breed"];
                            
                            [vc showViewController:rdvc sender:nil];
                            
                            return rdvc;
+                       } unroute:^void (id<ReduxyRoutable> src, id context) {
+                           [src.vc.navigationController popViewControllerAnimated:YES];
+                       }];
+    
+    [ReduxyRouter.shared add:LocalStoreViewController.path
+                       route:^id<ReduxyRoutable> (id<ReduxyRoutable> src, NSDictionary *context) {
+                           LocalStoreViewController *vc = [src.vc.storyboard instantiateViewControllerWithIdentifier:@"localstore"];
+                           
+                           vc.breed = context[@"breed"];
+                           
+                           [src.vc showViewController:vc sender:nil];
+                           
+                           return vc;
                        } unroute:^void (id<ReduxyRoutable> src, id context) {
                            [src.vc.navigationController popViewControllerAnimated:YES];
                        }];
@@ -251,10 +274,13 @@ ReduxyRoutable
 
     switch (section) {
         case 0: {
+            NSArray *menu = fixedMenuSelector(state);
+            NSString *path = menu[indexPath.row];
+
 #if REDUXY_ROUTER
-            [ReduxyRouter.shared dispatchRoute:@{ @"path": @"randomdog" }];
+            [ReduxyRouter.shared dispatchRoute:@{ @"path": path }];
 #else
-            [self performSegueWithIdentifier:@"RandomDog" sender:nil];
+            [self performSegueWithIdentifier:path sender:nil];
 #endif
             
             break ;
@@ -267,7 +293,7 @@ ReduxyRoutable
                                           @"breed": item
                                           }];
 #else
-            [self performSegueWithIdentifier:@"RandomDog" sender:item];
+            [self performSegueWithIdentifier:@"randomdog" sender:item];
 #endif
             
             break ;

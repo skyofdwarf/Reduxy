@@ -126,18 +126,21 @@ static NSString * const _stateKey = @"reduxy.routes";
     self.unroutes[path] = nil;
 }
 
-- (void)route:(NSString *)path source:(id<ReduxyRoutable>)routable context:(id)context {
+- (BOOL)route:(NSString *)path source:(id<ReduxyRoutable>)routable context:(id)context {
     RouteAction route = self.routes[path];
     if (route) {
         [self willRouteForPath:path from:routable];
         
         route(routable, context);
+        return YES;
     }
+    
+    return NO;
 }
 
-- (void)unroute:(NSString *)path source:(id<ReduxyRoutable>)routable context:(id)context {
+- (BOOL)unroute:(NSString *)path source:(id<ReduxyRoutable>)routable context:(id)context {
     if (!routable) {
-        return ;
+        return NO;
     }
     
     UnrouteAction unroute = self.unroutes[path];
@@ -146,7 +149,10 @@ static NSString * const _stateKey = @"reduxy.routes";
         
         // do manual unroute
         unroute(routable, context);
+        return YES;
     }
+    
+    return NO;
 }
 
 #pragma mark - redux
@@ -156,14 +162,14 @@ static NSString * const _stateKey = @"reduxy.routes";
     return ReduxyMiddlewareCreateMacro(store, next, action, {
         LOG(@"router mw> received action: %@", action.type);
         
-        NSString *path = action.payload[@"path"];
-        
         if ([action is:ratype(router.route)]) {
-            LOG(@"router mw> route action: %@", path);
+            LOG(@"router mw> route action: %@", action.payload[@"path"]);
+            
             [ReduxyRouter.shared route:action state:[store getState]];
         }
         else if ([action is:ratype(router.unroute)]) {
-            LOG(@"router mw> unroute action: %@", path);
+            LOG(@"router mw> unroute action: %@", action.payload[@"path"]);
+            
             [ReduxyRouter.shared unroute:action state:[store getState]];
         }
         
@@ -197,21 +203,20 @@ static NSString * const _stateKey = @"reduxy.routes";
             ReduxyState currentState = [self.store getState];
             
             NSMutableDictionary *mstate = [NSMutableDictionary dictionaryWithDictionary:nextState];
-            
             NSArray *routes = currentState[ReduxyRouter.stateKey] ?: defaultState;
             
             if ([action is:ratype(router.route)]) {
-                LOG(@"route reducer> %@, add: %@", routes, action.payload);
+                LOG(@"route reducer> route: %@, to: %@", action.payload, routes);
+                
                 NSMutableArray *mroutes = [NSMutableArray arrayWithArray:routes];
                 
                 [mroutes addObject:action.payload];
-                
                 [mstate setObject:mroutes.copy forKey:ReduxyRouter.stateKey];
                 
                 return [mstate copy];
             }
             else if ([action is:ratype(router.unroute)]) {
-                LOG(@"route reducer> %@, remove: %@", routes, action.payload[@"path"]);
+                LOG(@"route reducer> unroute: %@, from: %@", routes, action.payload);
                 
                 NSMutableArray *mroutes = [NSMutableArray arrayWithArray:routes];
                 
@@ -238,7 +243,6 @@ static NSString * const _stateKey = @"reduxy.routes";
             }
             else {
                 [mstate setObject:routes forKey:ReduxyRouter.stateKey];
-                
                 return [mstate copy];
             }
         };
@@ -248,24 +252,34 @@ static NSString * const _stateKey = @"reduxy.routes";
 
 #pragma mark - private
 
-- (void)route:(ReduxyAction)action state:(ReduxyState)state  {
+- (BOOL)route:(ReduxyAction)action state:(ReduxyState)state  {
     NSString *path  = action.payload[@"path"];
     NSString *way  = action.payload[@"way"];
     
+    NSAssert([path isKindOfClass:NSString.class], @"the `path` must be kined of NSString");
+    
     if (self.routesAutoway || !way) {
         id<ReduxyRoutable> routable = [self topRoutable];
-        [self route:path source:routable context:action.payload];
+        return [self route:path source:routable context:action.payload];
     }
+    
+    BOOL autorouting = (way != nil);
+    return autorouting;
 }
 
-- (void)unroute:(ReduxyAction)action state:(ReduxyState)state  {
+- (BOOL)unroute:(ReduxyAction)action state:(ReduxyState)state  {
     NSString *path  = action.payload[@"path"];
     NSString *way  = action.payload[@"way"];
     
+    NSAssert([path isKindOfClass:NSString.class], @"the `path` must be kined of NSString");
+    
     if (self.routesAutoway || !way) {
         id<ReduxyRoutable> routable = [self topRoutable];
-        [self unroute:path source:routable context:action.payload];
+        return [self unroute:path source:routable context:action.payload];
     }
+    
+    BOOL autorouting = (way != nil);
+    return autorouting;
 }
 
 - (id<ReduxyRoutable>)topRoutable {
@@ -472,22 +486,34 @@ static NSString * const _stateKey = @"reduxy.routes";
 
 #pragma mark - ReduxyStoreSubscriber
 
+
 - (void)store:(id<ReduxyStore>)store didChangeState:(ReduxyState)state byAction:(ReduxyAction)action {
+    /**
+     NOTE: router uses `actioin` to un/route a path
+     */
     
     if ([action is:ratype(router.route)]) {
         NSString *path = action.payload[@"path"];
         
-        LOG(@"router mw> route action: %@", path);
+        LOG(@"router subscriber> route action: %@", path);
         
-        [ReduxyRouter.shared route:action state:[store getState]];
+        if (![self route:action state:[store getState]]) {
+            @throw [NSException exceptionWithName:NSInternalInconsistencyException
+                                           reason:[NSString stringWithFormat:@"Route failed: %@", action]
+                                         userInfo:state];
+        }
     }
     else
     if ([action is:ratype(router.unroute)]) {
         NSString *path = action.payload[@"path"];
         
-        LOG(@"router mw> unroute action: %@", path);
+        LOG(@"router subscriber> unroute action: %@", path);
         
-        [ReduxyRouter.shared unroute:action state:[store getState]];
+        if (![self unroute:action state:[store getState]]) {
+            @throw [NSException exceptionWithName:NSInternalInconsistencyException
+                                           reason:[NSString stringWithFormat:@"unroute failed: %@", action]
+                                         userInfo:state];
+        }
     }
 }
 
