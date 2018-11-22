@@ -80,25 +80,26 @@ static ReduxyMiddleware mainQueue = ReduxyMiddlewareCreateMacro(store, next, act
     ReduxyReducer breedsReducer = ReduxyKeyPathReducerForAction(ratype(breedlist.reload), @"breeds", @{});
     ReduxyReducer filterReducer = ReduxyKeyPathReducerForAction(ratype(breedlist.filtered), @"filter", @"");
     ReduxyReducer randomDogReducer = ReduxyKeyPathReducerForAction(ratype(randomdog.reload), @"randomdog", @"");
+    ReduxyReducer indicatorReducer = ReduxyValueReducerForAction(ratype(indicator), @NO);
     
     // router reducers
-    ReduxyReducer routerReducer = [ReduxyRouter.shared reducerWithInitialRoutables:@[ nv, vc ]
-                                                                          forPaths:@[ @"navigation", @"breedlist" ]];
+    ReduxyReducerTransducer routerReducer = [ReduxyRouter.shared reducerWithInitialRoutables:@[ nv, vc ]
+                                                                                    forPaths:@[ @"navigation", @"breedlist" ]];
     
     // root reducer
-    return ^ReduxyState (ReduxyState state, ReduxyAction action) {
-        return @{ ReduxyRouter.stateKey: routerReducer(state[ReduxyRouter.stateKey], action),
-                  @"fixed-menu": @[ @"Random dog" ], ///< fixed state
+    return routerReducer(ReduxyPlayerReducer(^ReduxyState (ReduxyState state, ReduxyAction action) {
+        return @{ @"fixed-menu": @[ @"Random dog" ], ///< fixed state
                   @"breeds": breedsReducer(state[@"breeds"], action),
                   @"filter": filterReducer(state[@"filter"], action),
                   @"randomdog": randomDogReducer(state[@"randomdog"], action),
+                  @"indicator": indicatorReducer(state[@"indicator"], action),
                   };
-    };
+    }));
 }
     
 - (ReduxySimpleRecorder *)createRecorderWithRootReducer:(ReduxyReducer)rootReducer {
     return [[ReduxySimpleRecorder alloc] initWithRootReducer:rootReducer
-                                     ignorableActions:@[ ReduxyPlayerActionJump ]];
+                                     ignorableActions:@[ ReduxyPlayerActionJump, ReduxyPlayerActionStep ]];
 }
 
 - (ReduxyStore *)createMainStoreWithRootReducer:(ReduxyReducer)rootReducer recorder:(id<ReduxyRecorder>)recorder {

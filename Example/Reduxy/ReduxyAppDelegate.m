@@ -26,11 +26,9 @@
     raction_add(breedlist.filtered, "note: ...");
     raction_add(breedlist.reload);
     
-    raction_add(randomdog.fetched);
     raction_add(randomdog.reload);
     
-    raction_add(indicator.start);
-    raction_add(indicator.stop);
+    raction_add(indicator);
     
     return YES;
 }

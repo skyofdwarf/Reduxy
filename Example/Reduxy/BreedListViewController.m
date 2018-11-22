@@ -27,6 +27,10 @@
 
 #pragma mark - selectors
 
+static selector_block indicatorSelector = ^id (ReduxyState state) {
+    return state[@"indicator"];
+};
+
 selector_block filterSelector = ^NSString *(ReduxyState state) {
     return state[@"filter"];
 };
@@ -286,7 +290,7 @@ ReduxyRoutable
     LOG_HERE
     
     // dispatch fetching action
-    [Store.main dispatch:raction(indicator.start)];
+    [Store.main dispatch:raction_payload(indicator, @YES)];
     
     ReduxyAsyncAction *action =
     [ReduxyAsyncAction newWithTag:@"breedlist.reload"
@@ -307,7 +311,7 @@ ReduxyRoutable
                                                                                                        NSDictionary *breeds = json[@"message"];
                                                                                                        
                                                                                                        storeDispatch(raction_payload(breedlist.reload, @{ @"breeds": breeds }));
-                                                                                                       storeDispatch(raction(indicator.stop));
+                                                                                                       storeDispatch(raction_payload(indicator, @NO));
                                                                                                        // success
                                                                                                        return ;
                                                                                                    }
@@ -316,7 +320,7 @@ ReduxyRoutable
                                                                                            
                                                                                            // fail
                                                                                            storeDispatch(raction_payload(breedlist.reload, @{ @"breeds": @[] }));
-                                                                                           storeDispatch(raction(indicator.stop));
+                                                                                           storeDispatch(raction_payload(indicator, @NO));
                                                                                        }];
                                 [task resume];
                                 
@@ -362,20 +366,36 @@ ReduxyRoutable
 
 #pragma mark - ReduxyStoreSubscriber
 
-- (void)reduxyStore:(id<ReduxyStore>)store didChangeState:(ReduxyState)state byAction:(ReduxyAction)action {
+- (void)store:(id<ReduxyStore>)store didChangeState:(ReduxyState)state byAction:(ReduxyAction)action {
     LOG(@"state did change by action: %@\nstate: %@", action, state);
 
-    if ([action is:ratype(indicator.start)]) {
+#if 1 // refresh by state
+    
+    NSNumber *indicator = indicatorSelector(state);
+    if (indicator.boolValue) {
         [self.indicatorView startAnimating];
     }
-    if ([action is:ratype(indicator.stop)]) {
+    else {
         [self.indicatorView stopAnimating];
     }
 
+    [self.tableView reloadData];
+#else // refresh by action
+    if ([action is:ratype(indicator)]) {
+        NSNumber *visible = action.payload;
+        if (visible.boolValue) {
+            [self.indicatorView startAnimating];
+        }
+        else {
+            [self.indicatorView stopAnimating];
+        }
+    }
+    
     if ([action is:ratype(breedlist.filtered)] ||
         [action is:ratype(breedlist.reload)]) {
         [self.tableView reloadData];
     }
+#endif
 }
 
 #pragma mark - UISearchBarDelegate

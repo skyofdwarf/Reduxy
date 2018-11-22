@@ -9,13 +9,19 @@
 #import "ReduxyPlayerMiddleware.h"
 
 
-ReduxyActionType ReduxyPlayerActionJump = @"reduxy.action.player.jump";
+/// replay action in middleware, recover state in reducer
+ReduxyActionType ReduxyPlayerActionJump = @"reduxy.mw.player.jump";
+
+/// replay action, do not recever state
+ReduxyActionType ReduxyPlayerActionStep = @"reduxy.mw.player.step";
 
 
 ReduxyMiddleware ReduxyPlayerMiddleware = ^ReduxyTransducer (id<ReduxyStore> store) {
     return ^ReduxyDispatch (ReduxyDispatch next) {
         return ^ReduxyAction (ReduxyAction action) {
-            if ([action is:ReduxyPlayerActionJump]) {
+            if ([action is:ReduxyPlayerActionStep] ||
+                [action is:ReduxyPlayerActionJump])
+            {
                 LOG(@"player mw> player action: %@", action.type);
                 
                 id<ReduxyRecorderItem> item = action.payload;
@@ -29,3 +35,15 @@ ReduxyMiddleware ReduxyPlayerMiddleware = ^ReduxyTransducer (id<ReduxyStore> sto
     };
 };
 
+ReduxyReducerTransducer ReduxyPlayerReducer = ^ReduxyReducer (ReduxyReducer next) {
+    return ^ReduxyState (ReduxyState state, ReduxyAction action) {
+        if ([action is:ReduxyPlayerActionJump]) {
+            id<ReduxyRecorderItem> item = action.payload;
+            return item.nextState;
+        }
+        else {
+            return next(state, action);
+        }
+    };
+};
+        

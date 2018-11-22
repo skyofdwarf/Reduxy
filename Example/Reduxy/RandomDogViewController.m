@@ -17,6 +17,15 @@
 
 
 
+static selector_block indicatorSelector = ^id (ReduxyState state) {
+    return state[@"indicator"];
+};
+
+static selector_block imageSelector = ^id (ReduxyState state) {
+    return state[@"randomdog"][@"image"];
+};
+
+
 static ReduxyMiddleware logger = ReduxyMiddlewareCreateMacro(store, next, action, {
     LOG(@"logger> received action: %@", action);
     return next(action);
@@ -38,25 +47,25 @@ static ReduxyMiddleware mainQueue = ReduxyMiddlewareCreateMacro(store, next, act
     }
 });
 
-
-static ReduxyReducer randomdogReducer = ^ReduxyState (ReduxyState state, ReduxyAction action) {
-    if ([action is:ratype(randomdog.reload)]) {
-        UIImage *randomdog = action.payload[@"randomdog"];
-        return (randomdog? randomdog: NSNull.null);
-    }
-    else {
-        return (state? state: NSNull.null);
-    }
-};
-
 static ReduxyReducer rootReducer = ^ReduxyState (ReduxyState state, ReduxyAction action) {
+    ReduxyReducer indicatorReducer = ReduxyValueReducerForAction(ratype(indicator), @NO);
+    
+    ReduxyReducer randomdogReducer = ^ReduxyState (ReduxyState state, ReduxyAction action) {
+        if ([action is:ratype(randomdog.reload)]) {
+            UIImage *image = action.payload[@"image"];
+            return (image? @{ @"image": image }: @{});
+        }
+        else {
+            return (state? state: @{});
+        }
+    };
+
+    
     return @{ @"breed": state[@"breed"],
-              @"randomdog": randomdogReducer(state[@"randomdog"], action)
+              @"randomdog": randomdogReducer(state[@"randomdog"], action),
+              @"indicator": indicatorReducer(state[@"indicator"], action),
               };
 };
-
-
-
 
 
 @interface RandomDogViewController ()
@@ -152,7 +161,7 @@ ReduxyRoutable
     
     __weak typeof(self) wself = self;
     
-    [self.store dispatch:raction(indicator.start)];
+    [self.store dispatch:raction_payload(indicator, @YES)];
     
     ReduxyAsyncAction *action = [ReduxyAsyncAction newWithTag:@"randomdog.fetch-random"
                                                         actor:^ReduxyAsyncActionCanceller(ReduxyDispatch storeDispatch)
@@ -174,7 +183,7 @@ ReduxyRoutable
                                                                                if ([status isEqualToString:@"success"]) {
                                                                                    NSString *imageUrl = json[@"message"];
                                                                                    
-                                                                                   storeDispatch(raction_payload(randomdog.fetched, @{ @"url": imageUrl }));
+                                                                                   [self loadImageWithUrlString:imageUrl];
                                                                                    // success
                                                                                    return ;
                                                                                }
@@ -183,7 +192,7 @@ ReduxyRoutable
                                                                        
                                                                        // fail
                                                                        storeDispatch(raction(randomdog.reload));
-                                                                       storeDispatch(raction(indicator.stop));
+                                                                       storeDispatch(raction_payload(indicator, @NO));
                                                                    }];
                                      [task resume];
                                      
@@ -212,8 +221,8 @@ ReduxyRoutable
                                                                        if (!error) {
                                                                            UIImage *image = [UIImage imageWithData:data];
                                                                            if (image) {
-                                                                               storeDispatch(raction_payload(randomdog.reload, @{ @"randomdog": image }));
-                                                                               storeDispatch(raction(indicator.stop));
+                                                                               storeDispatch(raction_payload(randomdog.reload, @{ @"image": image }));
+                                                                               storeDispatch(raction_payload(indicator, @NO));
                                                                                // success
                                                                                return ;
                                                                            }
@@ -221,7 +230,7 @@ ReduxyRoutable
                                                                        
                                                                        // fail
                                                                        storeDispatch(raction(randomdog.reload));
-                                                                       storeDispatch(raction(indicator.stop));
+                                                                       storeDispatch(raction_payload(indicator, @NO));
                                                                    }];
                                      [task resume];
                                      
@@ -247,24 +256,35 @@ ReduxyRoutable
 
 #pragma mark - ReduxyStoreSubscriber
 
-- (void)reduxyStore:(id<ReduxyStore>)store didChangeState:(ReduxyState)state byAction:(ReduxyAction)action {
+- (void)store:(id<ReduxyStore>)store didChangeState:(ReduxyState)state byAction:(ReduxyAction)action {
     LOG(@"state did change by action: %@\nstate: %@", action, state);
     
-    if ([action is:ratype(indicator.start)]) {
+#if 1 // refresh by state
+    NSNumber *indicator = indicatorSelector(state);
+    if (indicator.boolValue) {
         [self.indicatorView startAnimating];
     }
-    
-    if ([action is:ratype(indicator.stop)]) {
+    else {
         [self.indicatorView stopAnimating];
     }
     
-    if ([action is:ratype(randomdog.fetched)]) {
-        [self loadImageWithUrlString:action.payload[@"url"]];
+    self.imageView.image = imageSelector(state);
+    
+#else // refresh by action
+    if ([action is:ratype(indicator)]) {
+        NSNumber *visible = action.payload;
+        if (visible.boolValue) {
+            [self.indicatorView startAnimating];
+        }
+        else {
+            [self.indicatorView stopAnimating];
+        }
     }
     
     if ([action is:ratype(randomdog.reload)]) {
-        self.imageView.image = action.payload[@"randomdog"];
+        self.imageView.image = action.payload[@"image];
     }
+#endif
 }
 
 

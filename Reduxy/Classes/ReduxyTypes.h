@@ -39,12 +39,19 @@ typedef NSString * const ReduxyActionType;
 #pragma mark - function types
 
 typedef ReduxyState (^ReduxyReducer)(ReduxyState state, ReduxyAction action);
+typedef ReduxyReducer (^ReduxyReducerTransducer)(ReduxyReducer next);
 
 typedef ReduxyState (^ReduxyGetState)(void);
 typedef ReduxyAction (^ReduxyDispatch)(ReduxyAction action);
 
 typedef ReduxyDispatch (^ReduxyTransducer)(ReduxyDispatch next);
 typedef ReduxyTransducer (^ReduxyMiddleware)(id<ReduxyStore> store);
+
+
+/**
+ regular selector, no computations
+ */
+typedef id (^selector_block) (ReduxyState);
 
 
 #pragma mark - reduxy action key
@@ -66,6 +73,7 @@ typedef NS_ENUM(NSUInteger, ReduxyError) {
 
 #pragma mark - reducer helper
 
+FOUNDATION_EXTERN ReduxyReducer ReduxyValueReducerForAction(ReduxyActionType type, id defaultValue);
 FOUNDATION_EXTERN ReduxyReducer ReduxyKeyPathReducerForAction(ReduxyActionType type, NSString *key, id defaultValue);
 
 
@@ -107,7 +115,7 @@ FOUNDATION_EXTERN ReduxyReducer ReduxyKeyPathReducerForAction(ReduxyActionType t
 
 @protocol ReduxyStoreSubscriber <NSObject>
 @required
-- (void)reduxyStore:(id<ReduxyStore>)store didChangeState:(ReduxyState)state byAction:(ReduxyAction)action;
+- (void)store:(id<ReduxyStore>)store didChangeState:(ReduxyState)state byAction:(ReduxyAction)action;
 @end
 
 

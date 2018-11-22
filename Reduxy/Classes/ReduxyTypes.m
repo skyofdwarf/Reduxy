@@ -25,6 +25,23 @@ NSErrorDomain const ReduxyErrorDomain = @"ReduxyErrorDomain";
 
 #pragma mark - reducer helper
 
+ReduxyReducer ReduxyValueReducerForAction(ReduxyActionType type, id defaultValue) {
+    return ^ReduxyState (ReduxyState state, ReduxyAction action) {
+        if ([action is:type]) {
+            id value = action.payload;
+            
+            if (!value)
+                @throw [NSException exceptionWithName:NSInternalInconsistencyException
+                                               reason:[NSString stringWithFormat:@"No payload value for action: %@", type]
+                                             userInfo:nil];
+            return value;
+        }
+        else {
+            return (state? state: defaultValue);
+        }
+    };
+};
+
 ReduxyReducer ReduxyKeyPathReducerForAction(ReduxyActionType type, NSString *keypath, id defaultValue) {
     return ^ReduxyState (ReduxyState state, ReduxyAction action) {
         if ([action is:type]) {

@@ -85,6 +85,7 @@ static NSString * const ReduxyRecorderUserDefaultKey = @"reduxy.recorder.items";
         LOG(@"recoder> save: %@", self.mutableItems);
     }
 #endif
+    LOG(@"recoder> saved %lu items", (unsigned long)self.mutableItems.count);
 }
 
 - (void)load {
@@ -106,6 +107,7 @@ static NSString * const ReduxyRecorderUserDefaultKey = @"reduxy.recorder.items";
         LOG(@"recoder> load: %@", items);
     }
 #endif
+    LOG(@"recoder> loaded %lu items", (unsigned long)items.count);
 }
 
 @end

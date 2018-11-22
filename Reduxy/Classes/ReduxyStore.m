@@ -111,7 +111,7 @@
 }
 
 - (void)publishState:(ReduxyState)state to:(id<ReduxyStoreSubscriber>)subscriber action:(ReduxyAction)action {
-    [subscriber reduxyStore:self didChangeState:state byAction:action];
+    [subscriber store:self didChangeState:state byAction:action];
 }
 
 #pragma mark - public

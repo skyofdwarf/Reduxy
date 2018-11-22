@@ -49,9 +49,9 @@ typedef void (^UnrouteAction)(id<ReduxyRoutable> src, id context);
 
 + (ReduxyMiddleware)middleware NS_UNAVAILABLE;
 
-- (ReduxyReducer)reducer;
-- (ReduxyReducer)reducerWithInitialRoutables:(NSArray<id<ReduxyRoutable>> *)vcs
-                                    forPaths:(NSArray<NSString *> *)paths;
+- (ReduxyReducerTransducer)reducer;
+- (ReduxyReducerTransducer)reducerWithInitialRoutables:(NSArray<id<ReduxyRoutable>> *)vcs
+                                              forPaths:(NSArray<NSString *> *)paths;
 
 
 #pragma mark - routing

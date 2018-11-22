@@ -22,12 +22,6 @@ typedef unary_argumented_block memoized_block;
 
 FOUNDATION_EXTERN memoized_block (^memoize)(memoizable_block);
 
-
-/**
- regular selector, no computations
- */
-typedef id (^selector_block) (ReduxyState);
-
 /**
  memoized result selector, do some computations with argsuments
  */

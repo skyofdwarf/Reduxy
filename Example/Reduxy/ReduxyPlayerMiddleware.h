@@ -14,9 +14,11 @@
 
 
 FOUNDATION_EXTERN ReduxyActionType ReduxyPlayerActionJump;
+FOUNDATION_EXTERN ReduxyActionType ReduxyPlayerActionStep;
 
 FOUNDATION_EXTERN ReduxyMiddleware ReduxyPlayerMiddleware;
-
+FOUNDATION_EXTERN ReduxyReducerTransducer ReduxyPlayerReducer;
+    
 
 @protocol ReduxyPlayer <NSObject>
 - (void)loadItems:(NSArray<id<ReduxyRecorderItem>> *)items dispatch:(ReduxyDispatch)dispatch;

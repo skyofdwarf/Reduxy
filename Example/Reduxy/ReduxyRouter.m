@@ -172,54 +172,76 @@ static NSString * const _stateKey = @"reduxy.routes";
 }
 
 
-- (ReduxyReducer)reducer {
+- (ReduxyReducerTransducer)reducer {
     return [self reducerWithInitialRoutables:@[] forPaths:@[]];
 }
 
-- (ReduxyReducer)reducerWithInitialRoutables:(NSArray<id<ReduxyRoutable>> *)vcs forPaths:(NSArray<NSString *> *)paths {
+- (ReduxyReducerTransducer)reducerWithInitialRoutables:(NSArray<id<ReduxyRoutable>> *)vcs forPaths:(NSArray<NSString *> *)paths {
     // builds root routing state
-    NSMutableArray *defaultState = @[].mutableCopy;
+    NSMutableArray *initialState = @[].mutableCopy;
     for (NSInteger index = 0; index < paths.count; ++index) {
         NSString *path = paths[index];
         id<ReduxyRoutable> routable = vcs[index];
         
         [self pushRoutable:routable path:path];
         
-        [defaultState addObject:@{ @"path": path }];
+        [initialState addObject:@{ @"path": path }];
     }
     
+    NSArray *defaultState = initialState.copy;
+    
     // returns a reducer for route state
-    return ^ReduxyState (ReduxyState state, ReduxyAction action) {
-        if ([action is:ratype(router.route)]) {
-            LOG(@"route> %@, add: %@", state, action.payload);
-            NSMutableArray *routes = [NSMutableArray arrayWithArray:state];
+    return ^ReduxyReducer (ReduxyReducer prev) {
+        return ^ReduxyState (ReduxyState state, ReduxyAction action) {
+            ReduxyState nextState = prev(state, action);
+            ReduxyState currentState = [self.store getState];
             
-            [routes addObject:action.payload];
-            return routes.copy;
-        }
-        else if ([action is:ratype(router.unroute)]) {
-            LOG(@"route> %@, remove: %@", state, action.payload[@"path"]);
+            NSMutableDictionary *mstate = [NSMutableDictionary dictionaryWithDictionary:nextState];
             
-            NSMutableArray<NSDictionary *> *routes = [NSMutableArray arrayWithArray:state];
+            NSArray *routes = currentState[ReduxyRouter.stateKey] ?: defaultState;
             
-            NSString *pathToPop = action.payload[@"path"];
-            
-            NSDictionary *topPathInfo = routes.lastObject;
-            NSString *topPath = topPathInfo[@"path"];
-            
-            LOG(@"route reducer> will pop the path: %@", pathToPop);
-            if ([topPath isEqualToString:pathToPop]) {
-                LOG(@"route reducer> pop the path: %@", pathToPop);
-                [routes removeLastObject];
-                return routes.copy;
+            if ([action is:ratype(router.route)]) {
+                LOG(@"route reducer> %@, add: %@", routes, action.payload);
+                NSMutableArray *mroutes = [NSMutableArray arrayWithArray:routes];
+                
+                [mroutes addObject:action.payload];
+                
+                [mstate setObject:mroutes.copy forKey:ReduxyRouter.stateKey];
+                
+                return [mstate copy];
+            }
+            else if ([action is:ratype(router.unroute)]) {
+                LOG(@"route reducer> %@, remove: %@", routes, action.payload[@"path"]);
+                
+                NSMutableArray *mroutes = [NSMutableArray arrayWithArray:routes];
+                
+                NSString *pathToPop = action.payload[@"path"];
+                
+                NSDictionary *topPathInfo = routes.lastObject;
+                NSString *topPath = topPathInfo[@"path"];
+                
+                if ([topPath isEqualToString:pathToPop]) {
+                    LOG(@"route reducer> pop the path: %@", pathToPop);
+                    [mroutes removeLastObject];
+                }
+                else {
+                    LOG(@"route reducer> not found the path: %@", pathToPop);
+                    
+                    @throw [NSException exceptionWithName:NSInternalInconsistencyException
+                                                   reason:[NSString stringWithFormat:@"Not found a path to pop: %@", pathToPop]
+                                                 userInfo:currentState];
+                }
+                
+                [mstate setObject:mroutes.copy forKey:ReduxyRouter.stateKey];
+                
+                return [mstate copy];
             }
             else {
-                LOG(@"route reducer> not found the path: %@", pathToPop);
+                [mstate setObject:routes forKey:ReduxyRouter.stateKey];
+                
+                return [mstate copy];
             }
-        }
-        
-        // else
-        return (state? state: defaultState);
+        };
     };
 }
 
@@ -450,7 +472,7 @@ static NSString * const _stateKey = @"reduxy.routes";
 
 #pragma mark - ReduxyStoreSubscriber
 
-- (void)reduxyStore:(id<ReduxyStore>)store didChangeState:(ReduxyState)state byAction:(ReduxyAction)action {
+- (void)store:(id<ReduxyStore>)store didChangeState:(ReduxyState)state byAction:(ReduxyAction)action {
     
     if ([action is:ratype(router.route)]) {
         NSString *path = action.payload[@"path"];
