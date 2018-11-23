@@ -8,12 +8,17 @@
 
 #import "ReduxySimpleRecorder.h"
 
+/// replay action in middleware, recover state in reducer
+ReduxyActionType ReduxyPlayerActionJump = @"reduxy.mw.player.jump";
+
+/// replay action, do not recever state
+ReduxyActionType ReduxyPlayerActionStep = @"reduxy.mw.player.step";
+
+
 static NSString * const ReduxyRecorderUserDefaultKey = @"reduxy.recorder.items";
 
 @interface ReduxySimpleRecorder ()
-<
-ReduxyStoreSubscriber
->
+
 @property (strong, nonatomic) NSMutableArray<id<ReduxyRecorderItem>> *mutableItems;
 @property (strong, nonatomic) NSSet<ReduxyActionType> *actionTypesToIgnore;
 
@@ -45,6 +50,9 @@ ReduxyStoreSubscriber
     return self;
 }
 
+
+#pragma mark - ReduxyRecorder protocol
+
 - (BOOL)record:(ReduxyAction)action state:(ReduxyState)state {
     if (!self.enabled) {
         return NO;
@@ -54,9 +62,14 @@ ReduxyStoreSubscriber
         return NO;
     }
     
-    [self.mutableItems addObject:@{ ReduxyRecorderItemAction: action,
+    BOOL copying = [action conformsToProtocol:@protocol(NSCopying)];
+    
+    [self.mutableItems addObject:@{ ReduxyRecorderItemAction: (copying?
+                                                               action:
+                                                               action.description),
                                     ReduxyRecorderItemState: state,
                                     }];
+    
     return YES;
 }
 
@@ -76,18 +89,6 @@ ReduxyStoreSubscriber
     
     [ud synchronize];
     
-#if DEBUG
-    NSData *data = [NSJSONSerialization dataWithJSONObject:self.mutableItems
-                                                   options:NSJSONWritingPrettyPrinted
-                                                     error:nil];
-    if (data) {
-        NSString *json = [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
-        LOG(@"recoder> save: %@", json);
-    }
-    else {
-        LOG(@"recoder> save: %@", self.mutableItems);
-    }
-#endif
     LOG(@"recoder> saved %lu items", (unsigned long)self.mutableItems.count);
 }
 
@@ -98,27 +99,15 @@ ReduxyStoreSubscriber
 
     [self.mutableItems setArray:items];
     
-#if DEBUG
-    NSData *data = [NSJSONSerialization dataWithJSONObject:items
-                                                   options:NSJSONWritingPrettyPrinted
-                                                     error:nil];
-    if (data) {
-        NSString *json = [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
-        LOG(@"recoder> load: %@", json);
-    }
-    else {
-        LOG(@"recoder> load: %@", items);
-    }
-#endif
-    LOG(@"recoder> loaded %lu items", (unsigned long)items.count);
+    LOG(@"recoder> loaded %lu items: %@", (unsigned long)items.count, items);
 }
 
 #pragma mark - ReduxyStoreSubscriber
 
 - (void)store:(id<ReduxyStore>)store didChangeState:(ReduxyState)state byAction:(ReduxyAction)action {
-    LOG(@"recorder subscriber> record action: %@ with state: %@", action.type, state);
-    
-    [self record:action state:state];
+    if ([self record:action state:state]) {
+        LOG(@"recorder subscriber> record action: %@ with state: %@", action.type, state);
+    }
 }
 
 @end

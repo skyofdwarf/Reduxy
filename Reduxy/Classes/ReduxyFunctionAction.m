@@ -30,6 +30,10 @@
     return @"ReduxyFunctionAction";
 }
 
+- (NSString *)description {
+    return [NSString stringWithFormat:@"%@: %@", self.type, self.tag];
+}
+
 @end
 
 

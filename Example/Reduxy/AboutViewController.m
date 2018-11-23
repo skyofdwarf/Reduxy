@@ -47,8 +47,6 @@ ReduxyRoutable
     LOG_HERE
     
     [super viewDidAppear:animated];
-    
-    LOG(@"vcs: %@", ReduxyRouter.shared.vcs);
 }
 
 

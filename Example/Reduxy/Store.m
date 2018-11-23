@@ -58,24 +58,7 @@ static ReduxyMiddleware mainQueue = ReduxyMiddlewareCreateMacro(store, next, act
     return instance;
 }
 
-- (instancetype)init {
-    ReduxyReducer rootReducer = [self createRootReducer];
-    
-    self = [super initWithState:rootReducer(nil, nil)
-                        reducer:rootReducer
-                    middlewares:@[ logger,
-                                   ReduxyFunctionMiddleware,
-                                   ReduxyPlayerMiddleware,
-                                   mainQueue
-                                   ]];
-    if (self) {
-        self.recorder = [self createRecorderWithStore:self];
-    }
-    
-    return self;
-}
-
-- (ReduxyReducer)createRootReducer {
++ (ReduxyReducer)createRootReducer {
     UINavigationController *nv = (UINavigationController *)ReduxyAppDelegate.shared.window.rootViewController;
     UIViewController *vc = nv.topViewController;
     
@@ -98,33 +81,36 @@ static ReduxyMiddleware mainQueue = ReduxyMiddlewareCreateMacro(store, next, act
     ReduxyReducerTransducer routerReducer = [ReduxyRouter.shared reducerWithInitialRoutables:@[ nv, vc ]
                                                                                     forPaths:@[ @"navigation", @"breedlist" ]];
     
-    // root reducer
-    return routerReducer(ReduxyPlayerReducer(^ReduxyState (ReduxyState state, ReduxyAction action) {
+    ReduxyReducer rootReducer = ^ReduxyState (ReduxyState state, ReduxyAction action) {
         return @{ @"fixed-menu": @[ @"randomdog", @"localstore" ], ///< fixed state
                   @"breeds": breedsReducer(state[@"breeds"], action),
                   @"filter": filterReducer(state[@"filter"], action),
                   @"randomdog": randomdogReducer(state[@"randomdog"], action),
                   @"indicator": indicatorReducer(state[@"indicator"], action),
                   };
-    }));
-}
+    };
     
-- (ReduxySimpleRecorder *)createRecorderWithStore:(id<ReduxyStore>)store {
-    return [[ReduxySimpleRecorder alloc] initWithStore:store actionTypesToIgnore:@[ ReduxyPlayerActionJump,
-                                                                                                              ReduxyPlayerActionStep ]];
+    // root reducer
+    return routerReducer(ReduxySimplePlayer.reducer(rootReducer));
 }
 
-- (ReduxyStore *)createMainStoreWithRootReducer:(ReduxyReducer)rootReducer {
-    return [ReduxyStore storeWithState:rootReducer(nil, nil)
-                               reducer:rootReducer
-                           middlewares:@[ logger,
-                                          ReduxyFunctionMiddleware,
-                                          ReduxyPlayerMiddleware,
-                                          mainQueue
-                                          ]];
+- (instancetype)init {
+    ReduxyReducer rootReducer = [self.class createRootReducer];
     
+    self = [super initWithState:rootReducer(nil, nil)
+                        reducer:rootReducer
+                    middlewares:@[ logger,
+                                   ReduxyFunctionMiddleware,
+                                   ReduxySimplePlayer.middleware,
+                                   mainQueue
+                                   ]];
+    if (self) {
+        self.recorder = [[ReduxySimpleRecorder alloc] initWithStore:self
+                                                actionTypesToIgnore:@[ ReduxyPlayerActionJump,
+                                                                       ReduxyPlayerActionStep ]];
+    }
+    
+    return self;
 }
-
-
 
 @end

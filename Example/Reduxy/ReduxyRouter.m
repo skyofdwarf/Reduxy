@@ -197,13 +197,12 @@ static NSString * const _stateKey = @"reduxy.routes";
     NSArray *defaultState = initialState.copy;
     
     // returns a reducer for route state
-    return ^ReduxyReducer (ReduxyReducer prev) {
+    return ^ReduxyReducer (ReduxyReducer next) {
         return ^ReduxyState (ReduxyState state, ReduxyAction action) {
-            ReduxyState nextState = prev(state, action);
-            ReduxyState currentState = [self.store getState];
+            ReduxyState nextState = next(state, action);
             
             NSMutableDictionary *mstate = [NSMutableDictionary dictionaryWithDictionary:nextState];
-            NSArray *routes = currentState[ReduxyRouter.stateKey] ?: defaultState;
+            NSArray *routes = state[ReduxyRouter.stateKey] ?: defaultState;
             
             if ([action is:ratype(router.route)]) {
                 LOG(@"route reducer> route: %@, to: %@", action.payload, routes);
@@ -234,7 +233,7 @@ static NSString * const _stateKey = @"reduxy.routes";
                     
                     @throw [NSException exceptionWithName:NSInternalInconsistencyException
                                                    reason:[NSString stringWithFormat:@"Not found a path to pop: %@", pathToPop]
-                                                 userInfo:currentState];
+                                                 userInfo:state];
                 }
                 
                 [mstate setObject:mroutes.copy forKey:ReduxyRouter.stateKey];
@@ -476,13 +475,6 @@ static NSString * const _stateKey = @"reduxy.routes";
     return YES;
 }
 
-#if DEBUG
-
-- (NSArray<NSDictionary *> *)vcs {
-    return self.routables.copy;
-}
-
-#endif
 
 #pragma mark - ReduxyStoreSubscriber
 

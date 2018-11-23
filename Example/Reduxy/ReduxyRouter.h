@@ -76,8 +76,5 @@ typedef void (^UnrouteAction)(id<ReduxyRoutable> src, id context);
 - (void)willRouteForPath:(NSString *)path from:(id<ReduxyRoutable>)routable;
 - (BOOL)didRoute:(id<ReduxyRoutable>)routable;
 
-#if DEBUG
-- (NSArray<NSDictionary *> *)vcs;
-#endif
 
 @end

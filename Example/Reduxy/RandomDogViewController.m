@@ -117,10 +117,7 @@ ReduxyRoutable
 #pragma mark - private
 
 - (void)updateImageWithData:(NSData *)data {
-    __weak typeof(self) wself = self;
-    dispatch_async(dispatch_get_main_queue(), ^{
-        wself.imageView.image = [UIImage imageWithData:data];
-    });
+    self.imageView.image = [UIImage imageWithData:data];
 }
 
 #pragma mark - network
@@ -146,26 +143,25 @@ ReduxyRoutable
                                                                        wself.canceller = nil;
                                                                        
                                                                        if (!error) {
-                                                                           NSError *jsonError = nil;
                                                                            NSDictionary *json = [NSJSONSerialization JSONObjectWithData:data
                                                                                                                                 options:0
-                                                                                                                                  error:&jsonError];
-                                                                           if (!jsonError) {
-                                                                               NSString *status = json[@"status"];
-                                                                               if ([status isEqualToString:@"success"]) {
-                                                                                   NSString *imageUrl = json[@"message"];
+                                                                                                                                  error:nil];
+                                                                           
+                                                                           NSString *status = json[@"status"];
+                                                                           
+                                                                           if ([status isEqualToString:@"success"]) {
+                                                                               NSString *imageUrl = json[@"message"];
+                                                                               
+                                                                               // success
+                                                                               [wself loadImageWithUrlString:imageUrl completion:^(NSData *data) {
+                                                                                   storeDispatch(data?
+                                                                                                 raction_payload(randomdog.reload, @{ @"image": data }):
+                                                                                                 raction(randomdog.reload}));
                                                                                    
-                                                                                   // success
-                                                                                   [wself loadImageWithUrlString:imageUrl completion:^(UIImage *image) {
-                                                                                       storeDispatch(image?
-                                                                                                     raction_payload(randomdog.reload, @{ @"image": image }):
-                                                                                                     raction(randomdog.reload}));
-                                                                                       
-                                                                                       storeDispatch(raction_payload(indicator, @NO));
-                                                                                   }];
-                                                                                   
-                                                                                   return ;
-                                                                               }
+                                                                                   storeDispatch(raction_payload(indicator, @NO));
+                                                                               }];
+                                                                               
+                                                                               return ;
                                                                            }
                                                                        }
                                                                        
@@ -184,15 +180,13 @@ ReduxyRoutable
     self.canceller = (ReduxyAsyncActionCanceller)[self.store dispatch:action];
 }
 
-- (void)loadImageWithUrlString:(NSString *)urlString completion:(void (^)(UIImage *image))completion {
-    __weak typeof(self) wself = self;
-    
+- (void)loadImageWithUrlString:(NSString *)urlString completion:(void (^)(NSData *data))completion {
     NSURL *url = [NSURL URLWithString:urlString];
     
     NSURLSessionDataTask *task = [NSURLSession.sharedSession dataTaskWithURL:url
                                                            completionHandler:^(NSData * _Nullable data, NSURLResponse * _Nullable response, NSError * _Nullable error)
                                   {
-                                      completion([UIImage imageWithData:data]);
+                                      completion(data);
                                   }];
     [task resume];
 }
@@ -224,7 +218,9 @@ ReduxyRoutable
     }
     
     // update image
-    self.imageView.image = imageSelector(state);
+    //self.imageView.image = imageSelector(state);
+    NSData *data = imageSelector(state);
+    self.imageView.image = [UIImage imageWithData:data];
     
     
 #else // refresh by action

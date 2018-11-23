@@ -7,7 +7,11 @@
 //
 
 #import <Foundation/Foundation.h>
-#import "ReduxyRecorderMiddleware.h"
+#import "ReduxyRecorder.h"
+
+
+FOUNDATION_EXTERN ReduxyActionType ReduxyPlayerActionJump;
+FOUNDATION_EXTERN ReduxyActionType ReduxyPlayerActionStep;
 
 
 /**
@@ -20,8 +24,13 @@
    ReduxyRecorderItemNextState: nextState,
  };
  */
-@interface ReduxySimpleRecorder : NSObject <ReduxyRecorder>
+@interface ReduxySimpleRecorder : NSObject
+<
+ReduxyRecorder,
+ReduxyStoreSubscriber
+>
 @property (assign, nonatomic) BOOL enabled;
+
 
 #pragma mark - constructors
 
@@ -37,6 +46,7 @@
 - (instancetype)initWithStore:(id<ReduxyStore>)store actionTypesToIgnore:(NSArray<ReduxyActionType> *)typesToIgnore;
 
 - (instancetype)initWithStore:(id<ReduxyStore>)store;
+
 
 
 #pragma mark - ReduxyRecorder protocol

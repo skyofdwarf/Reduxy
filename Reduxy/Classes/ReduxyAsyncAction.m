@@ -10,6 +10,7 @@
 
 
 @implementation ReduxyAsyncAction
+
 + (instancetype)newWithTag:(NSString *)tag actor:(ReduxyAsyncActor)actor {
     return [[ReduxyAsyncAction alloc] initWithTag:tag actor:actor];
 }

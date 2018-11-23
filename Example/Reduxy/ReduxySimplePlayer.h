@@ -8,13 +8,16 @@
 
 #import <Foundation/Foundation.h>
 #import "ReduxyTypes.h"
-#import "ReduxyPlayerMiddleware.h"
 
 @interface ReduxySimplePlayer : NSObject <ReduxyPlayer>
 @property (assign, nonatomic, readonly) NSInteger position;
 
 + (instancetype)shared;
 
++ (ReduxyMiddleware)middleware;
++ (ReduxyReducerTransducer)reducer;
+
+    
 - (void)loadItems:(NSArray<id<ReduxyRecorderItem>> *)items dispatch:(ReduxyDispatch)dispatch;
 
 - (BOOL)finished;

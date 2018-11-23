@@ -9,7 +9,6 @@
 #import "BreedListViewController.h"
 #import "ReduxyStore.h"
 #import "ReduxyFunctionMiddleware.h"
-#import "ReduxyRecorderMiddleware.h"
 #import "ReduxyAsyncAction.h"
 #import "RandomDogViewController.h"
 #import "ReduxySimpleRecorder.h"
