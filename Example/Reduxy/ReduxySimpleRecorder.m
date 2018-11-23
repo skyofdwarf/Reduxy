@@ -14,10 +14,14 @@ ReduxyActionType ReduxyPlayerActionJump = @"reduxy.mw.player.jump";
 /// replay action, do not recever state
 ReduxyActionType ReduxyPlayerActionStep = @"reduxy.mw.player.step";
 
+/// eplay action in middleware, recover state in reducer
+static ReduxyActionType ReduxyPlayerActionStart = @"reduxy.mw.player.start";
+
 
 static NSString * const ReduxyRecorderUserDefaultKey = @"reduxy.recorder.items";
 
 @interface ReduxySimpleRecorder ()
+@property (assign, nonatomic) BOOL recording;
 
 @property (strong, nonatomic) NSMutableArray<id<ReduxyRecorderItem>> *mutableItems;
 @property (strong, nonatomic) NSSet<ReduxyActionType> *actionTypesToIgnore;
@@ -27,6 +31,10 @@ static NSString * const ReduxyRecorderUserDefaultKey = @"reduxy.recorder.items";
 
 
 @implementation ReduxySimpleRecorder
+
++ (void)load {
+    raction_add_raw(ReduxyPlayerActionStart);
+}
 
 - (void)dealloc {
     [self.store unsubscribe:self];
@@ -39,10 +47,12 @@ static NSString * const ReduxyRecorderUserDefaultKey = @"reduxy.recorder.items";
 - (instancetype)initWithStore:(id<ReduxyStore>)store actionTypesToIgnore:(NSArray<ReduxyActionType> *)typesToIgnore {
     self = [super init];
     if (self) {
+        
+        
         self.store = store;
         self.actionTypesToIgnore = [NSSet setWithArray:typesToIgnore];
         
-        self.enabled = YES;
+        self.recording = NO;
         
         [self clear];
         [self.store subscribe:self];
@@ -50,11 +60,17 @@ static NSString * const ReduxyRecorderUserDefaultKey = @"reduxy.recorder.items";
     return self;
 }
 
+- (void)recordInitialState {
+    ReduxyState state = [self.store getState];
+    ReduxyAction action = raction_raw(ReduxyPlayerActionStart, nil);
+    
+    [self record:action state:state];
+}
 
 #pragma mark - ReduxyRecorder protocol
 
 - (BOOL)record:(ReduxyAction)action state:(ReduxyState)state {
-    if (!self.enabled) {
+    if (!self.recording) {
         return NO;
     }
     
@@ -75,6 +91,18 @@ static NSString * const ReduxyRecorderUserDefaultKey = @"reduxy.recorder.items";
 
 - (NSArray<ReduxyRecorderItem> *)items {
     return [self.mutableItems copy];
+}
+
+- (void)start {
+    [self clear];
+    
+    self.recording = YES;
+    
+    [self recordInitialState];
+}
+
+- (void)stop {
+    self.recording = NO;
 }
 
 - (void)clear {

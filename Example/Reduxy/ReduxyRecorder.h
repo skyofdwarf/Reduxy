@@ -43,6 +43,10 @@ FOUNDATION_EXTERN ReduxyActionType ReduxyRecorderItemState;
 - (BOOL)record:(ReduxyAction)action state:(ReduxyState)state;
 
 - (NSArray<ReduxyRecorderItem> *)items;
+
+- (void)start;
+- (void)stop;
+
 - (void)clear;
 
 - (void)save;

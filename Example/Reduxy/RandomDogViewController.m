@@ -48,6 +48,10 @@ ReduxyRoutable
 
 @implementation RandomDogViewController
 
++ (void)load {
+    raction_add(randomdog.reload);
+}
+    
 + (NSString *)path {
     return @"randomdog";
 }
@@ -106,6 +110,8 @@ ReduxyRoutable
         self.canceller();
         self.canceller = nil;
     }
+    
+    [self.store dispatch:raction_payload(indicator, @NO)];
 }
 
 - (void)viewDidDisappear:(BOOL)animated {
@@ -172,8 +178,8 @@ ReduxyRoutable
                                      [task resume];
                                      
                                      return ^() {
-                                         LOG(@"reload is cancelled");
                                          [task cancel];
+                                         LOG(@"reload is cancelled");
                                      };
                                  }];
     
@@ -183,12 +189,20 @@ ReduxyRoutable
 - (void)loadImageWithUrlString:(NSString *)urlString completion:(void (^)(NSData *data))completion {
     NSURL *url = [NSURL URLWithString:urlString];
     
+    __weak typeof(self) wself = self;
+    
     NSURLSessionDataTask *task = [NSURLSession.sharedSession dataTaskWithURL:url
                                                            completionHandler:^(NSData * _Nullable data, NSURLResponse * _Nullable response, NSError * _Nullable error)
                                   {
+                                      wself.canceller = nil;
                                       completion(data);
                                   }];
     [task resume];
+    
+    self.canceller = ^void () {
+        [task cancel];
+        LOG(@"load image cancelled");
+    };
 }
 
 #pragma mark - actions
@@ -198,7 +212,7 @@ ReduxyRoutable
 }
 
 - (IBAction)nextButtonDidClick:(id)sender {
-    [ReduxySimplePlayer.shared next];
+    [Store.shared.player next];
 }
 
 

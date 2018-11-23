@@ -19,7 +19,8 @@
  @param action_type action type to register
  @param comment justcomment
  */
-#define raction_add(action_type, ...) [ReduxyActionManager.shared register:@(#action_type)]
+#define raction_add_raw(action_type, ...) [ReduxyActionManager.shared register:action_type]
+#define raction_add(action_type, ...) raction_add_raw(@#action_type)
 
 /**
 macro to register keypath to raction

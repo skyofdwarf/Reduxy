@@ -81,6 +81,11 @@ static NSString * const _stateKey = @"reduxy.routes";
     return _stateKey;
 }
 
++ (void)load {
+    raction_add(router.route);
+    raction_add(router.unroute);
+}
+
 + (instancetype)shared {
     static dispatch_once_t onceToken;
     static ReduxyRouter *instance;
@@ -96,9 +101,6 @@ static NSString * const _stateKey = @"reduxy.routes";
         self.routes = @{}.mutableCopy;
         self.unroutes = @{}.mutableCopy;
         self.routables = [NSMutableArray array];
-        
-        raction_add(router.route);
-        raction_add(router.unroute);
     }
     return self;
 }

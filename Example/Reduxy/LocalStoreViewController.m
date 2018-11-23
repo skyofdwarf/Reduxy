@@ -82,6 +82,11 @@ ReduxyRoutable
 
 @implementation LocalStoreViewController
 
++ (void)load {
+    raction_add(local.randomdog.reload);
+    raction_add(local.indicator);
+}
+
 + (NSString *)path {
     return @"localstore";
 }
@@ -104,9 +109,6 @@ ReduxyRoutable
     self.title = (self.breed?
                   self.breed:
                   @"local.randomdog");
-    
-    raction_add(local.randomdog.reload);
-    raction_add(local.indicator);
     
     self.store = [ReduxyStore storeWithState:@{ @"local.breed": self.title,
                                                 @"local.randomdog": @{},
@@ -258,7 +260,7 @@ ReduxyRoutable
 }
 
 - (IBAction)nextButtonDidClick:(id)sender {
-    [ReduxySimplePlayer.shared next];
+    [Store.shared.player next];
 }
 
 

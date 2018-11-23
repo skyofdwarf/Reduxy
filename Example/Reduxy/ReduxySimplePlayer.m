@@ -59,17 +59,6 @@
     };
 }
 
-+ (instancetype)shared {
-    static dispatch_once_t onceToken;
-    static ReduxySimplePlayer *instance;
-    
-    dispatch_once(&onceToken, ^{
-        instance = [self new];
-    });
-    
-    return instance;
-}
-
 - (instancetype)init {
     self = [super init];
     if (self) {

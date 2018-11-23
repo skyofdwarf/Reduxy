@@ -63,6 +63,11 @@ ReduxyRoutable
 
 @implementation BreedListViewController
 
++ (void)load {
+    raction_add(breedlist.filtered, "note: ...");
+    raction_add(breedlist.reload);
+}
+
 + (NSString *)path {
     return @"breedlist";
 }
@@ -358,7 +363,12 @@ ReduxyRoutable
 }
 
 - (IBAction)recordingToggleButtonDidClick:(id)sender {
-    Store.shared.recorder.enabled = !Store.shared.recorder.enabled;
+    if (Store.shared.recorder.recording) {
+        [Store.shared.recorder stop];
+    }
+    else {
+        [Store.shared.recorder start];
+    }
 }
 
 - (IBAction)saveButtonDidClick:(id)sender {
@@ -370,22 +380,22 @@ ReduxyRoutable
     
     ReduxyRouter.shared.routesAutoway = YES;
     
-    [ReduxySimplePlayer.shared loadItems:Store.shared.recorder.items
-                                dispatch:^ReduxyAction(ReduxyAction action) {
-                                    return [Store.shared dispatch:action];
-                                }];
+    [Store.shared.player loadItems:Store.shared.recorder.items
+                          dispatch:^ReduxyAction(ReduxyAction action) {
+                              return [Store.shared dispatch:action];
+                          }];
 }
 
 - (IBAction)prevButtonDidClick:(id)sender {
-    [ReduxySimplePlayer.shared prev];
+    [Store.shared.player prev];
 }
 
 - (IBAction)nextButtonDidClick:(id)sender {
-    [ReduxySimplePlayer.shared next];
+    [Store.shared.player next];
 }
 
 - (IBAction)resetButtonDidClick:(id)sender {
-    [ReduxySimplePlayer.shared reset];
+    [Store.shared.player reset];
 }
 
 

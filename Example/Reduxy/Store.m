@@ -8,7 +8,6 @@
 
 #import "Store.h"
 
-#import "ReduxySimpleRecorder.h"
 #import "ReduxyRouter.h"
 #import "ReduxySimplePlayer.h"
 #import "ReduxyFunctionMiddleware.h"
@@ -43,6 +42,7 @@ static ReduxyMiddleware mainQueue = ReduxyMiddlewareCreateMacro(store, next, act
 
 @interface Store ()
 @property (strong, nonatomic) ReduxySimpleRecorder *recorder;
+@property (strong, nonatomic) ReduxySimplePlayer *player;
 @end
 
 @implementation Store
@@ -108,6 +108,7 @@ static ReduxyMiddleware mainQueue = ReduxyMiddlewareCreateMacro(store, next, act
         self.recorder = [[ReduxySimpleRecorder alloc] initWithStore:self
                                                 actionTypesToIgnore:@[ ReduxyPlayerActionJump,
                                                                        ReduxyPlayerActionStep ]];
+        self.player = [ReduxySimplePlayer new];
     }
     
     return self;

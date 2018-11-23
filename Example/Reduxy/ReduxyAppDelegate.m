@@ -20,14 +20,13 @@
 
 @implementation ReduxyAppDelegate
 
++ (void)load {
+    raction_add(indicator);
+}
+
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions
 {
     // Override point for customization after application launch.
-    raction_add(breedlist.filtered, "note: ...");
-    raction_add(breedlist.reload);
-    
-    raction_add(randomdog.reload);
-    raction_add(indicator);
     
     return YES;
 }

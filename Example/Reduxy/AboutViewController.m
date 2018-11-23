@@ -63,7 +63,7 @@ ReduxyRoutable
 }
 
 - (IBAction)nextButtonDidClick:(id)sender {
-    [ReduxySimplePlayer.shared next];
+    [Store.shared.player next];
 }
 
 - (IBAction)popButtonDidClick:(id)sender {

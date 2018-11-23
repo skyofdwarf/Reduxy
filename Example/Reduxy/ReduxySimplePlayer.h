@@ -12,8 +12,6 @@
 @interface ReduxySimplePlayer : NSObject <ReduxyPlayer>
 @property (assign, nonatomic, readonly) NSInteger position;
 
-+ (instancetype)shared;
-
 + (ReduxyMiddleware)middleware;
 + (ReduxyReducerTransducer)reducer;
 
