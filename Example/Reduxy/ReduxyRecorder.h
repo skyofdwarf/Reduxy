@@ -66,6 +66,7 @@ FOUNDATION_EXTERN ReduxyActionType ReduxyRecorderItemState;
 - (ReduxyAction)next;
 
 - (void)reset;
+- (void)clear;
 
 @end
 

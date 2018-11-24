@@ -9,11 +9,11 @@
 #import <Foundation/Foundation.h>
 #import "ReduxyTypes.h"
 
+
+
 @protocol ReduxyRoutable <NSObject>
 @required
 + (NSString *)path;
-
-- (void)routableDidRoute;
 
 @optional
 - (UIViewController *)vc;
@@ -21,12 +21,22 @@
 @end
 
 
-typedef id<ReduxyRoutable> (^RouteAction)(id<ReduxyRoutable> src, id context);
-typedef void (^UnrouteAction)(id<ReduxyRoutable> src, id context);
+typedef void (^RouteCompletion)(id<ReduxyRoutable> dest);
+typedef id<ReduxyRoutable> (^RouteAction)(id<ReduxyRoutable> src, id context, RouteCompletion completion);
 
 
+/**
+ default implementation
+ to use with ReduxyRouter, subclass UIViewController and name it on +[path:]
+ */
 @interface UIViewController (ReduxyRoutable) <ReduxyRoutable>
-- (void)routableDidRoute;
+/**
+ overrides default implementation to catch system based view transition like navigation default back button and pop gesture.
+ 
+ @note must be called if you overrided in subsclass of UIViewController.
+ */
+- (void)willMoveToParentViewController:(UIViewController *)parent;
+- (void)didMoveToParentViewController:(UIViewController *)parent;
 @end
 
 
@@ -56,7 +66,7 @@ typedef void (^UnrouteAction)(id<ReduxyRoutable> src, id context);
 
 #pragma mark - routing
 
-- (void)add:(NSString *)path route:(RouteAction)route unroute:(UnrouteAction)unroute;
+- (void)add:(NSString *)path route:(RouteAction)route unroute:(RouteAction)unroute;
 
 - (void)remove:(NSString *)path;
 

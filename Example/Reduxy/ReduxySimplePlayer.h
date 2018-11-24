@@ -14,13 +14,17 @@
 
 + (ReduxyMiddleware)middleware;
 + (ReduxyReducerTransducer)reducer;
-
     
 - (void)loadItems:(NSArray<id<ReduxyRecorderItem>> *)items dispatch:(ReduxyDispatch)dispatch;
 
-- (BOOL)finished;
+- (NSInteger)length;
+
+- (ReduxyAction)jump:(NSInteger)index;
 
 - (ReduxyAction)prev;
 - (ReduxyAction)next;
+
+- (void)reset;
+- (void)clear;
 
 @end

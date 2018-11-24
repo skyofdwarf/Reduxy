@@ -67,7 +67,7 @@
     return self;
 }
 
-- (void)loadItems:(NSArray<id<ReduxyRecorderItem>> *)items  dispatch:(ReduxyDispatch)dispatch {
+- (void)loadItems:(NSArray<id<ReduxyRecorderItem>> *)items dispatch:(ReduxyDispatch)dispatch {
     self.items = items;
     self.dispatch = dispatch;
     
@@ -78,8 +78,9 @@
     self.position = -1;
 }
 
-- (BOOL)finished {
-    return (self.position >= self.items.count);
+- (void)clear {
+    self.items = @[];
+    self.dispatch = nil;
 }
 
 - (ReduxyAction)prev {
@@ -106,26 +107,6 @@
 
 - (NSInteger)length {
     return self.items.count;
-}
-
-
-- (ReduxyAction)step:(NSInteger)index NS_UNAVAILABLE {
-    BOOL inRange = (0 <= index && index < self.items.count);
-    BOOL dispatchable = (self.dispatch != nil);
-    
-    if (dispatchable && inRange) {
-        id<ReduxyRecorderItem> item = self.items[index];
-
-        if (item) {
-            return self.dispatch(@{ ReduxyActionTypeKey: ReduxyPlayerActionStep,
-                                    ReduxyActionPayloadKey: item
-                                    });
-        }
-    }
-    else {
-        LOG(@"not playable: (%ld / %lu)", (long)index, (unsigned long)self.items.count);
-    }
-    return nil;
 }
 
 - (ReduxyAction)jump:(NSInteger)index {

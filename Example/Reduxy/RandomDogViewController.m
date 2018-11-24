@@ -59,6 +59,7 @@ ReduxyRoutable
 - (void)dealloc {
     LOG_HERE
     
+    [self.store dispatch:raction(randomdog.reload)];
     [self.store unsubscribe:self];
 }
 
@@ -162,7 +163,7 @@ ReduxyRoutable
                                                                                [wself loadImageWithUrlString:imageUrl completion:^(NSData *data) {
                                                                                    storeDispatch(data?
                                                                                                  raction_payload(randomdog.reload, @{ @"image": data }):
-                                                                                                 raction(randomdog.reload}));
+                                                                                                 raction(randomdog.reload));
                                                                                    
                                                                                    storeDispatch(raction_payload(indicator, @NO));
                                                                                }];
@@ -194,6 +195,7 @@ ReduxyRoutable
     NSURLSessionDataTask *task = [NSURLSession.sharedSession dataTaskWithURL:url
                                                            completionHandler:^(NSData * _Nullable data, NSURLResponse * _Nullable response, NSError * _Nullable error)
                                   {
+                                      LOG(@"load image error?: %@", error);
                                       wself.canceller = nil;
                                       completion(data);
                                   }];
