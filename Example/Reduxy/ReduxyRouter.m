@@ -32,17 +32,17 @@ static selector_block topRouteSelector = ^NSString * _Nullable (ReduxyState stat
     return self;
 }
 
-- (void)willMoveToParentViewController:(UIViewController *)parent {
+- (void)reduxyrouter_willMoveToParentViewController:(UIViewController *)parent {
     LOG_HERE
-
+    
     if ([self conformsToProtocol:@protocol(ReduxyRoutable)]) {
         [ReduxyRouter.shared viewController:self willMoveToParentViewController:parent];
     }
 }
 
-- (void)didMoveToParentViewController:(UIViewController *)parent {
+- (void)reduxyrouter_didMoveToParentViewController:(UIViewController *)parent {
     LOG_HERE
-
+    
     if ([self conformsToProtocol:@protocol(ReduxyRoutable)]) {
         [ReduxyRouter.shared viewController:self didMoveToParentViewController:parent];
     }
@@ -80,6 +80,27 @@ static NSString * const _stateKey = @"reduxy.routes";
     
     raction_add(router.route.by-state);
     raction_add(router.unroute.by-state);
+    
+    [self swizzle];
+}
+
++ (void)swizzle {
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
+        Method willMoveToParentViewController = class_getInstanceMethod(UIViewController.self, @selector(willMoveToParentViewController:));
+        Method reduxyrouter_willMoveToParentViewController = class_getInstanceMethod(UIViewController.self, @selector(reduxyrouter_willMoveToParentViewController:));
+        
+        if (willMoveToParentViewController && reduxyrouter_willMoveToParentViewController) {
+            method_exchangeImplementations(willMoveToParentViewController, reduxyrouter_willMoveToParentViewController);
+        }
+        
+        Method didMoveToParentViewController = class_getInstanceMethod(UIViewController.self, @selector(didMoveToParentViewController:));
+        Method reduxyrouter_didMoveToParentViewController = class_getInstanceMethod(UIViewController.self, @selector(reduxyrouter_didMoveToParentViewController:));
+        
+        if (didMoveToParentViewController && reduxyrouter_didMoveToParentViewController) {
+            method_exchangeImplementations(didMoveToParentViewController, reduxyrouter_didMoveToParentViewController);
+        }
+    });
 }
 
 + (instancetype)shared {
