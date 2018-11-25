@@ -98,7 +98,7 @@ ReduxyRoutable
     
     [super viewDidAppear:animated];
     
-    [self reload];
+//    [self reload];
 }
 
 
@@ -215,6 +215,12 @@ ReduxyRoutable
 
 - (IBAction)nextButtonDidClick:(id)sender {
     [Store.shared.player next];
+}
+
+- (IBAction)aboutButtonDidClick:(id)sender {
+    [ReduxyRouter.shared dispatchRoute:@{ @"path": @"about" }];
+    
+    // TODO: VC 하나 새로 만들어서 push 하고 popToRoot:, popToView 로 테스트
 }
 
 

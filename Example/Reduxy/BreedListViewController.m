@@ -178,6 +178,8 @@ ReduxyRoutable
 
     [ReduxyRouter.shared add:RandomDogViewController.path
                        route:^id<ReduxyRoutable> (id<ReduxyRoutable> src, NSDictionary *context, RouteCompletion completion) {
+                           LOG(@"in route function: randomdog");
+                           
                            RandomDogViewController *dest = [src.vc.storyboard instantiateViewControllerWithIdentifier:@"randomdog"];
                            
                            dest.store = Store.shared;
@@ -188,6 +190,8 @@ ReduxyRoutable
                            
                            return dest;
                        } unroute:^id<ReduxyRoutable>  (id<ReduxyRoutable> src, id context, RouteCompletion completion) {
+                           LOG(@"in unroute function: randomdog");
+                           
                            [src.vc.navigationController popViewControllerAnimated:YES];
                            completion(src);
                            
@@ -196,6 +200,8 @@ ReduxyRoutable
     
     [ReduxyRouter.shared add:LocalStoreViewController.path
                        route:^id<ReduxyRoutable>  (id<ReduxyRoutable> src, id context, RouteCompletion completion) {
+                           LOG(@"in route function: local-store");
+                           
                            LocalStoreViewController *dest = [src.vc.storyboard instantiateViewControllerWithIdentifier:@"localstore"];
                            
                            dest.breed = context[@"breed"];
@@ -205,6 +211,8 @@ ReduxyRoutable
                            
                            return dest;
                        } unroute:^id<ReduxyRoutable>  (id<ReduxyRoutable> src, id context, RouteCompletion completion) {
+                           LOG(@"in unroute function: local-store");
+                           
                            [src.vc.navigationController popViewControllerAnimated:YES];
                            completion(src);
                            
@@ -213,20 +221,24 @@ ReduxyRoutable
     
     [ReduxyRouter.shared add:AboutViewController.path
                        route:^id<ReduxyRoutable>  (id<ReduxyRoutable> src, id context, RouteCompletion completion) {
+                           LOG(@"in route function: about");
+                           
                            UIViewController *dest = [src.vc.storyboard instantiateViewControllerWithIdentifier:@"about"];
-                           UINavigationController *nv = [[UINavigationController alloc] initWithRootViewController:dest];
                            
-                           //[src.vc showViewController:dest sender:nil];
-                           //completion(dest);
+                           [src.vc showViewController:dest sender:nil];
+                           completion(dest);
                            
-                           [src.vc presentViewController:nv animated:YES completion:^{ completion(dest); }];
+                           //UINavigationController *nv = [[UINavigationController alloc] initWithRootViewController:dest];
+                           //[src.vc presentViewController:nv animated:YES completion:^{ completion(dest); }];
                            
                            return dest;
                        } unroute:^id<ReduxyRoutable>  (id<ReduxyRoutable> src, id context, RouteCompletion completion) {
-                           //[src.vc.navigationController popViewControllerAnimated:YES];
-                           //completion(src);
+                           LOG(@"in unroute function: about");
                            
-                           [src.vc dismissViewControllerAnimated:YES completion:^{ completion(src); }];
+                           [src.vc.navigationController popViewControllerAnimated:YES];
+                           completion(src);
+                           
+                           //[src.vc dismissViewControllerAnimated:YES completion:^{ completion(src); }];
                            
                            return src;
                        }];

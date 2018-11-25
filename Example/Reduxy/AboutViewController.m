@@ -69,7 +69,8 @@ ReduxyRoutable
 - (IBAction)popButtonDidClick:(id)sender {
     LOG(@"dispatch back in pop button");
     
-    [ReduxyRouter.shared dispatchUnroute:@{ @"path": @"about" }];
+    //[ReduxyRouter.shared dispatchUnroute:@{ @"path": @"about" }];
+    [self.navigationController popToRootViewControllerAnimated:YES];
 }
 
 
