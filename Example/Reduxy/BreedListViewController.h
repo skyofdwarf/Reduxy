@@ -7,7 +7,8 @@
 //
 
 #import <UIKit/UIKit.h>
+#import "ReduxyRouter.h"
 
-@interface BreedListViewController : UIViewController
+@interface BreedListViewController : UIViewController <ReduxyRoutable>
 
 @end

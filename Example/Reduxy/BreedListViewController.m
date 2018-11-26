@@ -223,7 +223,7 @@ ReduxyRoutable
                        route:^id<ReduxyRoutable>  (id<ReduxyRoutable> src, id context, RouteCompletion completion) {
                            LOG(@"in route function: about");
                            
-                           UIViewController *dest = [src.vc.storyboard instantiateViewControllerWithIdentifier:@"about"];
+                           AboutViewController *dest = [src.vc.storyboard instantiateViewControllerWithIdentifier:@"about"];
                            
                            [src.vc showViewController:dest sender:nil];
                            completion(dest);
@@ -307,7 +307,7 @@ ReduxyRoutable
             NSString *path = menu[indexPath.row];
 
 #if REDUXY_ROUTER
-            [ReduxyRouter.shared dispatchRoute:@{ @"path": path }];
+            [ReduxyRouter.shared routePath:path context:nil];
 #else
             [self performSegueWithIdentifier:path sender:nil];
 #endif
@@ -318,9 +318,7 @@ ReduxyRoutable
             NSArray *items = self.filteredBreedsSelector(state);
             id item = items[row];
 #if REDUXY_ROUTER
-            [ReduxyRouter.shared dispatchRoute:@{ @"path": @"randomdog",
-                                          @"breed": item
-                                          }];
+            [ReduxyRouter.shared routePath:@"randomdog" context:@{ @"breed": item }];
 #else
             [self performSegueWithIdentifier:@"randomdog" sender:item];
 #endif
@@ -335,7 +333,7 @@ ReduxyRoutable
 
 - (IBAction)aboutButtonDidClick:(id)sender {
 #if REDUXY_ROUTER
-    [ReduxyRouter.shared dispatchRoute:@{ @"path": @"about" }];
+    [ReduxyRouter.shared routePath:@"about" context:nil];
 #else
     [self performSegueWithIdentifier:@"About" sender:nil];
 #endif
@@ -381,6 +379,7 @@ ReduxyRoutable
                                 
                                 return ^() {
                                     [task cancel];
+                                    storeDispatch(raction_payload(indicator, @NO));
                                 };
                             }];
     
@@ -397,13 +396,13 @@ ReduxyRoutable
 }
 
 - (IBAction)saveButtonDidClick:(id)sender {
+    [Store.shared.recorder stop];
     [Store.shared.recorder save];
 }
 
 - (IBAction)loadButtonDidClick:(id)sender {
+    [Store.shared.recorder stop];
     [Store.shared.recorder load];
-    
-    //ReduxyRouter.shared.routesAutoway = YES;
     
     [Store.shared.player loadItems:Store.shared.recorder.items
                           dispatch:^ReduxyAction(ReduxyAction action) {

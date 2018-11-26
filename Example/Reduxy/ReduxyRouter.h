@@ -25,26 +25,20 @@ typedef void (^RouteCompletion)(id<ReduxyRoutable> dest);
 typedef id<ReduxyRoutable> (^RouteAction)(id<ReduxyRoutable> src, id context, RouteCompletion completion);
 
 
-/**
- default implementation
- to use with ReduxyRouter, subclass UIViewController and name it on +[path:]
- */
-@interface UIViewController (ReduxyRoutable) <ReduxyRoutable>
-/**
- overrides default implementation to catch system based view transition like navigation default back button and pop gesture.
- 
- @note must be called if you overrided in subsclass of UIViewController.
- */
-- (void)willMoveToParentViewController:(UIViewController *)parent;
-- (void)didMoveToParentViewController:(UIViewController *)parent;
-@end
-
-
 #pragma mark - Router
 
 @interface ReduxyRouter : NSObject
 @property (class, strong, nonatomic, readonly) NSString *stateKey;
 
+
+/**
+ routes by action not state
+ */
+@property (assign, nonatomic) BOOL routesByAction;
+
+/**
+ routes auto-way action. applied only if routesByAction is enabled
+ */
 @property (assign, nonatomic) BOOL routesAutoway;
 
 + (instancetype)shared;
@@ -70,10 +64,16 @@ typedef id<ReduxyRoutable> (^RouteAction)(id<ReduxyRoutable> src, id context, Ro
 
 - (void)remove:(NSString *)path;
 
-#pragma mark - dispatch
+#pragma mark - dispatch un/route
 
-- (void)dispatchRoute:(id)payload;
-- (void)dispatchUnroute:(id)payload;
+- (void)routePath:(NSString *)path context:(NSDictionary *)context;
+- (void)unroutePath:(NSString *)path context:(NSDictionary *)context;
+
+#warning not recordable action
+- (void)routePath:(NSString *)path context:(NSDictionary *)context completion:(void (^)(void))completion;
+
+#warning not recordable action
+- (void)unroutePath:(NSString *)path context:(NSDictionary *)context completion:(void (^)(void))completion;
 
 #pragma mark - event
 

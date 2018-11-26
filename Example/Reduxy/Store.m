@@ -60,7 +60,7 @@ static ReduxyMiddleware mainQueue = ReduxyMiddlewareCreateMacro(store, next, act
 
 + (ReduxyReducer)createRootReducer {
     UINavigationController *nv = (UINavigationController *)ReduxyAppDelegate.shared.window.rootViewController;
-    UIViewController *vc = nv.topViewController;
+    id<ReduxyRoutable> vc = (id<ReduxyRoutable>)nv.topViewController;
     
     // normal reducers
     ReduxyReducer breedsReducer = ReduxyKeyPathReducerForAction(ratype(breedlist.reload), @"breeds", @{});
@@ -78,8 +78,8 @@ static ReduxyMiddleware mainQueue = ReduxyMiddlewareCreateMacro(store, next, act
     };
     
     // router reducers
-    ReduxyReducerTransducer routerReducer = [ReduxyRouter.shared reducerWithInitialRoutables:@[ nv, vc ]
-                                                                                    forPaths:@[ @"navigation", @"breedlist" ]];
+    ReduxyReducerTransducer routerReducer = [ReduxyRouter.shared reducerWithInitialRoutables:@[ vc ]
+                                                                                    forPaths:@[ @"breedlist" ]];
     
     ReduxyReducer rootReducer = ^ReduxyState (ReduxyState state, ReduxyAction action) {
         return @{ @"fixed-menu": @[ @"randomdog", @"localstore" ], ///< fixed state

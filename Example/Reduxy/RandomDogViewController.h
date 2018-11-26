@@ -8,10 +8,11 @@
 
 #import <UIKit/UIKit.h>
 #import "ReduxyTypes.h"
+#import "ReduxyRouter.h"
 
 
 
-@interface RandomDogViewController : UIViewController
+@interface RandomDogViewController : UIViewController  <ReduxyRoutable>
 @property (strong, nonatomic, nullable) NSString *breed;
 @property (strong, nonatomic, nullable) id<ReduxyStore> store;
 @end

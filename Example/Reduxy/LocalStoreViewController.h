@@ -9,10 +9,12 @@
 #import <UIKit/UIKit.h>
 
 #import "ReduxyTypes.h"
+#import "ReduxyRouter.h"
+
 
 /**
  actually you can use local store.
  */
-@interface LocalStoreViewController : UIViewController
+@interface LocalStoreViewController : UIViewController <ReduxyRoutable>
 @property (strong, nonatomic, nullable) NSString *breed;
 @end

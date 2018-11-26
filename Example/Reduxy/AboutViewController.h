@@ -7,7 +7,9 @@
 //
 
 #import <UIKit/UIKit.h>
+#import "ReduxyRouter.h"
 
-@interface AboutViewController : UIViewController
+
+@interface AboutViewController : UIViewController <ReduxyRoutable>
 
 @end

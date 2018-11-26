@@ -13,7 +13,7 @@
 #import "ReduxyRouter.h"
 #import "Actions.h"
 #import "ReduxySimplePlayer.h"
-
+#import "ReduxyRouter.h"
 
 static selector_block indicatorSelector = ^id (ReduxyState state) {
     return state[@"local.indicator"];
@@ -68,8 +68,7 @@ static ReduxyReducer rootReducer = ^ReduxyState (ReduxyState state, ReduxyAction
 
 @interface LocalStoreViewController ()
 <
-ReduxyStoreSubscriber,
-ReduxyRoutable
+ReduxyStoreSubscriber
 >
 @property (weak, nonatomic) IBOutlet UIImageView *imageView;
 @property (weak, nonatomic) IBOutlet UIActivityIndicatorView *indicatorView;

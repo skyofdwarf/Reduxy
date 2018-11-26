@@ -111,8 +111,6 @@ ReduxyRoutable
         self.canceller();
         self.canceller = nil;
     }
-    
-    [self.store dispatch:raction_payload(indicator, @NO)];
 }
 
 - (void)viewDidDisappear:(BOOL)animated {
@@ -180,6 +178,8 @@ ReduxyRoutable
                                      
                                      return ^() {
                                          [task cancel];
+                                         storeDispatch(raction_payload(indicator, @NO));
+                                         
                                          LOG(@"reload is cancelled");
                                      };
                                  }];
@@ -203,6 +203,9 @@ ReduxyRoutable
     
     self.canceller = ^void () {
         [task cancel];
+        
+        [wself.store dispatch:raction_payload(indicator, @NO)];
+        
         LOG(@"load image cancelled");
     };
 }
@@ -218,7 +221,7 @@ ReduxyRoutable
 }
 
 - (IBAction)aboutButtonDidClick:(id)sender {
-    [ReduxyRouter.shared dispatchRoute:@{ @"path": @"about" }];
+    [ReduxyRouter.shared routePath:@"about" context:nil];
     
     // TODO: VC 하나 새로 만들어서 push 하고 popToRoot:, popToView 로 테스트
 }

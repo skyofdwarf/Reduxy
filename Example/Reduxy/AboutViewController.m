@@ -12,10 +12,6 @@
 
 
 @interface AboutViewController ()
-<
-ReduxyRoutable
->
-
 @end
 
 @implementation AboutViewController
@@ -69,8 +65,9 @@ ReduxyRoutable
 - (IBAction)popButtonDidClick:(id)sender {
     LOG(@"dispatch back in pop button");
     
-    //[ReduxyRouter.shared dispatchUnroute:@{ @"path": @"about" }];
-    [self.navigationController popToRootViewControllerAnimated:YES];
+    [ReduxyRouter.shared unroutePath:@"about" context:nil];
+    
+    //[self.navigationController popToRootViewControllerAnimated:YES];
 }
 
 
