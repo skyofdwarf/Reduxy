@@ -1,0 +1,8 @@
+about
+back -auto
+random dog
+item (about)
+pop - manuall
+back - auto back
+about
+pop - manuall

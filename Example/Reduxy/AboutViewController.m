@@ -65,9 +65,9 @@
 - (IBAction)popButtonDidClick:(id)sender {
     LOG(@"dispatch back in pop button");
     
-    [ReduxyRouter.shared unroutePath:@"about" context:nil];
+    //[ReduxyRouter.shared unroutePath:@"about" context:nil];
     
-    //[self.navigationController popToRootViewControllerAnimated:YES];
+    [self.navigationController popToRootViewControllerAnimated:YES];
 }
 
 

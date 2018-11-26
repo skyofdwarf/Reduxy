@@ -461,6 +461,27 @@ static NSString * const _stateKey = @"reduxy.routes";
     [self.store dispatch:ratype(router.unroute) payload:payload.copy];
 }
 
+- (void)routeToPath:(NSString *)path context:(NSDictionary *)context {
+    NSMutableDictionary *mcontext = [NSMutableDictionary dictionaryWithObject:@YES forKey:@"multi-depth"];
+    
+    if (context) {
+        [mcontext addEntriesFromDictionary:context];
+    }
+    
+    [self routePath:path context:mcontext.copy completion:nil];
+}
+
+- (void)unrouteToPath:(NSString *)path context:(NSDictionary *)context {
+    NSMutableDictionary *mcontext = [NSMutableDictionary dictionaryWithObject:@YES forKey:@"multi-depth"];
+    
+    if (context) {
+        [mcontext addEntriesFromDictionary:context];
+    }
+    
+    [self unroutePath:path context:mcontext.copy completion:nil];
+}
+
+
 #pragma mark - event
 
 - (void)viewController:(UIViewController<ReduxyRoutable> *)vc willMoveToParentViewController:(UIViewController *)parent {
@@ -634,7 +655,8 @@ static NSString * const _stateKey = @"reduxy.routes";
         
         //    [self routeByState:state];
         
-        [self routeMultiDepthByState:state action:action];
+        //[self routeMultiDepthByState:state action:action];
+        [self routeMultiDepthByState2:state action:action];
     }
 }
 
@@ -744,6 +766,47 @@ static NSString * const _stateKey = @"reduxy.routes";
         LOG(@"same route");
     }
 }
+
+
+- (void)routeMultiDepthByState2:(ReduxyState)state action:(ReduxyAction)action {
+    NSArray *routes = routesSelector(state);
+    
+    NSArray *pathsInState = [routes valueForKey:@"path"];
+    NSArray *pathsInRouter = [self.routables valueForKey:@"path"];
+    
+    LOG(@"router subscriber> paths in state: %@", pathsInState);
+    LOG(@"router subscriber> paths in router: %@", pathsInRouter);
+    
+    if (pathsInState.count > pathsInRouter.count) {
+        // push
+        NSString *path = pathsInState.lastObject;
+        
+        LOG(@"router subscriber> route action: %@", path);
+        
+        if (![self route:action state:state]) {
+            @throw [NSException exceptionWithName:NSInternalInconsistencyException
+                                           reason:[NSString stringWithFormat:@"Route failed: %@", action]
+                                         userInfo:state];
+        }
+    }
+    else if (pathsInState.count < pathsInRouter.count) {
+        // pop
+        NSString *path = pathsInRouter.lastObject;
+        
+        LOG(@"router subscriber> unroute action: %@", path);
+        
+        if (![self unroute:action state:state]) {
+            @throw [NSException exceptionWithName:NSInternalInconsistencyException
+                                           reason:[NSString stringWithFormat:@"unroute failed: %@", action]
+                                         userInfo:state];
+        }
+    }
+    else {
+        // same routes
+        LOG(@"same route");
+    }
+}
+
 
 
 @end
