@@ -86,7 +86,7 @@ ReduxyStoreSubscriber
     raction_add(local.indicator);
 }
 
-+ (NSString *)path {
+- (NSString *)path {
     return @"localstore";
 }
 

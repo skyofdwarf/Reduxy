@@ -68,7 +68,7 @@ ReduxyRoutable
     raction_add(breedlist.reload);
 }
 
-+ (NSString *)path {
+- (NSString *)path {
     return @"breedlist";
 }
 
@@ -176,7 +176,7 @@ ReduxyRoutable
 - (void)buildRoutes {
     [ReduxyRouter.shared attachStore:Store.shared];
 
-    [ReduxyRouter.shared add:RandomDogViewController.path
+    [ReduxyRouter.shared add:@"randomdog"
                        route:^id<ReduxyRoutable> (id<ReduxyRoutable> src, NSDictionary *context, RouteCompletion completion) {
                            LOG(@"in route function: randomdog");
                            
@@ -198,7 +198,7 @@ ReduxyRoutable
                            return src;
                        }];
     
-    [ReduxyRouter.shared add:LocalStoreViewController.path
+    [ReduxyRouter.shared add:@"localstore"
                        route:^id<ReduxyRoutable>  (id<ReduxyRoutable> src, id context, RouteCompletion completion) {
                            LOG(@"in route function: local-store");
                            
@@ -219,7 +219,7 @@ ReduxyRoutable
                            return src;
                        }];
     
-    [ReduxyRouter.shared add:AboutViewController.path
+    [ReduxyRouter.shared add:@"about"
                        route:^id<ReduxyRoutable>  (id<ReduxyRoutable> src, id context, RouteCompletion completion) {
                            LOG(@"in route function: about");
                            
@@ -239,6 +239,31 @@ ReduxyRoutable
                            completion(src);
                            
                            //[src.vc dismissViewControllerAnimated:YES completion:^{ completion(src); }];
+                           
+                           return src;
+                       }];
+    
+    [ReduxyRouter.shared add:@"set-vcs"
+                       route:^id<ReduxyRoutable>  (id<ReduxyRoutable> src, id context, RouteCompletion completion) {
+                           LOG(@"in route function: set-vcs");
+                           
+                           RandomDogViewController *randomdog = [src.vc.storyboard instantiateViewControllerWithIdentifier:@"randomdog"];
+                           
+                           randomdog.store = Store.shared;
+                           randomdog.breed = context[@"breed"];
+                           
+                           AboutViewController *about = [src.vc.storyboard instantiateViewControllerWithIdentifier:@"about"];
+                           
+                           [src.vc.navigationController setViewControllers:@[ src.vc, randomdog, about ] animated:YES];
+                           
+                           completion(randomdog);
+                           
+                           return randomdog;
+                       } unroute:^id<ReduxyRoutable>  (id<ReduxyRoutable> src, id context, RouteCompletion completion) {
+                           LOG(@"in unroute function: set-vcs");
+                           
+                           [src.vc.navigationController popToRootViewControllerAnimated:YES];
+                           completion(src);
                            
                            return src;
                        }];
@@ -307,7 +332,7 @@ ReduxyRoutable
             NSString *path = menu[indexPath.row];
 
 #if REDUXY_ROUTER
-            [ReduxyRouter.shared routePath:path context:nil];
+            [ReduxyRouter.shared routeFrom:self path:path context:nil];
 #else
             [self performSegueWithIdentifier:path sender:nil];
 #endif
@@ -318,7 +343,7 @@ ReduxyRoutable
             NSArray *items = self.filteredBreedsSelector(state);
             id item = items[row];
 #if REDUXY_ROUTER
-            [ReduxyRouter.shared routePath:@"randomdog" context:@{ @"breed": item }];
+            [ReduxyRouter.shared routeFrom:self path:@"randomdog" context:@{ @"breed": item }];
 #else
             [self performSegueWithIdentifier:@"randomdog" sender:item];
 #endif
@@ -333,7 +358,7 @@ ReduxyRoutable
 
 - (IBAction)aboutButtonDidClick:(id)sender {
 #if REDUXY_ROUTER
-    [ReduxyRouter.shared routePath:@"about" context:nil];
+    [ReduxyRouter.shared routeFrom:self path:@"about" context:nil];
 #else
     [self performSegueWithIdentifier:@"About" sender:nil];
 #endif
@@ -389,9 +414,13 @@ ReduxyRoutable
 - (IBAction)recordingToggleButtonDidClick:(id)sender {
     if (Store.shared.recorder.recording) {
         [Store.shared.recorder stop];
+        
+        ReduxyRouter.shared.routesAutoway = YES;
     }
     else {
         [Store.shared.recorder start];
+        
+        ReduxyRouter.shared.routesAutoway = NO;
     }
 }
 
@@ -408,6 +437,8 @@ ReduxyRoutable
                           dispatch:^ReduxyAction(ReduxyAction action) {
                               return [Store.shared dispatch:action];
                           }];
+    
+    ReduxyRouter.shared.routesAutoway = YES;
 }
 
 - (IBAction)prevButtonDidClick:(id)sender {
@@ -420,6 +451,8 @@ ReduxyRoutable
 
 - (IBAction)resetButtonDidClick:(id)sender {
     [Store.shared.player reset];
+    
+    [ReduxyRouter.shared routeFrom:self path:@"set-vcs" context:nil];
 }
 
 

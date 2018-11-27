@@ -52,7 +52,7 @@ ReduxyRoutable
     raction_add(randomdog.reload);
 }
     
-+ (NSString *)path {
+- (NSString *)path {
     return @"randomdog";
 }
 
@@ -221,7 +221,7 @@ ReduxyRoutable
 }
 
 - (IBAction)aboutButtonDidClick:(id)sender {
-    [ReduxyRouter.shared routePath:@"about" context:nil];
+    [ReduxyRouter.shared routeFrom:self path:@"about" context:nil];
     
     // TODO: VC 하나 새로 만들어서 push 하고 popToRoot:, popToView 로 테스트
 }

@@ -22,15 +22,14 @@ static selector_block topRouteSelector = ^NSString * _Nullable (ReduxyState stat
 
 @implementation UIViewController (ReduxyRoutable)
 
-+ (NSString *)path {
-    @throw [NSException exceptionWithName:NSInternalInconsistencyException
-                                   reason:@"Invalid call `+path` to UIViewController not conformed ReduxyRoutable"
-                                 userInfo:nil];
+- (NSString *)path {
+    return self.description;
 }
 
 - (UIViewController *)vc {
     return self;
 }
+
 
 /**
  overrides default implementation to catch system based view transition like navigation default back button and pop gesture.
@@ -66,7 +65,7 @@ static selector_block topRouteSelector = ^NSString * _Nullable (ReduxyState stat
 
 @property (strong, nonatomic) NSMutableDictionary<NSString */*path*/, RouteAction> *routes;
 @property (strong, nonatomic) NSMutableDictionary<NSString */*path*/, RouteAction> *unroutes;
-@property (strong, nonatomic) NSMutableArray<NSDictionary *> *routables;
+@property (strong, nonatomic) NSMutableDictionary<NSString *, NSDictionary *> *routables;
 
 @property (copy, nonatomic) NSDictionary *routingInfo;
 @property (copy, nonatomic) NSDictionary *unroutingInfo;
@@ -124,10 +123,10 @@ static NSString * const _stateKey = @"reduxy.routes";
     if (self) {
         self.routes = @{}.mutableCopy;
         self.unroutes = @{}.mutableCopy;
-        self.routables = [NSMutableArray array];
+        self.routables = [NSMutableDictionary dictionary];
         
-        self.routesAutoway = YES;
-        self.routesByAction = NO;
+        self.routesAutoway = NO;
+        self.routesByAction = YES;
     }
     return self;
 }
@@ -155,89 +154,42 @@ static NSString * const _stateKey = @"reduxy.routes";
     self.unroutes[path] = nil;
 }
 
-- (BOOL)route:(NSString *)path source:(id<ReduxyRoutable>)routable context:(id)context {
-    RouteAction route = self.routes[path];
-    if (route) {
-        [self willRouteForPath:path from:routable];
-        
-        void (^completion)(void) = context[@"completion"];
-        
-        __weak typeof(self) wself = self;
-        route(routable, context, ^(id<ReduxyRoutable> dest) {
-            [wself didRoute:dest];
-            
-            if (completion) {
-                completion();
-            }
-        });
-        return YES;
-    }
-    
-    return NO;
-}
-
-- (BOOL)unroute:(NSString *)path source:(id<ReduxyRoutable>)routable context:(id)context {
-    if (!routable) {
-        return NO;
-    }
-    
-    RouteAction unroute = self.unroutes[path];
-    if (unroute) {
-        [self willUnrouteForPath:path from:routable];
-        
-        void (^completion)(void) = context[@"completion"];
-        
-        // do manual unroute
-        __weak typeof(self) wself = self;
-        unroute(routable, context, ^(id<ReduxyRoutable> dest) {
-            [wself didUnroute:dest];
-            
-            if (completion) {
-                completion();
-            }
-        });
-        
-        return YES;
-    }
-    
-    return NO;
-}
-
 #pragma mark - redux
-
-+ (ReduxyMiddleware)middleware {
-    
-    return ReduxyMiddlewareCreateMacro(store, next, action, {
-        LOG(@"router mw> received action: %@", action.type);
-        
-        if ([action is:ratype(router.route)]) {
-            LOG(@"router mw> route action: %@", action.payload[@"path"]);
-            
-            [ReduxyRouter.shared route:action state:[store getState]];
-        }
-        else if ([action is:ratype(router.unroute)]) {
-            LOG(@"router mw> unroute action: %@", action.payload[@"path"]);
-            
-            [ReduxyRouter.shared unroute:action state:[store getState]];
-        }
-        
-        return next(action);
-    });
-}
 
 
 - (ReduxyReducerTransducer)reducer {
     return [self reducerWithInitialRoutables:@[] forPaths:@[]];
 }
 
-- (ReduxyReducerTransducer)reducerWithInitialRoutables:(NSArray<id<ReduxyRoutable>> *)vcs forPaths:(NSArray<NSString *> *)paths {
+- (ReduxyReducerTransducer)reducerWithInitialRoutables:(NSArray<id<ReduxyRoutable>> *)routables {
     // builds root routing state
     NSMutableArray *initialState = @[].mutableCopy;
+    for (id<ReduxyRoutable> routable in routables) {
+        [self addRoutable:routable];
+    }
+    
     for (NSInteger index = 0; index < paths.count; ++index) {
         NSString *path = paths[index];
         id<ReduxyRoutable> routable = vcs[index];
         
-        [self pushRoutable:routable path:path];
+        [self setRoutable:routable forPath:path];
+    }
+}
+    
+
+    
+- (ReduxyReducerTransducer)reducerWithInitialRoutables:(NSArray<id<ReduxyRoutable>> *)routables {
+    // builds root routing state
+    NSMutableArray *initialState = @[].mutableCopy;
+    for (id<ReduxyRoutable> routable in routables) {
+        [self addRoutable:routable];
+    }
+    
+    for (NSInteger index = 0; index < paths.count; ++index) {
+        NSString *path = paths[index];
+        id<ReduxyRoutable> routable = vcs[index];
+        
+        [self setRoutable:routable forPath:path];
         
         [initialState addObject:@{ @"path": path }];
     }
@@ -274,10 +226,10 @@ static NSString * const _stateKey = @"reduxy.routes";
                 
                 if (index == NSNotFound) {
                     LOG(@"route reducer> not found the path in stack: %@", pathToPop);
-                    
-                    @throw [NSException exceptionWithName:NSInternalInconsistencyException
-                                                   reason:[NSString stringWithFormat:@"Not found a path to pop in stack: %@", pathToPop]
-                                                 userInfo:state];
+
+//                    @throw [NSException exceptionWithName:NSInternalInconsistencyException
+//                                                   reason:[NSString stringWithFormat:@"Not found a path to pop in stack: %@", pathToPop]
+//                                                 userInfo:state];
                 }
                 else {
                     [mroutes removeObjectsInRange:NSMakeRange(index, mroutes.count - index)];
@@ -322,123 +274,109 @@ static NSString * const _stateKey = @"reduxy.routes";
 
 #pragma mark - private
 
-- (BOOL)route:(ReduxyAction)action state:(ReduxyState)state  {
-    NSString *path  = action.payload[@"path"];
+- (void)addRoutable:(id<ReduxyRoutable>)routable {
+    NSString *path = routable.path;
+    NSUInteger hash = routable.hash;
     
-    NSAssert([path isKindOfClass:NSString.class], @"the `path` must be kined of NSString");
+    NSString *key = [NSString stringWithFormat:@"%@-%lu", path, (unsigned long)hash];
     
-    if (self.routesByAction) {
-        NSString *way  = action.payload[@"way"];
-        
-        if (self.routesAutoway || !way) {
-            id<ReduxyRoutable> routable = [self topRoutable];
-            return [self route:path source:routable context:action.payload];
-        }
-        
-        BOOL autorouting = (way != nil);
-        return autorouting;
-    }
-    else {
-        id<ReduxyRoutable> routable = [self topRoutable];
-        return [self route:path source:routable context:action.payload];
-    }
+    [self.routables setValue:(routable?
+                              @{ @"routable": routable }:
+                              nil)
+                      forKey:key];
 }
 
-- (BOOL)unroute:(ReduxyAction)action state:(ReduxyState)state  {
-    NSString *path  = action.payload[@"path"];
+- (void)removeRoutable:(id<ReduxyRoutable>)routable {
+    NSString *path = routable.path;
+    NSUInteger hash = routable.hash;
     
-    NSAssert([path isKindOfClass:NSString.class], @"the `path` must be kined of NSString");
+    NSString *key = [NSString stringWithFormat:@"%@-%lu", path, (unsigned long)hash];
     
-    if (self.routesByAction) {
-        NSString *way  = action.payload[@"way"];
-        
-        if (self.routesAutoway || !way) {
-            id<ReduxyRoutable> routable = [self topRoutable];
-            return [self unroute:path source:routable context:action.payload];
-        }
-        
-        BOOL autorouting = (way != nil);
-        return autorouting;
-    }
-    else {
-        id<ReduxyRoutable> routable = [self topRoutable];
-        return [self unroute:path source:routable context:action.payload];
-    }
-}
-
-- (id<ReduxyRoutable>)topRoutable {
-    NSDictionary *routableInfo = self.routables.lastObject;
-    return routableInfo[@"routable"];
-}
-
-
-- (void)pushRoutable:(id<ReduxyRoutable>)routable path:(NSString *)path {
-    [self.routables addObject:@{ @"path": path,
-                                 @"routable": routable,
-                                 @"hash": @(routable.hash) }];
-}
-
-- (void)popRoutable {
-    [self.routables removeLastObject];
-}
-
-- (BOOL)popRoutablesToRoutable:(id<ReduxyRoutable>)routable {
-    NSUInteger index = NSNotFound;
-    
-    for (NSDictionary *info in self.routables) {
-        NSNumber *hash = info[@"hash"];
-        NSString *path = info[@"path"];
-        
-        if ([hash isEqualToNumber:@(routable.hash)] &&
-            [path isEqualToString:[routable.class path]])
-        {
-            index = [self.routables indexOfObject:info];
-        }
-    }
-
-    if (index == NSNotFound) {
-        return NO;
-    }
-    else {
-        [self.routables removeObjectsInRange:NSMakeRange(index, self.routables.count - index)];
-        return YES;
-    }
+    self.routables[key] = nil;
 }
 
 - (BOOL)routableInStack:(id<ReduxyRoutable>)routable {
-    for (NSDictionary *info in self.routables) {
-        NSNumber *hash = info[@"hash"];
-        NSString *path = info[@"path"];
+    return (self.routables[routable.path] != nil);
+}
+
+- (BOOL)route:(NSString *)path source:(id<ReduxyRoutable>)routable context:(id)context {
+    RouteAction route = self.routes[path];
+    if (route) {
+        [self willRouteForPath:path from:routable];
         
-        if ([hash isEqualToNumber:@(routable.hash)] &&
-            [path isEqualToString:[routable.class path]])
-        {
-            return YES;
-        }
+        __weak typeof(self) wself = self;
+        route(routable, context, ^(id<ReduxyRoutable> dest) {
+            [wself didRoute:dest];
+        });
+        return YES;
     }
     
     return NO;
 }
 
+- (BOOL)unroute:(NSString *)path source:(id<ReduxyRoutable>)routable context:(id)context {
+    if (!routable) {
+        return NO;
+    }
+    
+    RouteAction unroute = self.unroutes[path];
+    if (unroute) {
+        [self willUnrouteForPath:path from:routable];
+        
+        // do manual unroute
+        __weak typeof(self) wself = self;
+        unroute(routable, context, ^(id<ReduxyRoutable> dest) {
+            [wself didUnroute:dest];
+        });
+        
+        return YES;
+    }
+    
+    return NO;
+}
+
+- (BOOL)routeWithAction:(ReduxyAction)action {
+    NSString *path  = action.payload[@"path"];
+    
+    NSAssert([path isKindOfClass:NSString.class], @"the `path` must be kined of NSString");
+    
+    NSString *way  = action.payload[@"way"];
+    
+    if (self.routesAutoway || !way) {
+        id<ReduxyRoutable> routable = [self routableForPath:path];
+        return [self route:path source:routable context:action.payload];
+    }
+    
+    BOOL autorouting = (way != nil);
+    return autorouting;
+}
+
+- (BOOL)unrouteWithAction:(ReduxyAction)action {
+    NSString *path  = action.payload[@"path"];
+    
+    NSAssert([path isKindOfClass:NSString.class], @"the `path` must be kined of NSString");
+    
+    NSString *way  = action.payload[@"way"];
+    
+    if (self.routesAutoway || !way) {
+        id<ReduxyRoutable> routable = [self routableForPath:path];
+        return [self unroute:path source:routable context:action.payload];
+    }
+    
+    BOOL autorouting = (way != nil);
+    return autorouting;
+    
+}
 
 #pragma mark - dispatch
 
-- (void)routePath:(NSString *)path context:(NSDictionary *)context {
-    [self routePath:path context:context completion:nil];
-}
-
-- (void)unroutePath:(NSString *)path context:(NSDictionary *)context {
-    [self unroutePath:path context:context completion:nil];
-}
-
-- (void)routePath:(NSString *)path context:(NSDictionary *)context completion:(void (^)(void))completion {
+- (void)routeFrom:(id<ReduxyRoutable>)from path:(NSString *)path context:(NSDictionary *)context {
     NSAssert(path, @"No path to route");
     
-    NSMutableDictionary *payload = [NSMutableDictionary dictionaryWithDictionary:@{ @"path": path }];
-    
-    if (completion) {
-        [payload setObject:completion forKey:@"completion"];
-    }
+    NSMutableDictionary *payload = [NSMutableDictionary dictionaryWithDictionary:@{ @"path": path,
+                                                                                    @"from": from.path,
+                                                                                    @"from-hash": @(from.hash)
+                                                                                    }];
     if (context) {
         [payload addEntriesFromDictionary:context];
     }
@@ -446,14 +384,11 @@ static NSString * const _stateKey = @"reduxy.routes";
     [self.store dispatch:ratype(router.route) payload:payload.copy];
 }
 
-- (void)unroutePath:(NSString *)path context:(NSDictionary *)context completion:(void (^)(void))completion {
+- (void)unroutePath:(NSString *)path context:(NSDictionary *)context {
     NSAssert(path, @"No path to unroute");
     
     NSMutableDictionary *payload = [NSMutableDictionary dictionaryWithDictionary:@{ @"path": path }];
-    
-    if (completion) {
-        [payload setObject:completion forKey:@"completion"];
-    }
+
     if (context) {
         [payload addEntriesFromDictionary:context];
     }
@@ -461,31 +396,10 @@ static NSString * const _stateKey = @"reduxy.routes";
     [self.store dispatch:ratype(router.unroute) payload:payload.copy];
 }
 
-- (void)routeToPath:(NSString *)path context:(NSDictionary *)context {
-    NSMutableDictionary *mcontext = [NSMutableDictionary dictionaryWithObject:@YES forKey:@"multi-depth"];
-    
-    if (context) {
-        [mcontext addEntriesFromDictionary:context];
-    }
-    
-    [self routePath:path context:mcontext.copy completion:nil];
-}
-
-- (void)unrouteToPath:(NSString *)path context:(NSDictionary *)context {
-    NSMutableDictionary *mcontext = [NSMutableDictionary dictionaryWithObject:@YES forKey:@"multi-depth"];
-    
-    if (context) {
-        [mcontext addEntriesFromDictionary:context];
-    }
-    
-    [self unroutePath:path context:mcontext.copy completion:nil];
-}
-
-
 #pragma mark - event
 
 - (void)viewController:(UIViewController<ReduxyRoutable> *)vc willMoveToParentViewController:(UIViewController *)parent {
-    LOG(@"'%@' will move to parent: %@", [vc.class path], parent);
+    LOG(@"'%@' will move to parent: %@", [vc path], parent);
     
     BOOL detached = (parent == nil);
     if (detached) {
@@ -493,7 +407,7 @@ static NSString * const _stateKey = @"reduxy.routes";
 }
 
 - (void)viewController:(UIViewController<ReduxyRoutable> *)vc didMoveToParentViewController:(UIViewController *)parent {
-    LOG(@"'%@' did move to parent: %@", [vc.class path], parent);
+    LOG(@"'%@' did move to parent: %@", [vc path], parent);
     
     // NOTE: 이 메시지는 한번 이상 호출 될 수 있다.
     
@@ -527,37 +441,35 @@ static NSString * const _stateKey = @"reduxy.routes";
 - (BOOL)didUnroute:(id<ReduxyRoutable>)routable {
     LOG_HERE
     
-    id<ReduxyRoutable> top = [self topRoutable];
-    NSString *topPath = [top.class path];
-    NSString *path = [routable.class path];
-    
 #if DEBUG
-    LOG(@"did unroute, path: %@", path);
+    LOG(@"did unroute, path: %@", routable.path);
 #endif
     
     BOOL manualUnrouting = (self.unroutingInfo != nil);
-    BOOL onTopYet = (top.hash == routable.hash &&
-                     [topPath isEqualToString:path]);
-    
     
     BOOL inStack = [self routableInStack:routable];
     
     if (manualUnrouting) {
-        if (onTopYet) {
-            [self popRoutable];
+        LOG(@"manuall way");
+        if (inStack) {
+            LOG(@"pop routables to path: %@", routable.path);
+            [self setRoutable:nil forPath:routable.path];
         }
         
         self.unroutingInfo = nil;
     }
     else {
+        LOG(@"auto way");
 #if 1 // multi depth
         if (inStack) {
-            if ([self popRoutablesToRoutable:routable]) {
-                [self.store dispatch:ratype(router.unroute)
-                             payload:@{ @"path":  path,
-                                        @"way": @"auto",
-                                        @"depth": @"multi-able" }];
-            }
+            LOG(@"pop routables to path: %@", routable.path);
+            
+            [self setRoutable:nil forPath:routable.path];
+            
+            [self.store dispatch:ratype(router.unroute)
+                         payload:@{ @"path":  routable.path,
+                                    @"way": @"auto",
+                                    @"depth": @"multi-able" }];
         }
         else {
             // ignore
@@ -594,18 +506,20 @@ static NSString * const _stateKey = @"reduxy.routes";
 
 - (BOOL)didRoute:(id<ReduxyRoutable>)routable {
     
-    NSString *routedPath = [routable.class path];
-    
 #if DEBUG
-    LOG(@"did route, path: %@", routedPath);
+    LOG(@"did route, path: %@", routable.path);
 #endif
     
     BOOL manualRouting = (self.routingInfo != nil);
     if (manualRouting) {
+        LOG(@"manual way");
+        
         NSString *routingPath = self.routingInfo[@"path"];
         
-        if ([routingPath isEqualToString:routedPath]) {
-            [self pushRoutable:routable path:routedPath];
+        if ([routingPath isEqualToString:routable.path]) {
+            LOG(@"push routable: %@", routable.path);
+            
+            [self setRoutable:routable forPath:routable.path];
             self.routingInfo = nil;
         }
         else {
@@ -613,27 +527,20 @@ static NSString * const _stateKey = @"reduxy.routes";
         }
     }
     else {
-        BOOL alreadyInStack = NO;
+        LOG(@"auto way");
         
-        for (NSDictionary *info in self.routables) {
-            NSString *path = info[@"path"];
-            NSNumber *hash = info[@"hash"];
-            
-            alreadyInStack = ([hash isEqualToNumber:@(routable.hash)] &&
-                              [path isEqualToString:routedPath]);
-            if (alreadyInStack)
-                break ;
-        }
-        
+        BOOL alreadyInStack = [self routableInStack:routable];
         if (alreadyInStack) {
             // ignore
             LOG(@"ignore when routable is already on stack");
         }
         else {
-            [self pushRoutable:routable path:routedPath];
+            LOG(@"push routable: %@", routable.path);
+            
+            [self setRoutable:routable forPath:routable.path];
             
             [self.store dispatch:ratype(router.route)
-                         payload:@{ @"path":  routedPath,
+                         payload:@{ @"path": routable.path,
                                     @"way": @"auto" }];
         }
     }
@@ -648,28 +555,19 @@ static NSString * const _stateKey = @"reduxy.routes";
 - (void)store:(id<ReduxyStore>)store didChangeState:(ReduxyState)state byAction:(ReduxyAction)action {
     LOG(@"action: %@, state: %@", action, state);
     
-    if (self.routesByAction) {
-        [self routeByAction:action state:state];
-    }
-    else {
-        
-        //    [self routeByState:state];
-        
-        //[self routeMultiDepthByState:state action:action];
-        [self routeMultiDepthByState2:state action:action];
-    }
+    [self processRouteAction:action];
 }
 
-- (void)routeByAction:(ReduxyAction)action state:(ReduxyState)state {
+- (void)processRouteAction:(ReduxyAction)action {
     if ([action is:ratype(router.route)]) {
         NSString *path = action.payload[@"path"];
         
         LOG(@"router subscriber> route action: %@", path);
         
-        if (![self route:action state:state]) {
+        if (![self routeWithAction:action]) {
             @throw [NSException exceptionWithName:NSInternalInconsistencyException
                                            reason:[NSString stringWithFormat:@"Route failed: %@", action]
-                                         userInfo:state];
+                                         userInfo:nil];
         }
     }
     else if ([action is:ratype(router.unroute)]) {
@@ -677,136 +575,12 @@ static NSString * const _stateKey = @"reduxy.routes";
         
         LOG(@"router subscriber> unroute action: %@", path);
         
-        if (![self unroute:action state:state]) {
+        if (![self unrouteWithAction:action]) {
             @throw [NSException exceptionWithName:NSInternalInconsistencyException
                                            reason:[NSString stringWithFormat:@"unroute failed: %@", action]
-                                         userInfo:state];
+                                         userInfo:nil];
         }
     }
 }
-
-- (void)routeByState:(ReduxyState)state {
-    NSArray *routes = routesSelector(state);
-    
-    NSArray *pathsInState = [routes valueForKey:@"path"];
-    NSArray *pathsInRouter = [self.routables valueForKey:@"path"];
-    
-    LOG(@"router subscriber> paths in state: %@", pathsInState);
-    LOG(@"router subscriber> paths in router: %@", pathsInRouter);
-    
-    if (pathsInState.count > pathsInRouter.count) {
-        // push
-        NSString *path = pathsInState.lastObject;
-        
-        LOG(@"router subscriber> route action: %@", path);
-        
-        ReduxyAction action = raction_payload(router.route.by-state, @{ @"path": path });
-        
-        if (![self route:action state:state]) {
-            @throw [NSException exceptionWithName:NSInternalInconsistencyException
-                                           reason:[NSString stringWithFormat:@"Route failed: %@", action]
-                                         userInfo:state];
-        }
-    }
-    else if (pathsInState.count < pathsInRouter.count) {
-        // pop
-        NSString *path = pathsInRouter.lastObject;
-        
-        LOG(@"router subscriber> unroute action: %@", path);
-        
-        ReduxyAction action = raction_payload(router.unroute.by-state, @{ @"path": path });
-        
-        if (![self unroute:action state:state]) {
-            @throw [NSException exceptionWithName:NSInternalInconsistencyException
-                                           reason:[NSString stringWithFormat:@"unroute failed: %@", action]
-                                         userInfo:state];
-        }
-    }
-    else {
-        // same routes
-        LOG(@"same route");
-    }
-}
-
-- (void)routeMultiDepthByState:(ReduxyState)state action:(ReduxyAction)action {
-    NSArray *routes = routesSelector(state);
-    
-    NSArray *pathsInState = [routes valueForKey:@"path"];
-    NSArray *pathsInRouter = [self.routables valueForKey:@"path"];
-    
-    LOG(@"router subscriber> paths in state: %@", pathsInState);
-    LOG(@"router subscriber> paths in router: %@", pathsInRouter);
-    
-    if (pathsInState.count > pathsInRouter.count) {
-        // push
-        NSString *path = pathsInState.lastObject;
-        
-        LOG(@"router subscriber> route action: %@", path);
-        
-        if (![self route:action state:state]) {
-            @throw [NSException exceptionWithName:NSInternalInconsistencyException
-                                           reason:[NSString stringWithFormat:@"Route failed: %@", action]
-                                         userInfo:state];
-        }
-    }
-    else if (pathsInState.count < pathsInRouter.count) {
-        // pop
-        NSString *path = pathsInRouter.lastObject;
-        
-        LOG(@"router subscriber> unroute action: %@", path);
-        
-        if (![self unroute:action state:state]) {
-            @throw [NSException exceptionWithName:NSInternalInconsistencyException
-                                           reason:[NSString stringWithFormat:@"unroute failed: %@", action]
-                                         userInfo:state];
-        }
-    }
-    else {
-        // same routes
-        LOG(@"same route");
-    }
-}
-
-
-- (void)routeMultiDepthByState2:(ReduxyState)state action:(ReduxyAction)action {
-    NSArray *routes = routesSelector(state);
-    
-    NSArray *pathsInState = [routes valueForKey:@"path"];
-    NSArray *pathsInRouter = [self.routables valueForKey:@"path"];
-    
-    LOG(@"router subscriber> paths in state: %@", pathsInState);
-    LOG(@"router subscriber> paths in router: %@", pathsInRouter);
-    
-    if (pathsInState.count > pathsInRouter.count) {
-        // push
-        NSString *path = pathsInState.lastObject;
-        
-        LOG(@"router subscriber> route action: %@", path);
-        
-        if (![self route:action state:state]) {
-            @throw [NSException exceptionWithName:NSInternalInconsistencyException
-                                           reason:[NSString stringWithFormat:@"Route failed: %@", action]
-                                         userInfo:state];
-        }
-    }
-    else if (pathsInState.count < pathsInRouter.count) {
-        // pop
-        NSString *path = pathsInRouter.lastObject;
-        
-        LOG(@"router subscriber> unroute action: %@", path);
-        
-        if (![self unroute:action state:state]) {
-            @throw [NSException exceptionWithName:NSInternalInconsistencyException
-                                           reason:[NSString stringWithFormat:@"unroute failed: %@", action]
-                                         userInfo:state];
-        }
-    }
-    else {
-        // same routes
-        LOG(@"same route");
-    }
-}
-
-
 
 @end

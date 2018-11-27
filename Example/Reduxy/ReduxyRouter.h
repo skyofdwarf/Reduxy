@@ -13,7 +13,7 @@
 
 @protocol ReduxyRoutable <NSObject>
 @required
-+ (NSString *)path;
+- (NSString *)path;
 
 @optional
 - (UIViewController *)vc;
@@ -23,6 +23,11 @@
 
 typedef void (^RouteCompletion)(id<ReduxyRoutable> dest);
 typedef id<ReduxyRoutable> (^RouteAction)(id<ReduxyRoutable> src, id context, RouteCompletion completion);
+
+
+
+@interface UIViewController (ReduxyRoutable) <ReduxyRoutable>
+@end
 
 
 #pragma mark - Router
@@ -66,14 +71,8 @@ typedef id<ReduxyRoutable> (^RouteAction)(id<ReduxyRoutable> src, id context, Ro
 
 #pragma mark - dispatch un/route
 
-- (void)routePath:(NSString *)path context:(NSDictionary *)context;
+- (void)routeFrom:(id<ReduxyRoutable>)from path:(NSString *)path context:(NSDictionary *)context;
 - (void)unroutePath:(NSString *)path context:(NSDictionary *)context;
-
-#warning not recordable action
-- (void)routePath:(NSString *)path context:(NSDictionary *)context completion:(void (^)(void))completion;
-
-#warning not recordable action
-- (void)unroutePath:(NSString *)path context:(NSDictionary *)context completion:(void (^)(void))completion;
 
 #pragma mark - event
 

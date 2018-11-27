@@ -16,8 +16,22 @@
 
 @implementation AboutViewController
 
-+ (NSString *)path {
+- (NSString *)path {
     return @"about";
+}
+
++ (void)load {
+    [self buildRoutes];
+}
+
++ (void)buildRoutes {
+    
+    [ReduxyRouter.shared add:@"go to root" route:^id<ReduxyRoutable>(id<ReduxyRoutable> src, id context, RouteCompletion completion) {
+        return nil;
+    } unroute:^id<ReduxyRoutable>(id<ReduxyRoutable> src, id context, RouteCompletion completion) {
+        [src.vc.navigationController popToRootViewControllerAnimated:YES];
+        return src;
+    }];
 }
 
 
@@ -67,7 +81,9 @@
     
     //[ReduxyRouter.shared unroutePath:@"about" context:nil];
     
-    [self.navigationController popToRootViewControllerAnimated:YES];
+    //[self.navigationController popToRootViewControllerAnimated:YES];
+    
+    [ReduxyRouter.shared unroutePath:@"go to root" context:nil];
 }
 
 
