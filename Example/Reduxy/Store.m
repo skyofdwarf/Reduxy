@@ -78,8 +78,7 @@ static ReduxyMiddleware mainQueue = ReduxyMiddlewareCreateMacro(store, next, act
     };
     
     // router reducers
-    ReduxyReducerTransducer routerReducer = [ReduxyRouter.shared reducerWithInitialRoutables:@[ nv, vc ]
-                                                                                    forPaths:@[ @"navigation", @"breedlist" ]];
+    //ReduxyReducerTransducer routerReducer = [ReduxyRouter.shared reducerWithInitialRoutables:@[ nv, vc ]];
     
     ReduxyReducer rootReducer = ^ReduxyState (ReduxyState state, ReduxyAction action) {
         return @{ @"fixed-menu": @[ @"randomdog", @"localstore" ], ///< fixed state

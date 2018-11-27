@@ -174,6 +174,7 @@ ReduxyRoutable
 }
 
 - (void)buildRoutes {
+    [ReduxyRouter.shared setInitialRoutables:@[ ReduxyAppDelegate.shared.window.rootViewController ]];
     [ReduxyRouter.shared attachStore:Store.shared];
 
     [ReduxyRouter.shared add:@"randomdog"

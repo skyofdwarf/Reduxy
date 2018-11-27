@@ -52,15 +52,14 @@ typedef id<ReduxyRoutable> (^RouteAction)(id<ReduxyRoutable> src, id context, Ro
 
 - (void)attachStore:(id<ReduxyStore>)store;
 
-
+- (void)setInitialRoutables:(NSArray<id<ReduxyRoutable>> *)routables;
 
 #pragma mark - redux
 
 + (ReduxyMiddleware)middleware NS_UNAVAILABLE;
 
 - (ReduxyReducerTransducer)reducer;
-- (ReduxyReducerTransducer)reducerWithInitialRoutables:(NSArray<id<ReduxyRoutable>> *)vcs
-                                              forPaths:(NSArray<NSString *> *)paths;
+- (ReduxyReducerTransducer)reducerWithInitialRoutables:(NSArray<id<ReduxyRoutable>> *)vcs;
 
 
 #pragma mark - routing
@@ -72,7 +71,7 @@ typedef id<ReduxyRoutable> (^RouteAction)(id<ReduxyRoutable> src, id context, Ro
 #pragma mark - dispatch un/route
 
 - (void)routeFrom:(id<ReduxyRoutable>)from path:(NSString *)path context:(NSDictionary *)context;
-- (void)unroutePath:(NSString *)path context:(NSDictionary *)context;
+- (void)unrouteFrom:(id<ReduxyRoutable>)from path:(NSString *)path context:(NSDictionary *)context;
 
 #pragma mark - event
 
