@@ -21,7 +21,7 @@
 @end
 
 
-typedef void (^RouteCompletion)(id<ReduxyRoutable> dest);
+typedef void (^RouteCompletion)(id<ReduxyRoutable> from, id<ReduxyRoutable> to);
 typedef id<ReduxyRoutable> (^RouteAction)(id<ReduxyRoutable> src, id context, RouteCompletion completion);
 
 
@@ -70,19 +70,19 @@ typedef id<ReduxyRoutable> (^RouteAction)(id<ReduxyRoutable> src, id context, Ro
 
 #pragma mark - dispatch un/route
 
-- (void)routeFrom:(id<ReduxyRoutable>)from path:(NSString *)path context:(NSDictionary *)context;
-- (void)unrouteFrom:(id<ReduxyRoutable>)from path:(NSString *)path context:(NSDictionary *)context;
+- (void)routePath:(NSString *)path from:(id<ReduxyRoutable>)from context:(NSDictionary *)context;
+- (void)unroutePath:(NSString *)path from:(id<ReduxyRoutable>)from context:(NSDictionary *)context;
 
 #pragma mark - event
 
 - (void)viewController:(UIViewController<ReduxyRoutable> *)vc willMoveToParentViewController:(UIViewController *)parent;
 - (void)viewController:(UIViewController<ReduxyRoutable> *)vc didMoveToParentViewController:(UIViewController *)parent;
     
-- (void)willUnrouteForPath:(NSString *)path from:(id<ReduxyRoutable>)routable;
-- (BOOL)didUnroute:(id<ReduxyRoutable>)routable;
+- (void)willUnrouteForPath:(NSString *)path from:(id<ReduxyRoutable>)from;
+- (BOOL)didUnrouteFrom:(id<ReduxyRoutable>)from to:(id<ReduxyRoutable>)to;
 
-- (void)willRouteForPath:(NSString *)path from:(id<ReduxyRoutable>)routable;
-- (BOOL)didRoute:(id<ReduxyRoutable>)routable;
+- (void)willRouteForPath:(NSString *)path from:(id<ReduxyRoutable>)from;
+- (BOOL)didRouteFrom:(id<ReduxyRoutable>)from to:(id<ReduxyRoutable>)to;
 
 
 @end

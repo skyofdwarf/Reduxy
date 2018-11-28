@@ -187,14 +187,14 @@ ReduxyRoutable
                            dest.breed = context[@"breed"];
                            
                            [src.vc showViewController:dest sender:nil];
-                           completion(dest);
+                           completion(src, dest);
                            
                            return dest;
                        } unroute:^id<ReduxyRoutable>  (id<ReduxyRoutable> src, id context, RouteCompletion completion) {
                            LOG(@"in unroute function: randomdog");
                            
                            [src.vc.navigationController popViewControllerAnimated:YES];
-                           completion(src);
+                           completion(src, nil);
                            
                            return src;
                        }];
@@ -208,14 +208,14 @@ ReduxyRoutable
                            dest.breed = context[@"breed"];
                            
                            [src.vc showViewController:dest sender:nil];
-                           completion(dest);
+                           completion(src, dest);
                            
                            return dest;
                        } unroute:^id<ReduxyRoutable>  (id<ReduxyRoutable> src, id context, RouteCompletion completion) {
                            LOG(@"in unroute function: local-store");
                            
                            [src.vc.navigationController popViewControllerAnimated:YES];
-                           completion(src);
+                           completion(src, nil);
                            
                            return src;
                        }];
@@ -227,7 +227,7 @@ ReduxyRoutable
                            AboutViewController *dest = [src.vc.storyboard instantiateViewControllerWithIdentifier:@"about"];
                            
                            [src.vc showViewController:dest sender:nil];
-                           completion(dest);
+                           completion(src, dest);
                            
                            //UINavigationController *nv = [[UINavigationController alloc] initWithRootViewController:dest];
                            //[src.vc presentViewController:nv animated:YES completion:^{ completion(dest); }];
@@ -237,7 +237,7 @@ ReduxyRoutable
                            LOG(@"in unroute function: about");
                            
                            [src.vc.navigationController popViewControllerAnimated:YES];
-                           completion(src);
+                           completion(src, nil);
                            
                            //[src.vc dismissViewControllerAnimated:YES completion:^{ completion(src); }];
                            
@@ -257,14 +257,14 @@ ReduxyRoutable
                            
                            [src.vc.navigationController setViewControllers:@[ src.vc, randomdog, about ] animated:YES];
                            
-                           completion(randomdog);
+                           completion(src, randomdog);
                            
                            return randomdog;
                        } unroute:^id<ReduxyRoutable>  (id<ReduxyRoutable> src, id context, RouteCompletion completion) {
                            LOG(@"in unroute function: set-vcs");
                            
                            [src.vc.navigationController popToRootViewControllerAnimated:YES];
-                           completion(src);
+                           completion(src, nil);
                            
                            return src;
                        }];
@@ -333,7 +333,7 @@ ReduxyRoutable
             NSString *path = menu[indexPath.row];
 
 #if REDUXY_ROUTER
-            [ReduxyRouter.shared routeFrom:self path:path context:nil];
+            [ReduxyRouter.shared routePath:path from:self context:nil];
 #else
             [self performSegueWithIdentifier:path sender:nil];
 #endif
@@ -344,7 +344,7 @@ ReduxyRoutable
             NSArray *items = self.filteredBreedsSelector(state);
             id item = items[row];
 #if REDUXY_ROUTER
-            [ReduxyRouter.shared routeFrom:self path:@"randomdog" context:@{ @"breed": item }];
+            [ReduxyRouter.shared routePath:@"randomdog" from:self context:@{ @"breed": item }];
 #else
             [self performSegueWithIdentifier:@"randomdog" sender:item];
 #endif
@@ -359,7 +359,7 @@ ReduxyRoutable
 
 - (IBAction)aboutButtonDidClick:(id)sender {
 #if REDUXY_ROUTER
-    [ReduxyRouter.shared routeFrom:self path:@"about" context:nil];
+    [ReduxyRouter.shared routePath:@"about" from:self context:nil];
 #else
     [self performSegueWithIdentifier:@"About" sender:nil];
 #endif
@@ -453,7 +453,7 @@ ReduxyRoutable
 - (IBAction)resetButtonDidClick:(id)sender {
     [Store.shared.player reset];
     
-    [ReduxyRouter.shared routeFrom:self path:@"set-vcs" context:nil];
+    [ReduxyRouter.shared routePath:@"set-vcs" from:self context:nil];
 }
 
 

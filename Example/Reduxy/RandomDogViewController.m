@@ -221,7 +221,7 @@ ReduxyRoutable
 }
 
 - (IBAction)aboutButtonDidClick:(id)sender {
-    [ReduxyRouter.shared routeFrom:self path:@"about" context:nil];
+    [ReduxyRouter.shared routePath:@"about" from:self context:nil];
     
     // TODO: VC 하나 새로 만들어서 push 하고 popToRoot:, popToView 로 테스트
 }
