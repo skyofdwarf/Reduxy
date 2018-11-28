@@ -52,16 +52,6 @@ typedef id<ReduxyRoutable> (^RouteAction)(id<ReduxyRoutable> src, id context, Ro
 
 - (void)attachStore:(id<ReduxyStore>)store;
 
-- (void)setInitialRoutables:(NSArray<id<ReduxyRoutable>> *)routables;
-
-#pragma mark - redux
-
-+ (ReduxyMiddleware)middleware NS_UNAVAILABLE;
-
-- (ReduxyReducerTransducer)reducer;
-- (ReduxyReducerTransducer)reducerWithInitialRoutables:(NSArray<id<ReduxyRoutable>> *)vcs;
-
-
 #pragma mark - routing
 
 - (void)add:(NSString *)path route:(RouteAction)route unroute:(RouteAction)unroute;

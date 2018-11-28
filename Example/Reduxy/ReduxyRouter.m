@@ -10,7 +10,7 @@
 #import "ReduxyMemoizer.h"
 #import "ReduxyStore.h"
 
-static const NSInteger routable_order_association_key = 0;
+static const NSInteger routingSequenceAssoociationKey = 0;
 
 static selector_block routesSelector = ^NSArray<NSDictionary *> * _Nonnull (ReduxyState state) {
     return state[ReduxyRouter.stateKey];
@@ -66,14 +66,13 @@ static selector_block topRouteSelector = ^NSString * _Nullable (ReduxyState stat
 
 @property (strong, nonatomic) NSMutableDictionary<NSString */*path*/, RouteAction> *routes;
 @property (strong, nonatomic) NSMutableDictionary<NSString */*path*/, RouteAction> *unroutes;
-@property (strong, nonatomic) NSMutableDictionary<NSString *, NSMutableDictionary *> *routables;
 
-@property (strong, nonatomic) NSMutableArray<NSArray<id<ReduxyRoutable>> *> *fromToPairs;
+@property (strong, nonatomic) NSMutableSet<NSArray<id<ReduxyRoutable>> *> *routingTable;
 
 @property (copy, nonatomic) NSDictionary *routingInfo;
 @property (copy, nonatomic) NSDictionary *unroutingInfo;
 
-@property (assign, atomic) NSUInteger order;
+@property (assign, atomic) NSUInteger routingSequence;
 
 @end
 
@@ -128,8 +127,7 @@ static NSString * const _stateKey = @"reduxy.routes";
     if (self) {
         self.routes = @{}.mutableCopy;
         self.unroutes = @{}.mutableCopy;
-        self.routables = [NSMutableDictionary dictionary];
-        self.fromToPairs = [NSMutableArray array];
+        self.routingTable = [NSMutableSet set];
         
         self.routesAutoway = NO;
         self.routesByAction = YES;
@@ -148,7 +146,7 @@ static NSString * const _stateKey = @"reduxy.routes";
     [store subscribe:self];
 }
 
-#pragma mark - routing
+#pragma mark - register
 
 - (void)add:(NSString *)path route:(RouteAction)route unroute:(RouteAction)unroute {
     self.routes[path] = route;
@@ -160,287 +158,102 @@ static NSString * const _stateKey = @"reduxy.routes";
     self.unroutes[path] = nil;
 }
 
-- (void)setInitialRoutables:(NSArray<id<ReduxyRoutable>> *)routables {
-    for (id<ReduxyRoutable> routable in routables) {
-        [self addRoutable:routable];
-    }
-}
-    
-#pragma mark - redux
+#pragma mark - routable sequence
 
-
-- (ReduxyReducerTransducer)reducer {
-    return [self reducerWithInitialRoutables:@[]];
-}
-
-- (ReduxyReducerTransducer)reducerWithInitialRoutables:(NSArray<id<ReduxyRoutable>> *)routables {
-    // builds root routing state
-    NSMutableArray *initialState = @[].mutableCopy;
-    
-    for (id<ReduxyRoutable> routable in routables) {
-        [self addRoutable:routable];
-        
-        [initialState addObject:@{ @"path": routable.path }];
-    }
-    
-    NSArray *defaultState = initialState.copy;
-    
-    // returns a reducer for route state
-    return ^ReduxyReducer (ReduxyReducer next) {
-        return ^ReduxyState (ReduxyState state, ReduxyAction action) {
-            ReduxyState nextState = next(state, action);
-            
-            NSMutableDictionary *mstate = [NSMutableDictionary dictionaryWithDictionary:nextState];
-            NSArray *routes = state[ReduxyRouter.stateKey] ?: defaultState;
-            
-            if ([action is:ratype(router.route)]) {
-                LOG(@"route reducer> route: %@, to: %@", action.payload, routes);
-                
-                NSMutableArray *mroutes = [NSMutableArray arrayWithArray:routes];
-                
-                [mroutes addObject:action.payload];
-                [mstate setObject:mroutes.copy forKey:ReduxyRouter.stateKey];
-                
-                return [mstate copy];
-            }
-            else if ([action is:ratype(router.unroute)]) {
-                LOG(@"route reducer> unroute: %@, from: %@", action.payload, routes);
-#if 1 // multi-depth
-                NSMutableArray *mroutes = [NSMutableArray arrayWithArray:routes];
-                NSString *pathToPop = action.payload[@"path"];
-                
-                NSUInteger index = [routes indexOfObjectPassingTest:^BOOL(NSDictionary *obj, NSUInteger idx, BOOL * _Nonnull stop) {
-                    return [obj[@"path"] isEqualToString:pathToPop];
-                }];
-                
-                if (index == NSNotFound) {
-                    LOG(@"route reducer> not found the path in stack: %@", pathToPop);
-
-//                    @throw [NSException exceptionWithName:NSInternalInconsistencyException
-//                                                   reason:[NSString stringWithFormat:@"Not found a path to pop in stack: %@", pathToPop]
-//                                                 userInfo:state];
-                }
-                else {
-                    [mroutes removeObjectsInRange:NSMakeRange(index, mroutes.count - index)];
-                }
-                
-                [mstate setObject:mroutes.copy forKey:ReduxyRouter.stateKey];
-                
-                return [mstate copy];
-#else // one depth
-                NSMutableArray *mroutes = [NSMutableArray arrayWithArray:routes];
-                
-                NSString *pathToPop = action.payload[@"path"];
-                
-                NSDictionary *topPathInfo = routes.lastObject;
-                NSString *topPath = topPathInfo[@"path"];
-                
-                if ([topPath isEqualToString:pathToPop]) {
-                    LOG(@"route reducer> pop the path: %@", pathToPop);
-                    [mroutes removeLastObject];
-                }
-                else {
-                    LOG(@"route reducer> not found the path on top: %@", pathToPop);
-                    
-                    @throw [NSException exceptionWithName:NSInternalInconsistencyException
-                                                   reason:[NSString stringWithFormat:@"Not found a path to pop on top: %@", pathToPop]
-                                                 userInfo:state];
-                }
-                
-                [mstate setObject:mroutes.copy forKey:ReduxyRouter.stateKey];
-                
-                return [mstate copy];
-#endif
-            }
-            else {
-                [mstate setObject:routes forKey:ReduxyRouter.stateKey];
-                return [mstate copy];
-            }
-        };
-    };
-}
-
-
-#pragma mark - private
-
-- (NSNumber *)allocateOrderToRoutableIfNeeded:(id<ReduxyRoutable>)routable {
-    id r = objc_getAssociatedObject(routable, &routable_order_association_key);
+- (NSNumber *)tagSequenceToRoutableIfNeeded:(id<ReduxyRoutable>)routable {
+    id r = objc_getAssociatedObject(routable, &routingSequenceAssoociationKey);
     if (!r) {
-        NSUInteger order = self.order++;
-        objc_setAssociatedObject(routable, &routable_order_association_key, @(order), OBJC_ASSOCIATION_COPY);
+        NSUInteger seq = self.routingSequence++;
+        objc_setAssociatedObject(routable, &routingSequenceAssoociationKey, @(seq), OBJC_ASSOCIATION_COPY);
         
-        return @(order);
+        return @(seq);
     }
     
     return r;
 }
 
-- (NSNumber *)orderOfRoutable:(id<ReduxyRoutable>)routable {
-    id r = objc_getAssociatedObject(routable, &routable_order_association_key);
+- (NSNumber *)sequenceOfRoutable:(id<ReduxyRoutable>)routable {
+    id r = objc_getAssociatedObject(routable, &routingSequenceAssoociationKey);
     
-    NSAssert(r, @"No order set");
+    NSAssert(r, @"No sequence set");
     
     return r;
 }
 
+#pragma mark - routing tabls
 
-- (NSArray<id<ReduxyRoutable>> *)findFromToPairWithFrom:(id<ReduxyRoutable>)from to:(id<ReduxyRoutable>)to {
-    for (NSArray *pair in self.fromToPairs) {
-        if ([pair.firstObject isEqual:from] && [pair.lastObject isEqual:to])
-            return pair;
+- (void)addRoutingWithFrom:(id<ReduxyRoutable>)from to:(id<ReduxyRoutable>)to {
+    if (![self.routingTable containsObject:@[ from, to ]]) {
+        [self.routingTable addObject:@[ from, to ]];
+    }
+}
+
+- (void)removeRoutingInTableWithFrom:(id<ReduxyRoutable>)from {
+    NSArray<NSArray<id<ReduxyRoutable>> *> *pairs = [self findRoutingsInTabelWithFrom:from];
+    
+    for (NSArray<id<ReduxyRoutable>> *pair in pairs) {
+        [self.routingTable removeObject:pair];
+    }
+}
+
+- (void)removeRoutingInTableWithTo:(id<ReduxyRoutable>)to {
+    NSArray<id<ReduxyRoutable>> *pair = [self findRoutingInTabelWithTo:to];
+    [self.routingTable removeObject:pair];
+}
+
+- (NSArray<id<ReduxyRoutable>> *)routablesInRoutingTable {
+    NSMutableArray *routables = [NSMutableArray array];
+    for (NSArray<id<ReduxyRoutable>> *pair in self.routingTable) {
+        [routables addObject:pair.firstObject];
+        [routables addObject:pair.lastObject];
+    }
+    return routables.copy;
+}
+
+- (BOOL)isRoutableInRoutingTable:(id<ReduxyRoutable>)routable {
+    NSArray *routables = [self routablesInRoutingTable];
+    return [routables containsObject:routable];
+}
+
+- (id<ReduxyRoutable>)findRoutableWithPath:(NSString *)path sequence:(NSNumber *)sequence {
+    NSArray *routables = [self routablesInRoutingTable];
+    for (id<ReduxyRoutable> routable in routables) {
+        if ([routable.path isEqualToString:path] &&
+            [[self sequenceOfRoutable:routable] isEqualToNumber:sequence])
+        {
+            return routable;
+        }
     }
     return nil;
 }
 
-- (NSArray<id<ReduxyRoutable>> *)findFromToPairWithTo:(id<ReduxyRoutable>)to {
+- (NSArray<id<ReduxyRoutable>> *)findRoutingInTabelWithTo:(id<ReduxyRoutable>)to {
     NSMutableArray *pairs = [NSMutableArray array];
     
-    for (NSArray *pair in self.fromToPairs) {
+    for (NSArray *pair in self.routingTable) {
         if ([pair.lastObject isEqual:to]) {
-            //return pair;
             [pairs addObject:pair];
         }
     }
     
-    NSAssert(pairs.count == 1, @"A routable must be exist one as 'to' in from-to pairs");
+    NSAssert(pairs.count <= 1, @"A routable must be exist one or zero as 'to' in from-to pairs");
     
     return pairs.firstObject;
 }
 
-- (NSArray<NSArray<id<ReduxyRoutable>> *> *)findFromToPairsWithToPath:(NSString *)path {
-    NSMutableArray<NSArray<id<ReduxyRoutable>> *> *pairs = [NSMutableArray array];
-    
-    for (NSArray *pair in self.fromToPairs) {
-        id<ReduxyRoutable> to = pair.lastObject;
-        
-        if ([to.path isEqualToString:path]) {
-            [pairs addObject:pair];
-        }
-    }
-    return pairs.copy;
-}
-
-- (NSArray<id<ReduxyRoutable>> *)findFromToPairWithToPath:(NSString *)path toHash:(NSNumber *)hash {
-    NSArray<NSArray<id<ReduxyRoutable>> *> *pairs = [self findFromToPairsWithToPath:path];
-    
-    if (hash) {
-        for (NSArray<id<ReduxyRoutable>> *pair in pairs) {
-            id<ReduxyRoutable> to = pair.lastObject;
-            if ([hash isEqualToNumber:@(to.hash)])
-                return pair;
-        }
-        return nil;
-    }
-    else {
-        NSAssert(pairs.count <= 1, @"finding pair without hash must be one or zero");
-        
-        return pairs.firstObject;
-    }
-}
-
-- (NSArray<id<ReduxyRoutable>> *)routablesInFromToPairsWithPath:(NSString *)path {
-    NSMutableSet *set = [NSMutableSet set];
-    for (NSArray<id<ReduxyRoutable>> *pair in self.fromToPairs) {
-        id<ReduxyRoutable> from = pair.firstObject;
-        id<ReduxyRoutable> to = pair.lastObject;
-        
-        [set addObject:from];
-        [set addObject:to];
-    }
-    
-    return set.allObjects;
-}
-
-- (id<ReduxyRoutable>)findFromToPairWithPath:(NSString *)path hash:(NSNumber *)hash {
-    NSArray<id<ReduxyRoutable>> *routables = [self routablesInFromToPairsWithPath:path];
-    
-    if (hash) {
-        for (id<ReduxyRoutable> routable in routables) {
-            if ([path isEqualToString:routable.path] &&
-                [hash isEqualToNumber:@(routable.hash)])
-            {
-                return routable;
-            }
-        }
-        return nil;
-    }
-    else {
-        NSAssert(routables.count <= 1, @"finding pair without hash must be one or zero");
-        
-        return routables.firstObject;
-    }
-}
-
-
-- (NSArray<NSArray<id<ReduxyRoutable>> *> *)findFromToPairsWithFrom:(id<ReduxyRoutable>)from {
+- (NSArray<NSArray<id<ReduxyRoutable>> *> *)findRoutingsInTabelWithFrom:(id<ReduxyRoutable>)from {
     NSMutableArray *pairs = [NSMutableArray array];
     
-    for (NSArray *pair in self.fromToPairs) {
-        if ([pair.firstObject isEqual:from])
+    for (NSArray *pair in self.routingTable) {
+        if ([pair.firstObject isEqual:from]) {
             [pairs addObject:pair];
+        }
     }
+    
     return pairs.copy;
 }
 
-- (void)addFromToPairWithFrom:(id<ReduxyRoutable>)from to:(id<ReduxyRoutable>)to {
-    [self.fromToPairs addObject:@[ from, to ]];
-}
-
-- (void)removeFromToPairByTo:(id<ReduxyRoutable>)to {
-    NSArray<id<ReduxyRoutable>> *pair = [self findFromToPairWithTo:to];
-    [self.fromToPairs removeObject:pair];
-}
-
-- (void)removeFromToPairsByFrom:(id<ReduxyRoutable>)from {
-    NSArray<NSArray<id<ReduxyRoutable>> *> *pairs = [self findFromToPairsWithFrom:from];
- 
-    [self.fromToPairs removeObjectsInArray:pairs];
-}
-
-
-- (void)addRoutable:(id<ReduxyRoutable>)routable {
-    NSString *path = routable.path;
-    NSNumber *order = [self allocateOrderToRoutableIfNeeded:routable];
-    
-    NSMutableDictionary *routables = [self routablesForPath:path];
-    
-    [routables setObject:@{ @"routable": routable,
-                            @"path": path,
-                            @"order": order,
-                            }
-                  forKey:order];
-    
-    [self.routables setValue:routables forKey:path];
-}
-
-- (void)removeRoutable:(id<ReduxyRoutable>)routable {
-    NSString *path = routable.path;
-    
-    NSMutableDictionary *routables = [self routablesForPath:path];
-    
-    NSNumber *order = [self orderOfRoutable:routable];
-    
-    [routables removeObjectForKey:order];
-}
-
-- (NSMutableDictionary *)routablesForPath:(NSString *)path {
-    NSMutableDictionary *routables = [self.routables objectForKey:path];
-    if (routables) {
-        return routables;
-    }
-    return [NSMutableDictionary dictionary];
-}
-
-- (id<ReduxyRoutable>)routableForPath:(NSString *)path order:(NSNumber *)order {
-    NSMutableDictionary *routables = [self routablesForPath:path];
-    return routables[order][@"routable"];
-}
-
-- (BOOL)routableInStack:(id<ReduxyRoutable>)routable {
-    NSNumber *order = [self orderOfRoutable:routable];
-    
-    return ([self routableForPath:routable.path order:order] != nil);
-}
+#pragma mark - routes
 
 - (BOOL)route:(NSString *)path source:(id<ReduxyRoutable>)routable context:(id)context {
     RouteAction route = self.routes[path];
@@ -451,7 +264,7 @@ static NSString * const _stateKey = @"reduxy.routes";
         id<ReduxyRoutable> to = route(routable, context, ^(id<ReduxyRoutable> from, id<ReduxyRoutable> to) {
             [wself didRouteFrom:from to:to];
         });
-        [self allocateOrderToRoutableIfNeeded:to];
+        [self tagSequenceToRoutableIfNeeded:to];
         return YES;
     }
     
@@ -488,9 +301,9 @@ static NSString * const _stateKey = @"reduxy.routes";
     
     if (self.routesAutoway || !way) {
         NSString *fromPath = action.payload[@"from-path"];
-        NSNumber *fromOrder  = action.payload[@"from-order"];
+        NSNumber *fromSeq  = action.payload[@"from-seq"];
         
-        id<ReduxyRoutable> from = [self routableForPath:fromPath order:fromOrder];
+        id<ReduxyRoutable> from = [self findRoutableWithPath:fromPath sequence:fromSeq];
         
         return [self route:path source:from context:action.payload];
     }
@@ -508,9 +321,9 @@ static NSString * const _stateKey = @"reduxy.routes";
     
     if (self.routesAutoway || !way) {
         NSString *fromPath = action.payload[@"from-path"];
-        NSNumber *fromOrder  = action.payload[@"from-order"];
+        NSNumber *fromSeq  = action.payload[@"from-seq"];
         
-        id<ReduxyRoutable> from = [self routableForPath:fromPath order:fromOrder];
+        id<ReduxyRoutable> from = [self findRoutableWithPath:fromPath sequence:fromSeq];
         
         return [self unroute:path source:from context:action.payload];
     }
@@ -525,11 +338,11 @@ static NSString * const _stateKey = @"reduxy.routes";
 - (void)routePath:(NSString *)path from:(id<ReduxyRoutable>)from context:(NSDictionary *)context {
     NSAssert(path, @"No path to route");
     
-    NSNumber *order = [self orderOfRoutable:from];
+    NSNumber *seq = [self sequenceOfRoutable:from];
     
     NSMutableDictionary *payload = [NSMutableDictionary dictionaryWithDictionary:@{ @"path": path,
                                                                                     @"from-path": from.path,
-                                                                                    @"from-order": order,
+                                                                                    @"from-seq": seq,
                                                                                     }];
     if (context) {
         [payload addEntriesFromDictionary:context];
@@ -541,11 +354,11 @@ static NSString * const _stateKey = @"reduxy.routes";
 - (void)unroutePath:(NSString *)path from:(id<ReduxyRoutable>)from context:(NSDictionary *)context {
     NSAssert(path, @"No path to unroute");
     
-    NSNumber *order = [self orderOfRoutable:from];
+    NSNumber *seq = [self sequenceOfRoutable:from];
     
     NSMutableDictionary *payload = [NSMutableDictionary dictionaryWithDictionary:@{ @"path": path,
                                                                                     @"from-path": from.path,
-                                                                                    @"from-order": order,
+                                                                                    @"from-seq": seq,
                                                                                     }];
     
     if (context) {
@@ -594,7 +407,7 @@ static NSString * const _stateKey = @"reduxy.routes";
 #endif
 
     self.unroutingInfo = @{ @"path": path,
-                            @"order": [self orderOfRoutable:from],
+                            @"seq": [self sequenceOfRoutable:from],
                             };
 }
 
@@ -607,17 +420,14 @@ static NSString * const _stateKey = @"reduxy.routes";
     
     BOOL manualUnrouting = (self.unroutingInfo != nil);
     
-    BOOL inStack = [self routableInStack:from];
+    BOOL inStack = [self isRoutableInRoutingTable:from];
     
     if (manualUnrouting) {
         LOG(@"manuall way");
         if (inStack) {
             LOG(@"pop routables to path: %@", from.path);
             
-            NSArray<id<ReduxyRoutable>> *pair = [self findFromToPairWithTo:from];
-            
-            [self removeRoutable:from];
-            [self removeFromToPairByTo:from];
+            [self removeRoutingInTableWithTo:from];
         }
         
         self.unroutingInfo = nil;
@@ -628,15 +438,12 @@ static NSString * const _stateKey = @"reduxy.routes";
         if (inStack) {
             LOG(@"pop routables to path: %@", from.path);
             
-            NSArray<id<ReduxyRoutable>> *pair = [self findFromToPairWithTo:from];
-            
-            [self removeRoutable:from];
-            [self removeFromToPairByTo:from];
+            [self removeRoutingInTableWithTo:from];
             
             [self.store dispatch:ratype(router.unroute)
                          payload:@{ @"path": from.path,
                                     @"from-path": from.path,
-                                    @"from-order": [self orderOfRoutable:from],
+                                    @"from-seq": [self sequenceOfRoutable:from],
                                     @"way": @"auto",
                                     }];
         }
@@ -656,7 +463,7 @@ static NSString * const _stateKey = @"reduxy.routes";
 #endif
 
     self.routingInfo = @{ @"path": path,
-                          @"order": [self orderOfRoutable:from],
+                          @"seq": [self sequenceOfRoutable:from],
                           };
 
 }
@@ -667,8 +474,15 @@ static NSString * const _stateKey = @"reduxy.routes";
     LOG(@"did route, from: '%@' to: '%@'", from.path, to.path);
 #endif
     
-    [self allocateOrderToRoutableIfNeeded:from];
-    [self allocateOrderToRoutableIfNeeded:to];
+    [self tagSequenceToRoutableIfNeeded:from];
+    [self tagSequenceToRoutableIfNeeded:to];
+    
+    if (from) {
+        NSArray<id<ReduxyRoutable>> *routing = [self findRoutingInTabelWithTo:to];
+        if (!routing) {
+            [self addRoutingWithFrom:from to:to];
+        }
+    }
     
     BOOL manualRouting = (self.routingInfo != nil);
     if (manualRouting) {
@@ -679,18 +493,16 @@ static NSString * const _stateKey = @"reduxy.routes";
         if ([routingPath isEqualToString:to.path]) {
             LOG(@"push routable: %@", to.path);
             
-            [self addRoutable:to];
-            [self addFromToPairWithFrom:from to:to];
-            
             self.routingInfo = nil;
         }
         else {
-            LOG(@"ignore, it is not the routable waiting");        }
+            LOG(@"ignore, it is not the routable waiting");
+        }
     }
     else {
         LOG(@"auto way");
         
-        BOOL alreadyInStack = [self routableInStack:to];
+        BOOL alreadyInStack = [self isRoutableInRoutingTable:to];
         if (alreadyInStack) {
             // ignore
             LOG(@"ignore when routable is already on stack");
@@ -698,14 +510,11 @@ static NSString * const _stateKey = @"reduxy.routes";
         else {
             LOG(@"push routable: %@", to.path);
             
-            [self addRoutable:to];
-            [self addFromToPairWithFrom:from to:to];
-            
             [self.store dispatch:ratype(router.route)
                          payload:(from?
                                   @{ @"path": to.path,
                                      @"from-path": from.path,
-                                     @"from-order": [self orderOfRoutable:from],
+                                     @"from-seq": [self sequenceOfRoutable:from],
                                      @"way": @"auto"
                                      }:
                                   @{ @"path": to.path,
