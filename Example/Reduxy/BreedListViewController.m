@@ -451,7 +451,7 @@ ReduxyRoutable
 }
 
 - (IBAction)resetButtonDidClick:(id)sender {
-    [Store.shared.player reset];
+//    [Store.shared.player reset];
     
     [ReduxyRouter.shared routePath:@"set-vcs" from:self context:nil];
 }
