@@ -59,7 +59,7 @@ ReduxyRoutable
 - (void)dealloc {
     LOG_HERE
     
-    [self.store dispatch:raction(randomdog.reload)];
+    //[self.store dispatch:raction(randomdog.reload)];
     [self.store unsubscribe:self];
 }
 

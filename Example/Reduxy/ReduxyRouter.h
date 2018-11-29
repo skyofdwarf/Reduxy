@@ -22,7 +22,7 @@
 
 
 typedef void (^RouteCompletion)(id<ReduxyRoutable> from, id<ReduxyRoutable> to);
-typedef id<ReduxyRoutable> (^RouteAction)(id<ReduxyRoutable> src, id context, RouteCompletion completion);
+typedef id (^RouteAction)(id<ReduxyRoutable> src, id context, RouteCompletion completion);
 
 
 

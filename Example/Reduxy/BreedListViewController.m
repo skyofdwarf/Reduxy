@@ -187,14 +187,14 @@ ReduxyRoutable
                            dest.breed = context[@"breed"];
                            
                            [src.vc showViewController:dest sender:nil];
-                           completion(src, dest);
+//                           completion(src, dest);
                            
                            return dest;
                        } unroute:^id<ReduxyRoutable>  (id<ReduxyRoutable> src, id context, RouteCompletion completion) {
                            LOG(@"in unroute function: randomdog");
                            
                            [src.vc.navigationController popViewControllerAnimated:YES];
-                           completion(src, nil);
+//                           completion(src, nil);
                            
                            return src;
                        }];
@@ -208,14 +208,14 @@ ReduxyRoutable
                            dest.breed = context[@"breed"];
                            
                            [src.vc showViewController:dest sender:nil];
-                           completion(src, dest);
+//                           completion(src, dest);
                            
                            return dest;
                        } unroute:^id<ReduxyRoutable>  (id<ReduxyRoutable> src, id context, RouteCompletion completion) {
                            LOG(@"in unroute function: local-store");
                            
                            [src.vc.navigationController popViewControllerAnimated:YES];
-                           completion(src, nil);
+//                           completion(src, nil);
                            
                            return src;
                        }];
@@ -227,7 +227,7 @@ ReduxyRoutable
                            AboutViewController *dest = [src.vc.storyboard instantiateViewControllerWithIdentifier:@"about"];
                            
                            [src.vc showViewController:dest sender:nil];
-                           completion(src, dest);
+//                           completion(src, dest);
                            
                            //UINavigationController *nv = [[UINavigationController alloc] initWithRootViewController:dest];
                            //[src.vc presentViewController:nv animated:YES completion:^{ completion(dest); }];
@@ -237,9 +237,27 @@ ReduxyRoutable
                            LOG(@"in unroute function: about");
                            
                            [src.vc.navigationController popViewControllerAnimated:YES];
-                           completion(src, nil);
+//                           completion(src, nil);
                            
                            //[src.vc dismissViewControllerAnimated:YES completion:^{ completion(src); }];
+                           
+                           return src;
+                       }];
+    
+    [ReduxyRouter.shared add:@"about-modal"
+                       route:^id<ReduxyRoutable>  (id<ReduxyRoutable> src, id context, RouteCompletion completion) {
+                           LOG(@"in route function: about");
+                           
+                           AboutViewController *dest = [src.vc.storyboard instantiateViewControllerWithIdentifier:@"about"];
+                           UINavigationController *nv = [[UINavigationController alloc] initWithRootViewController:dest];
+                           
+                           [src.vc presentViewController:nv animated:YES completion:^{ completion(src, dest); }];
+                           
+                           return dest;
+                       } unroute:^id<ReduxyRoutable>  (id<ReduxyRoutable> src, id context, RouteCompletion completion) {
+                           LOG(@"in unroute function: about");
+                           
+                           [src.vc dismissViewControllerAnimated:YES completion:^{ completion(src, nil); }];
                            
                            return src;
                        }];
@@ -255,16 +273,16 @@ ReduxyRoutable
                            
                            AboutViewController *about = [src.vc.storyboard instantiateViewControllerWithIdentifier:@"about"];
                            
-                           [src.vc.navigationController setViewControllers:@[ src.vc, randomdog, about ] animated:YES];
+                           [src.vc.navigationController setViewControllers:@[ randomdog, about ] animated:YES];
                            
                            completion(src, randomdog);
                            
-                           return randomdog;
+                           return @[ randomdog, about ];
                        } unroute:^id<ReduxyRoutable>  (id<ReduxyRoutable> src, id context, RouteCompletion completion) {
                            LOG(@"in unroute function: set-vcs");
                            
                            [src.vc.navigationController popToRootViewControllerAnimated:YES];
-                           completion(src, nil);
+//                           completion(src, nil);
                            
                            return src;
                        }];
@@ -359,7 +377,7 @@ ReduxyRoutable
 
 - (IBAction)aboutButtonDidClick:(id)sender {
 #if REDUXY_ROUTER
-    [ReduxyRouter.shared routePath:@"about" from:self context:nil];
+    [ReduxyRouter.shared routePath:@"about-modal" from:self context:nil];
 #else
     [self performSegueWithIdentifier:@"About" sender:nil];
 #endif

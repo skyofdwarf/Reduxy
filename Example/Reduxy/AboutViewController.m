@@ -83,7 +83,8 @@
     
     //[self.navigationController popToRootViewControllerAnimated:YES];
     
-    [ReduxyRouter.shared unroutePath:@"go to root" from:self context:nil];
+    //[ReduxyRouter.shared unroutePath:@"go to root" from:self context:nil];
+    [ReduxyRouter.shared unroutePath:@"about-modal" from:self context:nil];
 }
 
 
