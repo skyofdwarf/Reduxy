@@ -11,8 +11,6 @@
 NS_ASSUME_NONNULL_BEGIN
 
 @protocol ReduxyRoutable <NSObject>
-@required
-- (NSString *)path;
 
 @optional
 - (UIViewController *)vc;

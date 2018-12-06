@@ -8,7 +8,6 @@
 
 /* Begin PBXBuildFile section */
 		07EBC9F843BFDF062B4A1942 /* Pods_Reduxy_Tests.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2325645312FA0CA935FBE3C6 /* Pods_Reduxy_Tests.framework */; };
-		5683B94521B82CDD0063DC94 /* UIViewController+ReduxyRoutable.m in Sources */ = {isa = PBXBuildFile; fileRef = 5683B94421B82CDD0063DC94 /* UIViewController+ReduxyRoutable.m */; };
 		6003F58E195388D20070C39A /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6003F58D195388D20070C39A /* Foundation.framework */; };
 		6003F590195388D20070C39A /* CoreGraphics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6003F58F195388D20070C39A /* CoreGraphics.framework */; };
 		6003F592195388D20070C39A /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6003F591195388D20070C39A /* UIKit.framework */; };
@@ -51,8 +50,6 @@
 		2325645312FA0CA935FBE3C6 /* Pods_Reduxy_Tests.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_Reduxy_Tests.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		293AE4197A2966966BD51E65 /* Pods_Reduxy_Example.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_Reduxy_Example.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		2BC9782ABF420CF2C491F022 /* Pods-Reduxy_Tests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Reduxy_Tests.release.xcconfig"; path = "Pods/Target Support Files/Pods-Reduxy_Tests/Pods-Reduxy_Tests.release.xcconfig"; sourceTree = "<group>"; };
-		5683B94321B82CDD0063DC94 /* UIViewController+ReduxyRoutable.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "UIViewController+ReduxyRoutable.h"; sourceTree = "<group>"; };
-		5683B94421B82CDD0063DC94 /* UIViewController+ReduxyRoutable.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "UIViewController+ReduxyRoutable.m"; sourceTree = "<group>"; };
 		5683B94621B8365C0063DC94 /* ReduxyRoutable.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ReduxyRoutable.h; sourceTree = "<group>"; };
 		6003F58A195388D20070C39A /* Reduxy_Example.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Reduxy_Example.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		6003F58D195388D20070C39A /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
@@ -194,8 +191,6 @@
 				D558CCA0209AE3590069536D /* Store.m */,
 				D5B0365E20A4297400F7C2D3 /* Actions.h */,
 				D5B0365F20A4298500F7C2D3 /* Actions.m */,
-				5683B94321B82CDD0063DC94 /* UIViewController+ReduxyRoutable.h */,
-				5683B94421B82CDD0063DC94 /* UIViewController+ReduxyRoutable.m */,
 				5683B94621B8365C0063DC94 /* ReduxyRoutable.h */,
 			);
 			name = "Example for Reduxy";
@@ -477,7 +472,6 @@
 				D558CC9E209AD9B80069536D /* AboutViewController.m in Sources */,
 				D5EB3F47208ED0FA003F5519 /* BreedListViewController.m in Sources */,
 				6003F59A195388D20070C39A /* main.m in Sources */,
-				5683B94521B82CDD0063DC94 /* UIViewController+ReduxyRoutable.m in Sources */,
 				D5B0366020A4298500F7C2D3 /* Actions.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

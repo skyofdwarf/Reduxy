@@ -18,6 +18,13 @@ typedef void (^RouterRoute)(id<ReduxyRoutable> from, NSDictionary<NSString *, id
 typedef void (^RouterUnroute)(id<ReduxyRoutable> from, RouterUnrouteCompletion optionalCompletion);
 
 
+#pragma mark - UIViewController (ReduxyRoutable) <ReduxyRoutable>
+
+@interface UIViewController (ReduxyRoutable) <ReduxyRoutable>
+@end
+
+
+
 #pragma mark - Router
 
 @interface ReduxyRouter : NSObject
