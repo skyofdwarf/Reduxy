@@ -173,7 +173,7 @@ http://dog.ceo/dog-api</string>
                                     <action selector="reloadButtonDidClick:" destination="7BS-0c-BeB" id="rHr-b5-XVx"/>
                                 </connections>
                             </barButtonItem>
-                            <barButtonItem style="plain" id="wtx-Wd-PCJ">
+                            <barButtonItem id="wtx-Wd-PCJ">
                                 <button key="customView" opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="infoLight" showsTouchWhenHighlighted="YES" lineBreakMode="middleTruncation" id="alg-gV-69y">
                                     <rect key="frame" x="245" y="11" width="22" height="22"/>
                                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
