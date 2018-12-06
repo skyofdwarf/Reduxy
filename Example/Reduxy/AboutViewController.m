@@ -20,21 +20,6 @@
     return @"about";
 }
 
-+ (void)load {
-    [self buildRoutes];
-}
-
-+ (void)buildRoutes {
-    
-    [ReduxyRouter.shared add:@"go to root" route:^id<ReduxyRoutable>(id<ReduxyRoutable> src, id context, RouteCompletion completion) {
-        return nil;
-    } unroute:^id<ReduxyRoutable>(id<ReduxyRoutable> src, id context, RouteCompletion completion) {
-        [src.vc.navigationController popToRootViewControllerAnimated:YES];
-        return src;
-    }];
-}
-
-
 - (void)dealloc {
     LOG_HERE
 }
@@ -67,7 +52,7 @@
 }
 
 - (void)viewDidDisappear:(BOOL)animated {
-    LOG_HERE
+     LOG_HERE
     
     [super viewDidDisappear:animated];
 }
@@ -79,12 +64,8 @@
 - (IBAction)popButtonDidClick:(id)sender {
     LOG(@"dispatch back in pop button");
     
-    //[ReduxyRouter.shared unroutePath:@"about" context:nil];
-    
-    //[self.navigationController popToRootViewControllerAnimated:YES];
-    
-    //[ReduxyRouter.shared unroutePath:@"go to root" from:self context:nil];
-    [ReduxyRouter.shared unroutePath:@"about-modal" from:self context:nil];
+    // explicit unroute
+    [ReduxyRouter.shared unrouteFrom:self];
 }
 
 

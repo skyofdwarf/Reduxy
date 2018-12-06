@@ -108,7 +108,10 @@
 - (void)publishState:(ReduxyState)state action:(ReduxyAction)action {
     LOG(@"publish action: %@, state: %@", action, state);
     
-    for (id<ReduxyStoreSubscriber> subscriber in self.subscribers) {
+    NSArray<id<ReduxyStoreSubscriber>> *subs = self.subscribers.allObjects;
+    LOG(@"subs: %@", subs);
+    
+    for (id<ReduxyStoreSubscriber> subscriber in subs) {
         [self publishState:state to:subscriber action:action];
     }
 }

@@ -71,6 +71,8 @@ ReduxyRoutable
     
     NSAssert(self.store, @"No store");
     
+    self.view.backgroundColor = [UIColor grayColor];
+    
     self.title = (self.breed?
                   self.breed:
                   @"random dog");

@@ -8,26 +8,14 @@
 
 #import <Foundation/Foundation.h>
 #import "ReduxyTypes.h"
+#import "ReduxyRoutable.h"
 
+typedef void (^RouterRouteCompletion)(id<ReduxyRoutable> from, NSDictionary<NSString *, id<ReduxyRoutable>> *to);
+typedef void (^RouterUnrouteCompletion)(id<ReduxyRoutable> from);
 
-
-@protocol ReduxyRoutable <NSObject>
-@required
-- (NSString *)path;
-
-@optional
-- (UIViewController *)vc;
-- (UIView *)view;
-@end
-
-
-typedef void (^RouteCompletion)(id<ReduxyRoutable> from, id<ReduxyRoutable> to);
-typedef id (^RouteAction)(id<ReduxyRoutable> src, id context, RouteCompletion completion);
-
-
-
-@interface UIViewController (ReduxyRoutable) <ReduxyRoutable>
-@end
+typedef id<ReduxyRoutable> (^RouterTargetCreator)(id<ReduxyRoutable> from, NSDictionary *context);
+typedef void (^RouterRoute)(id<ReduxyRoutable> from, NSDictionary<NSString *, id<ReduxyRoutable>> *to, NSDictionary *context, RouterRouteCompletion optionalCompletion);
+typedef void (^RouterUnroute)(id<ReduxyRoutable> from, RouterUnrouteCompletion optionalCompletion);
 
 
 #pragma mark - Router
@@ -37,12 +25,7 @@ typedef id (^RouteAction)(id<ReduxyRoutable> src, id context, RouteCompletion co
 
 
 /**
- routes by action not state
- */
-@property (assign, nonatomic) BOOL routesByAction;
-
-/**
- routes auto-way action. applied only if routesByAction is enabled
+ routes auto-way action
  */
 @property (assign, nonatomic) BOOL routesAutoway;
 
@@ -54,25 +37,25 @@ typedef id (^RouteAction)(id<ReduxyRoutable> src, id context, RouteCompletion co
 
 #pragma mark - routing
 
-- (void)add:(NSString *)path route:(RouteAction)route unroute:(RouteAction)unroute;
+- (void)addTarget:(NSString *)name creator:(RouterTargetCreator)creator;
+- (void)addPath:(NSString *)path targets:(NSArray<NSString *> *)targets route:(RouterRoute)route unroute:(RouterUnroute)unroute;
 
-- (void)remove:(NSString *)path;
-
-#pragma mark - dispatch un/route
+- (void)removeTarget:(NSString *)name;
+- (void)removePath:(NSString *)path;
 
 - (void)routePath:(NSString *)path from:(id<ReduxyRoutable>)from context:(NSDictionary *)context;
-- (void)unroutePath:(NSString *)path from:(id<ReduxyRoutable>)from context:(NSDictionary *)context;
+- (void)unroutePath:(NSString *)path from:(id<ReduxyRoutable>)from;
+- (void)unrouteFrom:(id<ReduxyRoutable>)from;
+
+
 
 #pragma mark - event
 
 - (void)viewController:(UIViewController<ReduxyRoutable> *)vc willMoveToParentViewController:(UIViewController *)parent;
 - (void)viewController:(UIViewController<ReduxyRoutable> *)vc didMoveToParentViewController:(UIViewController *)parent;
-    
-- (void)willUnrouteForPath:(NSString *)path from:(id<ReduxyRoutable>)from;
-- (BOOL)didUnrouteFrom:(id<ReduxyRoutable>)from to:(id<ReduxyRoutable>)to;
-
-- (void)willRouteForPath:(NSString *)path from:(id<ReduxyRoutable>)from;
-- (BOOL)didRouteFrom:(id<ReduxyRoutable>)from to:(id<ReduxyRoutable>)to;
-
 
 @end
+
+
+
+
