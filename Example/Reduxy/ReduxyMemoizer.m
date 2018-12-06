@@ -19,10 +19,10 @@ memoized_block (^memoize)(memoizable_block) = ^memoized_block (memoizable_block 
             last_args = args;
             last_result = block(args);
             
-            LOG(@"return new result: %@", last_result);
+            LOG(@"memozie> return new result: %@", last_result);
         }
         else {
-            LOG(@"return cached result: %@", last_result);
+            LOG(@"memozie> return cached result");
         }
         
         return last_result;

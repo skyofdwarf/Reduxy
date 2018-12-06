@@ -75,9 +75,11 @@ static ReduxyMiddleware mainQueue = ReduxyMiddlewareCreateMacro(store, next, act
     };
     
     ReduxyReducer rootReducer = ^ReduxyState (ReduxyState state, ReduxyAction action) {
-        return @{ @"fixed-menu": @[ @"randomdog", @"localstore" ], ///< fixed state
-                  @"breeds": breedsReducer(state[@"breeds"], action),
-                  @"filter": filterReducer(state[@"filter"], action),
+        return @{ @"menu": @{ @"fixed": @[ @"randomdog", @"localstore" ],
+                              @"dynamic": @{ @"breeds": breedsReducer([state valueForKeyPath:@"menu.dynamic.breeds"], action),
+                                             @"filter": filterReducer([state valueForKeyPath:@"menu.dynamic.filter"], action),
+                                             },
+                                },
                   @"randomdog": randomdogReducer(state[@"randomdog"], action),
                   @"indicator": indicatorReducer(state[@"indicator"], action),
                   };

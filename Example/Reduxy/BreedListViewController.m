@@ -23,12 +23,10 @@
 #define REDUXY_ROUTER 1
 
 
-
-
 #pragma mark - selectors
 
 static selector_block fixedMenuSelector = ^id (ReduxyState state) {
-    return state[@"fixed-menu"];
+    return [state valueForKeyPath:@"menu.fixed"];
 };
 
 static selector_block indicatorSelector = ^id (ReduxyState state) {
@@ -36,11 +34,11 @@ static selector_block indicatorSelector = ^id (ReduxyState state) {
 };
 
 selector_block filterSelector = ^NSString *(ReduxyState state) {
-    return state[@"filter"];
+    return [state valueForKeyPath:@"menu.dynamic.filter"];
 };
 
 selector_block breedsSelector = ^NSDictionary *(ReduxyState state) {
-    return state[@"breeds"];
+    return [state valueForKeyPath:@"menu.dynamic.breeds"];
 };
 
 
@@ -289,7 +287,7 @@ ReduxyRoutable
     
     switch (section) {
         case 0: {
-            NSArray *fixedMenu = state[@"fixed-menu"];
+            NSArray *fixedMenu = fixedMenuSelector(state);
             return fixedMenu.count;
         }
         case 1: {
@@ -313,7 +311,7 @@ ReduxyRoutable
     
     switch (section) {
         case 0: {
-            items = state[@"fixed-menu"];
+            items = fixedMenuSelector(state);
             break ;
         }
         case 1: {
@@ -326,6 +324,11 @@ ReduxyRoutable
     
     return cell;
 }
+
+- (NSString *)tableView:(UITableView *)tableView titleForHeaderInSection:(NSInteger)section {
+    return @[ @"fixed", @"dynamic" ][section];
+}
+
 
 #pragma mark - Table view delegate
 
