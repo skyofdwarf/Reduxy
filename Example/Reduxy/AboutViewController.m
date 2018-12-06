@@ -57,10 +57,6 @@
     [super viewDidDisappear:animated];
 }
 
-- (IBAction)nextButtonDidClick:(id)sender {
-    [Store.shared.player next];
-}
-
 - (IBAction)popButtonDidClick:(id)sender {
     LOG(@"dispatch back in pop button");
     

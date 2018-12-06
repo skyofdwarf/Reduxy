@@ -40,18 +40,11 @@ http://dog.ceo/dog-api</string>
                         </constraints>
                     </view>
                     <navigationItem key="navigationItem" id="5BY-6s-LEz">
-                        <rightBarButtonItems>
-                            <barButtonItem title="NEXT" id="EvA-un-hXa">
-                                <connections>
-                                    <action selector="nextButtonDidClick:" destination="Dem-PX-pSc" id="3b8-4T-Y5I"/>
-                                </connections>
-                            </barButtonItem>
-                            <barButtonItem title="POP" id="Tf6-AT-0NU">
-                                <connections>
-                                    <action selector="popButtonDidClick:" destination="Dem-PX-pSc" id="sDa-kd-bBT"/>
-                                </connections>
-                            </barButtonItem>
-                        </rightBarButtonItems>
+                        <barButtonItem key="rightBarButtonItem" title="POP" id="Tf6-AT-0NU">
+                            <connections>
+                                <action selector="popButtonDidClick:" destination="Dem-PX-pSc" id="sDa-kd-bBT"/>
+                            </connections>
+                        </barButtonItem>
                     </navigationItem>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="vY2-CN-lM3" userLabel="First Responder" sceneMemberID="firstResponder"/>
@@ -116,54 +109,20 @@ http://dog.ceo/dog-api</string>
                         </constraints>
                     </view>
                     <navigationItem key="navigationItem" title="dog.ceo" id="RQr-2S-5Zy">
-                        <leftBarButtonItems>
-                            <barButtonItem id="YiL-6C-I34">
-                                <button key="customView" opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="infoLight" showsTouchWhenHighlighted="YES" lineBreakMode="middleTruncation" id="aLT-NJ-rm8">
-                                    <rect key="frame" x="16" y="11" width="22" height="22"/>
-                                    <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
-                                    <connections>
-                                        <action selector="aboutButtonDidClick:" destination="WCh-Zn-tPy" eventType="touchUpInside" id="IIY-UG-afE"/>
-                                    </connections>
-                                </button>
-                            </barButtonItem>
-                            <barButtonItem title="S" id="rXu-4K-wyY">
+                        <barButtonItem key="leftBarButtonItem" id="YiL-6C-I34">
+                            <button key="customView" opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="infoLight" showsTouchWhenHighlighted="YES" lineBreakMode="middleTruncation" id="aLT-NJ-rm8">
+                                <rect key="frame" x="16" y="11" width="22" height="22"/>
+                                <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                                 <connections>
-                                    <action selector="saveButtonDidClick:" destination="WCh-Zn-tPy" id="9ps-xE-rVo"/>
+                                    <action selector="aboutButtonDidClick:" destination="WCh-Zn-tPy" eventType="touchUpInside" id="IIY-UG-afE"/>
                                 </connections>
-                            </barButtonItem>
-                            <barButtonItem title="L" id="cIX-e4-gd0">
-                                <connections>
-                                    <action selector="loadButtonDidClick:" destination="WCh-Zn-tPy" id="ocT-L1-Zxz"/>
-                                </connections>
-                            </barButtonItem>
-                            <barButtonItem title="T" id="Gc9-tE-qI7">
-                                <connections>
-                                    <action selector="recordingToggleButtonDidClick:" destination="WCh-Zn-tPy" id="5hx-M3-x9G"/>
-                                </connections>
-                            </barButtonItem>
-                        </leftBarButtonItems>
-                        <rightBarButtonItems>
-                            <barButtonItem systemItem="refresh" id="5dA-Bd-HMb">
-                                <connections>
-                                    <action selector="reloadButtonDidClick:" destination="WCh-Zn-tPy" id="wAB-9F-bhl"/>
-                                </connections>
-                            </barButtonItem>
-                            <barButtonItem title="r" id="AKE-Cn-x7R">
-                                <connections>
-                                    <action selector="resetButtonDidClick:" destination="WCh-Zn-tPy" id="oNm-OZ-0Dg"/>
-                                </connections>
-                            </barButtonItem>
-                            <barButtonItem title="n" id="puO-1v-bK2">
-                                <connections>
-                                    <action selector="nextButtonDidClick:" destination="WCh-Zn-tPy" id="ezv-v7-vwg"/>
-                                </connections>
-                            </barButtonItem>
-                            <barButtonItem title="p" id="Myj-pQ-eiq">
-                                <connections>
-                                    <action selector="prevButtonDidClick:" destination="WCh-Zn-tPy" id="wwb-3y-FwU"/>
-                                </connections>
-                            </barButtonItem>
-                        </rightBarButtonItems>
+                            </button>
+                        </barButtonItem>
+                        <barButtonItem key="rightBarButtonItem" systemItem="refresh" id="5dA-Bd-HMb">
+                            <connections>
+                                <action selector="reloadButtonDidClick:" destination="WCh-Zn-tPy" id="wAB-9F-bhl"/>
+                            </connections>
+                        </barButtonItem>
                     </navigationItem>
                     <connections>
                         <outlet property="indicatorView" destination="CgD-Kb-KYU" id="SXt-fn-sWi"/>
@@ -214,15 +173,14 @@ http://dog.ceo/dog-api</string>
                                     <action selector="reloadButtonDidClick:" destination="7BS-0c-BeB" id="rHr-b5-XVx"/>
                                 </connections>
                             </barButtonItem>
-                            <barButtonItem title="NEXT" id="J8u-Ch-EMk">
-                                <connections>
-                                    <action selector="nextButtonDidClick:" destination="7BS-0c-BeB" id="hbY-Vh-FEA"/>
-                                </connections>
-                            </barButtonItem>
-                            <barButtonItem title="Item" id="b00-OO-gnx">
-                                <connections>
-                                    <action selector="aboutButtonDidClick:" destination="7BS-0c-BeB" id="7gr-W5-Ajl"/>
-                                </connections>
+                            <barButtonItem style="plain" id="wtx-Wd-PCJ">
+                                <button key="customView" opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="infoLight" showsTouchWhenHighlighted="YES" lineBreakMode="middleTruncation" id="alg-gV-69y">
+                                    <rect key="frame" x="245" y="11" width="22" height="22"/>
+                                    <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                                    <connections>
+                                        <action selector="aboutButtonDidClick:" destination="7BS-0c-BeB" eventType="touchUpInside" id="DZ6-Db-QHh"/>
+                                    </connections>
+                                </button>
                             </barButtonItem>
                         </rightBarButtonItems>
                     </navigationItem>
@@ -282,18 +240,11 @@ http://dog.ceo/dog-api</string>
                         </constraints>
                     </view>
                     <navigationItem key="navigationItem" title="local" id="1Cd-gc-3qv">
-                        <rightBarButtonItems>
-                            <barButtonItem systemItem="refresh" id="P9c-dH-hSD">
-                                <connections>
-                                    <action selector="reloadButtonDidClick:" destination="Oba-Rz-Dgy" id="T5V-za-6Om"/>
-                                </connections>
-                            </barButtonItem>
-                            <barButtonItem title="NEXT" id="hII-pi-0R5">
-                                <connections>
-                                    <action selector="nextButtonDidClick:" destination="Oba-Rz-Dgy" id="p8C-Kb-YnR"/>
-                                </connections>
-                            </barButtonItem>
-                        </rightBarButtonItems>
+                        <barButtonItem key="rightBarButtonItem" systemItem="refresh" id="P9c-dH-hSD">
+                            <connections>
+                                <action selector="reloadButtonDidClick:" destination="Oba-Rz-Dgy" id="T5V-za-6Om"/>
+                            </connections>
+                        </barButtonItem>
                     </navigationItem>
                     <connections>
                         <outlet property="imageView" destination="M1w-4V-RMN" id="Ewd-Fy-oi8"/>

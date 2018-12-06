@@ -8,12 +8,23 @@
 
 #import "ReduxyAppDelegate.h"
 
+
+#import "ReduxyRouter.h"
+
+
 #pragma mark - app delegate
 
 
 
 @interface ReduxyAppDelegate ()
 @property (strong, nonatomic) ReduxyStore *store;
+@property (strong, nonatomic) UIWindow *recorderWindow;
+
+@property (strong, nonatomic) UIBarButtonItem *recoderStartButton;
+@property (strong, nonatomic) UIBarButtonItem *recoderStopButton;
+@property (strong, nonatomic) UIBarButtonItem *recoderSaveButton;
+@property (strong, nonatomic) UIBarButtonItem *recoderLoadButton;
+@property (strong, nonatomic) UIBarButtonItem *playerNextButton;
 
 @end
 
@@ -27,6 +38,8 @@
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions
 {
     // Override point for customization after application launch.
+    
+    [self attachRecorderUI];
     
     return YES;
 }
@@ -63,6 +76,141 @@
 
 + (instancetype)shared {
     return (ReduxyAppDelegate *)UIApplication.sharedApplication.delegate;
+}
+
+
+#pragma mark - recorder window
+
+- (void)attachRecorderUI {
+    UINavigationController *nv = [[UINavigationController alloc] initWithRootViewController:[UIViewController new]];
+    nv.toolbarHidden = NO;
+    nv.topViewController.toolbarItems = [self toolbarItems];
+    
+    CGRect frame = UIScreen.mainScreen.bounds;
+    frame.origin.y = frame.size.height - nv.toolbar.bounds.size.height;
+    frame.size.height = nv.toolbar.bounds.size.height;
+    
+    self.recorderWindow = [[UIWindow alloc] initWithFrame:frame];
+    self.recorderWindow.windowLevel = UIWindowLevelNormal + 1;
+    self.recorderWindow.backgroundColor = UIColor.redColor;
+    self.recorderWindow.rootViewController = nv;
+    
+    [self.recorderWindow makeKeyAndVisible];
+    [self.recorderWindow resignKeyWindow];
+}
+
+- (NSArray *)toolbarItems {
+    self.recoderStartButton = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemPlay
+                                                                            target:self
+                                                                            action:@selector(recordeStartButtonClicked:)];
+    
+    self.recoderStopButton = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemStop
+                                                                           target:self
+                                                                           action:@selector(recordeStopButtonClicked:)];
+    
+    self.recoderSaveButton = [[UIBarButtonItem alloc] initWithTitle:@"Save"
+                                                              style:UIBarButtonItemStylePlain
+                                                             target:self
+                                                             action:@selector(recordeSaveButtonClicked:)];
+    self.recoderLoadButton = [[UIBarButtonItem alloc] initWithTitle:@"Load"
+                                                              style:UIBarButtonItemStylePlain
+                                                             target:self
+                                                             action:@selector(recordeLoadButtonClicked:)];
+    
+    self.playerNextButton = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemFastForward
+                                                                          target:self
+                                                                          action:@selector(recordeNextButtonClicked:)];
+    
+    self.recoderStartButton.enabled = YES;
+    self.recoderStopButton.enabled = NO;
+
+    self.recoderSaveButton.enabled = NO;
+    self.recoderLoadButton.enabled = YES;
+    self.playerNextButton.enabled = NO;
+
+    
+    return @[
+             self.recoderStartButton,
+             
+             [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemFixedSpace
+                                                           target:nil
+                                                           action:nil],
+             self.recoderStopButton,
+             self.recoderSaveButton,
+             
+             [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemFlexibleSpace
+                                                           target:nil
+                                                           action:nil],
+             self.recoderLoadButton,
+             self.playerNextButton,
+             ];
+}
+
+#pragma mark - recorder window action
+
+- (void)recordeStartButtonClicked:(id)sender {
+    if (!Store.shared.recorder.recording) {
+        [Store.shared.recorder start];
+        ReduxyRouter.shared.routesAutoway = NO;
+        
+        self.recoderStartButton.enabled = NO;
+        self.recoderStopButton.enabled = YES;
+        
+        self.recoderSaveButton.enabled = NO;
+        self.recoderLoadButton.enabled = NO;
+        self.playerNextButton.enabled = NO;
+        
+    }
+}
+
+- (void)recordeStopButtonClicked:(id)sender {
+    if (Store.shared.recorder.recording) {
+        [Store.shared.recorder stop];
+        ReduxyRouter.shared.routesAutoway = YES;
+        
+        self.recoderStartButton.enabled = YES;
+        self.recoderStopButton.enabled = NO;
+        
+        self.recoderSaveButton.enabled = YES;
+        self.recoderLoadButton.enabled = YES;
+        self.playerNextButton.enabled = NO;
+    }
+}
+
+- (void)recordeSaveButtonClicked:(id)sender {
+    [Store.shared.recorder stop];
+    [Store.shared.recorder save];
+    
+    self.recoderStartButton.enabled = YES;
+    self.recoderStopButton.enabled = NO;
+    
+    self.recoderSaveButton.enabled = NO;
+    self.recoderLoadButton.enabled = YES;
+    self.playerNextButton.enabled = NO;
+}
+
+- (void)recordeLoadButtonClicked:(id)sender {
+    [Store.shared.recorder stop];
+    [Store.shared.recorder load];
+    
+    [Store.shared.player loadItems:Store.shared.recorder.items
+                          dispatch:^ReduxyAction(ReduxyAction action) {
+                              return [Store.shared dispatch:action];
+                          }];
+    
+    ReduxyRouter.shared.routesAutoway = YES;
+    
+    self.recoderStartButton.enabled = YES;
+    self.recoderStopButton.enabled = NO;
+    
+    self.recoderSaveButton.enabled = NO;
+    self.recoderLoadButton.enabled = YES;
+    self.playerNextButton.enabled = YES;
+}
+
+
+- (void)recordeNextButtonClicked:(id)sender {
+    self.playerNextButton.enabled = ([Store.shared.player next] != nil);
 }
 
 

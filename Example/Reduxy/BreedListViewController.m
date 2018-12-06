@@ -59,6 +59,7 @@ ReduxyRoutable
 @property (copy, nonatomic) selector_block filteredBreedsSelector;
 @end
 
+
 @implementation BreedListViewController
 
 + (void)load {
@@ -421,51 +422,6 @@ ReduxyRoutable
                             }];
     
     [Store.shared dispatch:action];
-}
-
-- (IBAction)recordingToggleButtonDidClick:(id)sender {
-    if (Store.shared.recorder.recording) {
-        [Store.shared.recorder stop];
-        
-        ReduxyRouter.shared.routesAutoway = YES;
-    }
-    else {
-        [Store.shared.recorder start];
-        
-        ReduxyRouter.shared.routesAutoway = NO;
-    }
-}
-
-- (IBAction)saveButtonDidClick:(id)sender {
-    [Store.shared.recorder stop];
-    [Store.shared.recorder save];
-}
-
-- (IBAction)loadButtonDidClick:(id)sender {
-    [Store.shared.recorder stop];
-    [Store.shared.recorder load];
-    
-    [Store.shared.player loadItems:Store.shared.recorder.items
-                          dispatch:^ReduxyAction(ReduxyAction action) {
-                              return [Store.shared dispatch:action];
-                          }];
-    
-    ReduxyRouter.shared.routesAutoway = YES;
-}
-
-- (IBAction)prevButtonDidClick:(id)sender {
-    [Store.shared.player prev];
-}
-
-- (IBAction)nextButtonDidClick:(id)sender {
-    [Store.shared.player next];
-}
-
-- (IBAction)resetButtonDidClick:(id)sender {
-//    [Store.shared.player reset];
-    
-//    [ReduxyRouter.shared routePath:@"set-vcs" from:self context:nil];
-    [ReduxyRouter.shared routePath:@"split" from:self context:nil];
 }
 
 

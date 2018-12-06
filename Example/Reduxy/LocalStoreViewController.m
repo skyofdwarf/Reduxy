@@ -258,11 +258,6 @@ ReduxyStoreSubscriber
     [self reload];
 }
 
-- (IBAction)nextButtonDidClick:(id)sender {
-    [Store.shared.player next];
-}
-
-
 #pragma mark - ReduxyStoreSubscriber
 
 - (void)store:(id<ReduxyStore>)store didChangeState:(ReduxyState)state byAction:(ReduxyAction)action {

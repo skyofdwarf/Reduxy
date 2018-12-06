@@ -218,10 +218,6 @@ ReduxyRoutable
     [self reload];
 }
 
-- (IBAction)nextButtonDidClick:(id)sender {
-    [Store.shared.player next];
-}
-
 - (IBAction)aboutButtonDidClick:(id)sender {
     [ReduxyRouter.shared routePath:@"about" from:self context:nil];
     
