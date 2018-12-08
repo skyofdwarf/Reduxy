@@ -20,9 +20,6 @@
 #import "LocalStoreViewController.h"
 
 
-#define REDUXY_ROUTER 1
-
-
 #pragma mark - selectors
 
 static selector_block fixedMenuSelector = ^id (ReduxyState state) {
@@ -93,9 +90,6 @@ ReduxyRoutable
         }
     });
     
-    [self buildTargets];
-    [self buildRoutes];
-    
     [Store.shared subscribe:self];
 }
 
@@ -137,18 +131,6 @@ ReduxyRoutable
     // Dispose of any resources that can be recreated.
 }
 
-- (void)prepareForSegue:(UIStoryboardSegue *)segue sender:(id)sender {
-#if !REDUXY_ROUTER
-    if ([segue.identifier isEqualToString:@"randomdog"]) {
-        RandomDogViewController *vc = (RandomDogViewController *)segue.destinationViewController;
-        vc.breed = sender;
-    }
-    else if ([segue.identifier isEqualToString:@"localstore"]) {
-        LocalStoreViewController *vc = (LocalStoreViewController *)segue.destinationViewController;
-        vc.breed = sender;
-    }
-#endif
-}
 
 #pragma mark - private
 
@@ -171,110 +153,6 @@ ReduxyRoutable
         self.navigationItem.titleView = sb;
         sb.delegate = self;
     }
-}
-
-- (void)buildTargets {
-    [ReduxyRouter.shared addTarget:@"randomdog" creator:^id<ReduxyRoutable>(id<ReduxyRoutable> from, NSDictionary *context) {
-        RandomDogViewController *dest = [from.vc.storyboard instantiateViewControllerWithIdentifier:@"randomdog"];
-        
-        dest.store = Store.shared;
-        dest.breed = context[@"breed"];
-        
-        return dest;
-    }];
-    
-    [ReduxyRouter.shared addTarget:@"localstore" creator:^id<ReduxyRoutable>(id<ReduxyRoutable> from, NSDictionary *context) {
-        LocalStoreViewController *dest = [from.vc.storyboard instantiateViewControllerWithIdentifier:@"localstore"];
-        
-        dest.breed = context[@"breed"];
-        
-        return dest;
-    }];
-    
-    [ReduxyRouter.shared addTarget:@"about" creator:^id<ReduxyRoutable>(id<ReduxyRoutable> from, NSDictionary *context) {
-        AboutViewController *dest = [from.vc.storyboard instantiateViewControllerWithIdentifier:@"about"];
-        return dest;
-    }];
-}
-
-- (void)buildRoutes {
-    //[ReduxyRouter.shared setInitialRoutables:@[ ReduxyAppDelegate.shared.window.rootViewController ]];
-    [ReduxyRouter.shared attachStore:Store.shared];
-    
-    [ReduxyRouter.shared addPath:@"randomdog"
-                         targets:@[ @"randomdog" ]
-                           route:^void(id<ReduxyRoutable> from, NSDictionary<NSString *,id<ReduxyRoutable>> *to, NSDictionary *context, RouterRouteCompletion optionalCompletion) {
-                               id<ReduxyRoutable> routable = to[@"randomdog"];
-                               
-                               [from.vc showViewController:routable.vc sender:nil];
-                           } unroute:^void(id<ReduxyRoutable> from, RouterUnrouteCompletion optionalCompletion) {
-                               [from.vc.navigationController popViewControllerAnimated:YES];
-                           }];
-    
-    [ReduxyRouter.shared addPath:@"localstore"
-                         targets:@[ @"localstore" ]
-                           route:^void(id<ReduxyRoutable> from, NSDictionary<NSString *,id<ReduxyRoutable>> *to, NSDictionary *context, RouterRouteCompletion optionalCompletion) {
-                               id<ReduxyRoutable> routable = to[@"localstore"];
-                               
-                               [from.vc showViewController:routable.vc sender:nil];
-                           } unroute:^void(id<ReduxyRoutable> from, RouterUnrouteCompletion optionalCompletion) {
-                               [from.vc.navigationController popViewControllerAnimated:YES];
-                           }];
-    
-    [ReduxyRouter.shared addPath:@"about"
-                         targets:@[ @"about" ]
-                           route:^void(id<ReduxyRoutable> from, NSDictionary<NSString *,id<ReduxyRoutable>> *to, NSDictionary *context, RouterRouteCompletion optionalCompletion) {
-                               id<ReduxyRoutable> routable = to[@"about"];
-                               
-                               [from.vc showViewController:routable.vc sender:nil];
-                           } unroute:^void(id<ReduxyRoutable> from, RouterUnrouteCompletion optionalCompletion) {
-                               [from.vc.navigationController popViewControllerAnimated:YES];
-                           }];
-    
-    [ReduxyRouter.shared addPath:@"about-modal"
-                         targets:@[ @"about" ]
-                           route:^void(id<ReduxyRoutable> from, NSDictionary<NSString *,id<ReduxyRoutable>> *to, NSDictionary *context, RouterRouteCompletion optionalCompletion) {
-                               id<ReduxyRoutable> routable = to[@"about"];
-                               
-                               UINavigationController *nv = [[UINavigationController alloc] initWithRootViewController:routable.vc];
-                               
-                               [from.vc presentViewController:nv
-                                                     animated:YES
-                                                   completion:nil];
-                           } unroute:^void(id<ReduxyRoutable> from, RouterUnrouteCompletion optionalCompletion) {
-                               [from.vc dismissViewControllerAnimated:YES
-                                                           completion:nil];
-                           }];
-    
-    [ReduxyRouter.shared addPath:@"split"
-                         targets:@[ @"randomdog", @"about" ]
-                           route:^void(id<ReduxyRoutable> from, NSDictionary<NSString *,id<ReduxyRoutable>> *to, NSDictionary *context, RouterRouteCompletion optionalCompletion) {
-                               id<ReduxyRoutable> randomdog = to[@"randomdog"];
-                               id<ReduxyRoutable> about = to[@"about"];
-                               
-                               UISplitViewController* split = [[UISplitViewController alloc] init];
-                               split.viewControllers = @[ about.vc, randomdog.vc ];
-                               
-                               // TODO: nv didMove 로 확인 되는지?
-                               [from.vc presentViewController:split
-                                                     animated:YES
-                                                   completion:nil];
-                           } unroute:^void(id<ReduxyRoutable> from, RouterUnrouteCompletion optionalCompletion) {
-                               [from.vc dismissViewControllerAnimated:YES
-                                                           completion:nil];
-                           }];
-    
-    [ReduxyRouter.shared addPath:@"set-vcs"
-                         targets:@[ @"randomdog", @"about" ]
-                           route:^void(id<ReduxyRoutable> from, NSDictionary<NSString *,id<ReduxyRoutable>> *to, NSDictionary *context, RouterRouteCompletion optionalCompletion) {
-                               id<ReduxyRoutable> randomdog = to[@"randomdog"];
-                               id<ReduxyRoutable> about = to[@"about"];
-                               
-                               [from.vc.navigationController setViewControllers:@[ from.vc, randomdog.vc, about.vc ]
-                                                                       animated:YES];
-                           } unroute:^void(id<ReduxyRoutable> from, RouterUnrouteCompletion optionalCompletion) {
-                               [from.vc.navigationController popToRootViewControllerAnimated:YES];
-                           }];
 }
 
 #pragma mark - Table view data source
@@ -344,23 +222,15 @@ ReduxyRoutable
             NSArray *menu = fixedMenuSelector(state);
             NSString *path = menu[indexPath.row];
 
-#if REDUXY_ROUTER
             [ReduxyRouter.shared routePath:path from:self context:nil];
-#else
-            [self performSegueWithIdentifier:path sender:nil];
-#endif
             
             break ;
         }
         case 1: {
             NSArray *items = self.filteredBreedsSelector(state);
             id item = items[row];
-#if REDUXY_ROUTER
             [ReduxyRouter.shared routePath:@"randomdog" from:self context:@{ @"breed": item }];
-#else
-            [self performSegueWithIdentifier:@"randomdog" sender:item];
-#endif
-            
+
             break ;
         }
     }
@@ -370,11 +240,7 @@ ReduxyRoutable
 #pragma mark - actions
 
 - (IBAction)aboutButtonDidClick:(id)sender {
-#if REDUXY_ROUTER
     [ReduxyRouter.shared routePath:@"about-modal" from:self context:nil];
-#else
-    [self performSegueWithIdentifier:@"About" sender:nil];
-#endif
 }
 
 - (IBAction)reloadButtonDidClick:(id)sender {

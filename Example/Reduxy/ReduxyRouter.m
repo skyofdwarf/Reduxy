@@ -188,7 +188,7 @@ static NSString * const _stateKey = @"reduxy.routes";
     
     [self.store dispatch:ratype(router.route)
                  payload:@{ @"path": path,
-                            @"from-tag": fromTag,
+                            @"from-tag": fromTag ?: @"",
                             @"target-tags": targetTags,
                             @"context": context ?: @{}
                             }
@@ -260,7 +260,7 @@ static NSString * const _stateKey = @"reduxy.routes";
     }
     
     [self pushPath:@{ @"path": path,
-                      @"from-tag": fromTag,
+                      @"from-tag": fromTag ?: @"",
                       @"target-tags": targetTags,
                       }];
     
@@ -325,7 +325,9 @@ static NSString * const _stateKey = @"reduxy.routes";
 }
 
 - (id)tagOfRoutable:(id<ReduxyRoutable>)routable {
-    NSParameterAssert(routable);
+    if (!routable) {
+        return nil;
+    }
     
     id r = objc_getAssociatedObject(routable, &routableTagAssoociationKey);
     if (r) {
@@ -352,18 +354,14 @@ static NSString * const _stateKey = @"reduxy.routes";
     
     [self.pathStack enumerateObjectsWithOptions:NSEnumerationReverse
                                      usingBlock:
-     ^(NSDictionary * _Nonnull info, NSUInteger idx, BOOL * _Nonnull stop) {
+     ^(NSDictionary * _Nonnull info, NSUInteger stackIndex, BOOL * _Nonnull stop) {
          if ([info[@"path"] isEqualToString:pathToPop]) {
              NSDictionary *targets = info[@"target-tags"];
              
-             [targets.allValues enumerateObjectsUsingBlock:^(NSString *tag, NSUInteger idx, BOOL * _Nonnull stop) {
-                 if ([tag isEqualToString:fromTag]) {
-                     foundIndex = idx;
-                     *stop = YES;
-                 }
-             }];
-             
-             *stop = (foundIndex != NSNotFound);
+             if ([targets.allValues containsObject:fromTag]) {
+                 foundIndex = stackIndex;
+                 *stop = YES;
+             }
          }
      }];
     
@@ -378,15 +376,21 @@ static NSString * const _stateKey = @"reduxy.routes";
 #pragma mark - routables
 
 - (void)addRoutable:(id<ReduxyRoutable>)routable {
-    [self.routables addObject:routable];
+    if (routable) {
+        [self.routables addObject:routable];
+    }
 }
 
 - (void)removeRoutable:(id<ReduxyRoutable>)routable {
-    [self.routables removeObject:routable];
+    if (routable) {
+        [self.routables removeObject:routable];
+    }
 }
 
 - (id<ReduxyRoutable>)findRoutableWithTag:(id)tagToFind {
-    NSParameterAssert(tagToFind);
+    if (!tagToFind) {
+        return nil;
+    }
     
     for (id<ReduxyRoutable> routable in self.routables) {
         NSString *tag = [self tagOfRoutable:routable];
@@ -428,10 +432,12 @@ static NSString * const _stateKey = @"reduxy.routes";
         LOG(@"has from '%@' yet", [self nameOfRoutable:from]);
         LOG(@"remove routable of path: %@", [self nameOfRoutable:from]);
         
-        [self removeRoutable:from];
-        
         NSString *path = objc_getAssociatedObject(from, &routePathAssoociationKey);
         objc_removeAssociatedObjects(from);
+        
+        [self removeRoutable:from];
+        [self popPath:@{ @"path": path,
+                         @"from-tag": fromTag }];
         
         [self.store dispatch:ratype(router.unroute)
                      payload:@{ @"path": path,
