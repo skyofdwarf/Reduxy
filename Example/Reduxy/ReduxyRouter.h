@@ -42,6 +42,8 @@ typedef void (^RouterUnroute)(id<ReduxyRoutable> from, RouterUnrouteCompletion o
 
 - (void)attachStore:(id<ReduxyStore>)store;
 
+- (ReduxyReducer)reducer;
+    
 #pragma mark - routing
 
 - (void)addTarget:(NSString *)name creator:(RouterTargetCreator)creator;
@@ -50,11 +52,11 @@ typedef void (^RouterUnroute)(id<ReduxyRoutable> from, RouterUnrouteCompletion o
 - (void)removeTarget:(NSString *)name;
 - (void)removePath:(NSString *)path;
 
+- (void)startWithPath:(NSString *)path;
+    
 - (void)routePath:(NSString *)path from:(id<ReduxyRoutable>)from context:(NSDictionary *)context;
 - (void)unroutePath:(NSString *)path from:(id<ReduxyRoutable>)from;
 - (void)unrouteFrom:(id<ReduxyRoutable>)from;
-
-
 
 #pragma mark - event
 

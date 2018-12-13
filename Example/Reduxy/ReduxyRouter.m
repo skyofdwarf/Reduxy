@@ -53,8 +53,6 @@ static const NSInteger routableNameAssoociationKey = 0;
 @property (strong, nonatomic) NSMutableDictionary<NSString */*name*/, RouterTargetCreator> *targets;
 @property (strong, nonatomic) NSMutableDictionary<NSString */*path*/, id> *paths;
 
-@property (strong, nonatomic) NSMutableSet<id<ReduxyRoutable>> *routables;
-
 @property (strong, nonatomic) NSMutableArray<NSDictionary *> *pathStack;
 @end
 
@@ -113,7 +111,6 @@ static NSString * const _stateKey = @"reduxy.routes";
     if (self) {
         self.targets = @{}.mutableCopy;
         self.paths = @{}.mutableCopy;
-        self.routables = [NSMutableSet new];
         self.pathStack = @[].mutableCopy;
         
         self.routesAutoway = NO;
@@ -130,6 +127,51 @@ static NSString * const _stateKey = @"reduxy.routes";
     
     self.store = store;
     [store subscribe:self];
+}
+
+- (ReduxyReducer)reducer {
+    return ^ReduxyState (ReduxyState state, ReduxyAction action) {
+        if ([action is:ratype(router.route)]) {
+            NSString *path = action.payload[@"path"];
+            NSAssert(path, @"No path to route in payload of action");
+            if (path) {
+                NSMutableArray *mstate = [NSMutableArray arrayWithArray:(state ?: @[])];
+                [mstate addObject:action.payload];
+                
+                return mstate.copy;
+            }
+        }
+        
+        if ([action is:ratype(router.unroute)]) {
+            NSString *pathToUnroute = action.payload[@"path"];
+            NSAssert(pathToUnroute, @"No path to unroute in payload of action");
+            if (pathToUnroute) {
+                NSMutableArray *mstate = [NSMutableArray arrayWithArray:(state ?: @[])];
+                
+                __block NSInteger foundIndex = NSNotFound;
+                
+                [mstate enumerateObjectsWithOptions:NSEnumerationReverse usingBlock:
+                 ^(NSDictionary  * _Nonnull info, NSUInteger idx, BOOL * _Nonnull stop) {
+                     if ([info[@"path"] isEqualToString:pathToUnroute]) {
+                         foundIndex = idx;
+                         *stop = YES;
+                     }
+                 }];
+                
+                if (foundIndex != NSNotFound) {
+                    [mstate removeObjectsInRange:NSMakeRange(foundIndex, mstate.count - foundIndex)];
+                    return mstate.copy;
+                }
+                else {
+                    @throw [NSException exceptionWithName:NSInternalInconsistencyException
+                                                   reason:[NSString stringWithFormat:@"No path '%@', to unroute in state", pathToUnroute]
+                                                 userInfo:nil];
+                }
+            }
+        }
+        
+        return (state? state: @[]);
+    };
 }
 
 #pragma mark - add
@@ -156,23 +198,12 @@ static NSString * const _stateKey = @"reduxy.routes";
 
 #pragma mark - route
 
-- (NSDictionary *)preloadForPath:(NSString *)path from:(id<ReduxyRoutable>)from context:(NSDictionary *)context {
-    NSDictionary *pathInfo = self.paths[path];
-    NSArray<NSString *> *targets = pathInfo[@"targets"];
-    
+- (NSDictionary *)generateTagsForTargets:(NSArray<NSString *> *)targets {
     NSMutableDictionary *targetTags = @{}.mutableCopy;
     
     for (NSString *target in targets) {
-        RouterTargetCreator creator = self.targets[target];
-        id<ReduxyRoutable> routable = creator(from, context);
-        
-        NSString *tag = [NSString stringWithFormat:@"%p", routable];
-        
-        [self nameRoutable:routable to:target];
-        [self tagRoutable:routable to:tag];
-        [self addRoutable:routable];
-        
-        objc_setAssociatedObject(routable, &routePathAssoociationKey, path, OBJC_ASSOCIATION_COPY);
+        NSTimeInterval ti = [NSDate timeIntervalSinceReferenceDate];
+        NSString *tag = [NSString stringWithFormat:@"%@-%f", target, ti];
         
         targetTags[target] = tag;
     }
@@ -180,17 +211,42 @@ static NSString * const _stateKey = @"reduxy.routes";
     return targetTags.copy;
 }
 
-- (void)routePath:(NSString *)path from:(id<ReduxyRoutable>)from context:(NSDictionary *)context {
-    [self addRoutable:from];
+- (void)startWithPath:(NSString *)path {
+    NSDictionary *pathInfo = self.paths[path];
+    NSArray<NSString *> *targets = pathInfo[@"targets"];
+    NSMutableDictionary *tags = @{}.mutableCopy;
     
+    for (NSString *target in targets) {
+        tags[target] = [NSString stringWithFormat:@"%@-main", target];
+    }
+    
+    [self routePath:path from:nil context:nil tags:tags.copy];
+}
+
+- (void)routePath:(NSString *)path from:(id<ReduxyRoutable>)from context:(NSDictionary *)context {
+    [self routePath:path from:from context:context tags:@{}];
+}
+
+- (void)routePath:(NSString *)path from:(id<ReduxyRoutable>)from context:(NSDictionary *)context tags:(NSDictionary *)predefinedTags {
+    NSDictionary *pathInfo = self.paths[path];
+    NSArray<NSString *> *targets = pathInfo[@"targets"];
     NSString *fromTag = [self tagOfRoutable:from];
-    NSDictionary *targetTags = [self preloadForPath:path from:from context:context];
+    
+    NSDictionary *tags = [self generateTagsForTargets:targets];
+    if (predefinedTags) {
+        NSMutableDictionary *mtags = tags.mutableCopy;
+        [mtags addEntriesFromDictionary:predefinedTags];
+        
+        tags = mtags.copy;
+    }
     
     [self.store dispatch:ratype(router.route)
                  payload:@{ @"path": path,
                             @"from-tag": fromTag ?: @"",
-                            @"target-tags": targetTags,
-                            @"context": context ?: @{}
+                            @"context": context ?: @{},
+                            @"targets": @{ @"names": targets,
+                                           @"tags": tags,
+                                           },
                             }
      ];
 }
@@ -207,29 +263,18 @@ static NSString * const _stateKey = @"reduxy.routes";
 
 - (void)unrouteFrom:(id<ReduxyRoutable>)from {
     NSString *path = objc_getAssociatedObject(from, &routePathAssoociationKey);
-    NSString *fromTag = [self tagOfRoutable:from];
     
-    [self.store dispatch:ratype(router.unroute)
-                 payload:@{ @"path": path,
-                            @"from-tag": fromTag,
-                            }
-     ];
+    [self unroutePath:path from:from];
 }
 
+#pragma mark - route payload
 
-#pragma mark - route action
-
-- (void)routeAction:(ReduxyAction)action {
-    NSNumber *implicit = action.payload[@"implicit"];
-    
-    if (!self.routesAutoway && implicit.boolValue) {
-        return ;
-    }
-    
-    NSString *path = action.payload[@"path"];
-    NSString *fromTag = action.payload[@"from-tag"];
-    NSDictionary *context = action.payload[@"context"];
-    NSDictionary *targetTags = action.payload[@"target-tags"];
+- (void)routePayload:(NSDictionary *)payload {
+    NSString *path = payload[@"path"];
+    NSString *fromTag = payload[@"from-tag"];
+    NSDictionary *context = payload[@"context"];
+    NSArray *targets = [payload valueForKeyPath:@"targets.names"];
+    NSDictionary *targetTags = [payload valueForKeyPath:@"targets.tags"];
     
     NSDictionary *pathInfo = self.paths[path];
     
@@ -253,7 +298,6 @@ static NSString * const _stateKey = @"reduxy.routes";
             
             [self nameRoutable:routable to:target];
             [self tagRoutable:routable to:tag];
-            [self addRoutable:routable];
             
             objc_setAssociatedObject(routable, &routePathAssoociationKey, path, OBJC_ASSOCIATION_COPY);
         }
@@ -261,7 +305,10 @@ static NSString * const _stateKey = @"reduxy.routes";
     
     [self pushPath:@{ @"path": path,
                       @"from-tag": fromTag ?: @"",
-                      @"target-tags": targetTags,
+                      @"targets": @{ @"names": targets,
+                                     @"tags": targetTags,
+                                     @"routables": to.copy
+                                    },
                       }];
     
     route(from, to, context, ^(id<ReduxyRoutable> from, NSDictionary<NSString *, id<ReduxyRoutable>> *to) {
@@ -269,25 +316,21 @@ static NSString * const _stateKey = @"reduxy.routes";
     });
 }
 
-- (void)unrouteAction:(ReduxyAction)action {
-    NSNumber *implicit = action.payload[@"implicit"];
+- (void)unroutePayload:(NSDictionary *)payload {
+    NSString *path = payload[@"path"];
+    NSArray<NSString *> *targets = [payload valueForKeyPath:@"targets.names"];
+    NSDictionary *targetTags = [payload valueForKeyPath:@"targets.tags"];
     
-    if (!self.routesAutoway && implicit.boolValue) {
-        return ;
-    }
-    
-    NSString *path = action.payload[@"path"];
-    NSString *fromTag = action.payload[@"from-tag"];
+    NSString *target = targets.lastObject;
+    NSString *targetTag = targetTags[target];
     
     NSDictionary *pathInfo = self.paths[path];
     RouterUnroute unroute = pathInfo[@"unroute"];
     
-    id<ReduxyRoutable> from = [self findRoutableWithTag:fromTag];
+    id<ReduxyRoutable> from = [self findRoutableWithTag:targetTag];
     if (from) {
-        [self removeRoutable:from];
-        
         [self popPath:@{ @"path": path,
-                          @"from-tag": fromTag }];
+                         @"from-tag": targetTag }];
         
         unroute(from, ^(id<ReduxyRoutable> from) {
             [self didUnrouteFrom:from];
@@ -356,7 +399,7 @@ static NSString * const _stateKey = @"reduxy.routes";
                                      usingBlock:
      ^(NSDictionary * _Nonnull info, NSUInteger stackIndex, BOOL * _Nonnull stop) {
          if ([info[@"path"] isEqualToString:pathToPop]) {
-             NSDictionary *targets = info[@"target-tags"];
+             NSDictionary *targets = [info valueForKeyPath:@"targets.tags"];
              
              if ([targets.allValues containsObject:fromTag]) {
                  foundIndex = stackIndex;
@@ -373,32 +416,33 @@ static NSString * const _stateKey = @"reduxy.routes";
     }
 }
 
-#pragma mark - routables
-
-- (void)addRoutable:(id<ReduxyRoutable>)routable {
-    if (routable) {
-        [self.routables addObject:routable];
-    }
-}
-
-- (void)removeRoutable:(id<ReduxyRoutable>)routable {
-    if (routable) {
-        [self.routables removeObject:routable];
-    }
-}
-
 - (id<ReduxyRoutable>)findRoutableWithTag:(id)tagToFind {
     if (!tagToFind) {
         return nil;
     }
     
-    for (id<ReduxyRoutable> routable in self.routables) {
-        NSString *tag = [self tagOfRoutable:routable];
+    for (NSDictionary *path in self.pathStack) {
+        NSDictionary *tags = [path valueForKeyPath:@"targets.tags"];
         
-        if ([tag isEqualToString:tagToFind]) {
-            return routable;
+        if ([tags.allValues containsObject:tagToFind]) {
+            
+        }
+        
+        NSString *foundTarget = nil;
+        
+        for (NSString *target in tags) {
+            if ([tags[target] isEqualToString:tagToFind]) {
+                foundTarget = target;
+                break ;
+            }
+        }
+        
+        if (foundTarget) {
+            NSDictionary *routables = [path valueForKeyPath:@"targets.routables"];
+            return routables[foundTarget];
         }
     }
+    
     return nil;
 }
 
@@ -435,7 +479,6 @@ static NSString * const _stateKey = @"reduxy.routes";
         NSString *path = objc_getAssociatedObject(from, &routePathAssoociationKey);
         objc_removeAssociatedObjects(from);
         
-        [self removeRoutable:from];
         [self popPath:@{ @"path": path,
                          @"from-tag": fromTag }];
         
@@ -463,8 +506,6 @@ static NSString * const _stateKey = @"reduxy.routes";
         }
         else {
             LOG(@"warning: implicit routing: %@", [self nameOfRoutable:routable]);
-            
-            [self addRoutable:routable];
         }
     }
     
@@ -476,23 +517,26 @@ static NSString * const _stateKey = @"reduxy.routes";
 - (void)store:(id<ReduxyStore>)store didChangeState:(ReduxyState)state byAction:(ReduxyAction)action {
     LOG(@"action: %@, state: %@", action, state);
     
-    [self processRouteAction:action];
+    [self processRouteState:state];
 }
 
-- (void)processRouteAction:(ReduxyAction)action {
-    if ([action is:ratype(router.route)]) {
-        NSString *path = action.payload[@"path"];
+- (void)processRouteState:(ReduxyState)state {
+    
+    NSArray *pathsInRouter = self.pathStack;
+    NSArray *pathsInState = [state valueForKeyPath:@"router.routes"];
+    
+    if (pathsInState.count > pathsInRouter.count) {
+        // route
+        NSDictionary *pathToRoute = pathsInState.lastObject;
         
-        LOG(@"router subscriber> route action: %@", path);
+        [self routePayload:pathToRoute];
         
-        [self routeAction:action];
     }
-    else if ([action is:ratype(router.unroute)]) {
-        NSString *path = action.payload[@"path"];
+    else if (pathsInState.count < pathsInRouter.count) {
+        // unroute
+        NSDictionary *pathToUnroute = pathsInRouter.lastObject;
         
-        LOG(@"router subscriber> unroute action: %@", path);
-        
-        [self unrouteAction:action];
+        [self unroutePayload:pathToUnroute];
     }
 }
 

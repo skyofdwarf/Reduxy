@@ -27,7 +27,9 @@
 @property (strong, nonatomic) UIBarButtonItem *recoderStopButton;
 @property (strong, nonatomic) UIBarButtonItem *recoderSaveButton;
 @property (strong, nonatomic) UIBarButtonItem *recoderLoadButton;
+@property (strong, nonatomic) UIBarButtonItem *playerPrevButton;
 @property (strong, nonatomic) UIBarButtonItem *playerNextButton;
+
 
 @end
 
@@ -49,7 +51,7 @@
     [self buildTargets];
     [self buildPaths];
     
-    [ReduxyRouter.shared routePath:@"main" from:nil context:nil];
+    [ReduxyRouter.shared startWithPath:@"main"];
     
     return YES;
 }
@@ -127,6 +129,10 @@
                                                              target:self
                                                              action:@selector(recordeLoadButtonClicked:)];
     
+    self.playerPrevButton = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemRewind
+                                                                          target:self
+                                                                          action:@selector(recordePrevButtonClicked:)];
+    
     self.playerNextButton = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemFastForward
                                                                           target:self
                                                                           action:@selector(recordeNextButtonClicked:)];
@@ -136,6 +142,7 @@
 
     self.recoderSaveButton.enabled = NO;
     self.recoderLoadButton.enabled = YES;
+    self.playerPrevButton.enabled = NO;
     self.playerNextButton.enabled = NO;
 
     
@@ -152,6 +159,7 @@
                                                            target:nil
                                                            action:nil],
              self.recoderLoadButton,
+             self.playerPrevButton,
              self.playerNextButton,
              ];
 }
@@ -168,6 +176,7 @@
         
         self.recoderSaveButton.enabled = NO;
         self.recoderLoadButton.enabled = NO;
+        self.playerPrevButton.enabled = NO;
         self.playerNextButton.enabled = NO;
         
     }
@@ -183,6 +192,7 @@
         
         self.recoderSaveButton.enabled = YES;
         self.recoderLoadButton.enabled = YES;
+        self.playerPrevButton.enabled = NO;
         self.playerNextButton.enabled = NO;
     }
 }
@@ -196,6 +206,7 @@
     
     self.recoderSaveButton.enabled = NO;
     self.recoderLoadButton.enabled = YES;
+    self.playerPrevButton.enabled = NO;
     self.playerNextButton.enabled = NO;
 }
 
@@ -215,7 +226,13 @@
     
     self.recoderSaveButton.enabled = NO;
     self.recoderLoadButton.enabled = YES;
+    self.playerPrevButton.enabled = YES;
     self.playerNextButton.enabled = YES;
+}
+
+
+- (void)recordePrevButtonClicked:(id)sender {
+    self.playerPrevButton.enabled = ([Store.shared.player prev] != nil);
 }
 
 
@@ -258,7 +275,6 @@
 }
 
 - (void)buildPaths {
-    //[ReduxyRouter.shared setInitialRoutables:@[ ReduxyAppDelegate.shared.window.rootViewController ]];
     [ReduxyRouter.shared attachStore:Store.shared];
     
     __weak typeof(self) wself = self;
