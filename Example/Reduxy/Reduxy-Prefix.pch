@@ -16,9 +16,6 @@
 
 
 #import "ReduxyAppDelegate.h"
-#import "Store.h"
-#import "Actions.h"
-
 
 #define LOG_HERE NSLog(@"%s", __PRETTY_FUNCTION__);
 //#define LOG(...)  NSLog(__VA_ARGS__)

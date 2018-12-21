@@ -7,8 +7,7 @@
 //
 
 
-#import "ReduxyStore.h"
-
+@import Reduxy;
 
 @import UIKit;
 

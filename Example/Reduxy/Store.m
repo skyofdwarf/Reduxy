@@ -8,15 +8,6 @@
 
 #import "Store.h"
 
-#import "ReduxyRouter.h"
-#import "ReduxySimplePlayer.h"
-#import "ReduxyFunctionMiddleware.h"
-#import "Actions.h"
-
-
-
-#pragma mark - middlewares
-
 static ReduxyMiddleware logger = ReduxyMiddlewareCreateMacro(store, next, action, {
     LOG(@"logger mw> received action: %@", action.type);
     return next(action);
@@ -41,8 +32,6 @@ static ReduxyMiddleware mainQueue = ReduxyMiddlewareCreateMacro(store, next, act
 
 
 @interface Store ()
-@property (strong, nonatomic) ReduxySimpleRecorder *recorder;
-@property (strong, nonatomic) ReduxySimplePlayer *player;
 @end
 
 @implementation Store
@@ -64,31 +53,12 @@ static ReduxyMiddleware mainQueue = ReduxyMiddlewareCreateMacro(store, next, act
     ReduxyReducer filterReducer = ReduxyKeyPathReducerForAction(ratype(breedlist.filtered), @"filter", @"");
     ReduxyReducer indicatorReducer = ReduxyValueReducerForAction(ratype(indicator), @NO);
     
-    ReduxyReducer randomdogReducer = ^ReduxyState (ReduxyState state, ReduxyAction action) {
-        if ([action is:ratype(randomdog.reload)]) {
-            UIImage *image = action.payload[@"image"];
-            return (image? @{ @"image": image }: @{});
-        }
-        else {
-            return (state? state: @{});
-        }
-    };
-    
-    ReduxyReducer rootReducer = ^ReduxyState (ReduxyState state, ReduxyAction action) {
-        return @{ @"menu": @{ @"fixed": @[ @"randomdog" ],
-                              @"dynamic": @{ @"breeds": breedsReducer([state valueForKeyPath:@"menu.dynamic.breeds"], action),
-                                             @"filter": filterReducer([state valueForKeyPath:@"menu.dynamic.filter"], action),
-                                             },
-                                },
-                  @"randomdog": randomdogReducer(state[@"randomdog"], action),
+    return ^ReduxyState (ReduxyState state, ReduxyAction action) {
+        return @{ @"breeds": breedsReducer([state valueForKeyPath:@"breeds"], action),
+                  @"filter": filterReducer([state valueForKeyPath:@"filter"], action),
                   @"indicator": indicatorReducer(state[@"indicator"], action),
-                  @"router": @{ @"routes": ReduxyRouter.shared.reducer([state valueForKeyPath:@"router.routes"], action)
-                                },
                   };
     };
-    
-    // root reducer
-    return ReduxySimplePlayer.reducer(rootReducer);
 }
 
 - (instancetype)init {
@@ -98,14 +68,9 @@ static ReduxyMiddleware mainQueue = ReduxyMiddlewareCreateMacro(store, next, act
                         reducer:rootReducer
                     middlewares:@[ logger,
                                    ReduxyFunctionMiddleware,
-                                   ReduxySimplePlayer.middleware,
                                    mainQueue
                                    ]];
     if (self) {
-        self.recorder = [[ReduxySimpleRecorder alloc] initWithStore:self
-                                                actionTypesToIgnore:@[ ReduxyPlayerActionJump,
-                                                                       ReduxyPlayerActionStep ]];
-        self.player = [ReduxySimplePlayer new];
     }
     
     return self;

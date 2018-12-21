@@ -1,5 +1,5 @@
 //
-//  Actions.h
+//  ReduxyActionManager.h
 //  Reduxy_Example
 //
 //  Created by yjkim on 10/05/2018.
@@ -8,9 +8,6 @@
 
 #import <Foundation/Foundation.h>
 #import "ReduxyTypes.h"
-#import <objc/runtime.h>
-#import <objc/message.h>
-
 
 
 /**

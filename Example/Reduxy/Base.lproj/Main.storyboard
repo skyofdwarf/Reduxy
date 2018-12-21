@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="14460.31" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" colorMatched="YES">
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="14460.31" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" colorMatched="YES" initialViewController="Jc2-kp-E9m">
     <device id="retina4_0" orientation="portrait">
         <adaptation id="fullscreen"/>
     </device>
@@ -9,48 +9,6 @@
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
     </dependencies>
     <scenes>
-        <!--About-->
-        <scene sceneID="Iql-zp-ChC">
-            <objects>
-                <viewController storyboardIdentifier="about" title="About" id="Dem-PX-pSc" customClass="AboutViewController" sceneMemberID="viewController">
-                    <layoutGuides>
-                        <viewControllerLayoutGuide type="top" id="BPs-DP-03f"/>
-                        <viewControllerLayoutGuide type="bottom" id="bfj-7z-i5f"/>
-                    </layoutGuides>
-                    <view key="view" contentMode="scaleToFill" id="gwe-LC-kbN">
-                        <rect key="frame" x="0.0" y="0.0" width="320" height="568"/>
-                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
-                        <subviews>
-                            <textView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" textAlignment="natural" translatesAutoresizingMaskIntoConstraints="NO" id="Fir-wy-J5B">
-                                <rect key="frame" x="0.0" y="64" width="320" height="504"/>
-                                <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
-                                <string key="text">this example app use dog.ceo API
-
-http://dog.ceo/dog-api</string>
-                                <fontDescription key="fontDescription" type="system" pointSize="14"/>
-                                <textInputTraits key="textInputTraits" autocapitalizationType="sentences"/>
-                            </textView>
-                        </subviews>
-                        <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
-                        <constraints>
-                            <constraint firstItem="bfj-7z-i5f" firstAttribute="top" secondItem="Fir-wy-J5B" secondAttribute="bottom" id="VsJ-aJ-9yy"/>
-                            <constraint firstItem="Fir-wy-J5B" firstAttribute="top" secondItem="BPs-DP-03f" secondAttribute="bottom" id="akf-PM-Pmi"/>
-                            <constraint firstAttribute="trailing" secondItem="Fir-wy-J5B" secondAttribute="trailing" id="fAY-Wi-vLO"/>
-                            <constraint firstItem="Fir-wy-J5B" firstAttribute="leading" secondItem="gwe-LC-kbN" secondAttribute="leading" id="uoJ-Z9-co2"/>
-                        </constraints>
-                    </view>
-                    <navigationItem key="navigationItem" id="5BY-6s-LEz">
-                        <barButtonItem key="rightBarButtonItem" title="POP" id="Tf6-AT-0NU">
-                            <connections>
-                                <action selector="popButtonDidClick:" destination="Dem-PX-pSc" id="sDa-kd-bBT"/>
-                            </connections>
-                        </barButtonItem>
-                    </navigationItem>
-                </viewController>
-                <placeholder placeholderIdentifier="IBFirstResponder" id="vY2-CN-lM3" userLabel="First Responder" sceneMemberID="firstResponder"/>
-            </objects>
-            <point key="canvasLocation" x="1223" y="786"/>
-        </scene>
         <!--dog.ceo-->
         <scene sceneID="Y6A-QW-AYh">
             <objects>
@@ -109,15 +67,6 @@ http://dog.ceo/dog-api</string>
                         </constraints>
                     </view>
                     <navigationItem key="navigationItem" title="dog.ceo" id="RQr-2S-5Zy">
-                        <barButtonItem key="leftBarButtonItem" id="YiL-6C-I34">
-                            <button key="customView" opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="infoLight" showsTouchWhenHighlighted="YES" lineBreakMode="middleTruncation" id="aLT-NJ-rm8">
-                                <rect key="frame" x="16" y="11" width="22" height="22"/>
-                                <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
-                                <connections>
-                                    <action selector="aboutButtonDidClick:" destination="WCh-Zn-tPy" eventType="touchUpInside" id="IIY-UG-afE"/>
-                                </connections>
-                            </button>
-                        </barButtonItem>
                         <barButtonItem key="rightBarButtonItem" systemItem="refresh" id="5dA-Bd-HMb">
                             <connections>
                                 <action selector="reloadButtonDidClick:" destination="WCh-Zn-tPy" id="wAB-9F-bhl"/>
@@ -127,71 +76,11 @@ http://dog.ceo/dog-api</string>
                     <connections>
                         <outlet property="indicatorView" destination="CgD-Kb-KYU" id="SXt-fn-sWi"/>
                         <outlet property="tableView" destination="eEI-Hl-mtO" id="lfx-ju-BSq"/>
-                        <segue destination="7BS-0c-BeB" kind="show" identifier="randomdog" id="fV9-bb-EHc"/>
-                        <segue destination="Dem-PX-pSc" kind="show" identifier="About" id="Wuy-u8-Tj6"/>
-                        <segue destination="Oba-Rz-Dgy" kind="show" identifier="localstore" id="ic6-Q5-5pU"/>
                     </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="CDI-y4-Ny7" userLabel="First Responder" sceneMemberID="firstResponder"/>
             </objects>
             <point key="canvasLocation" x="1223" y="18"/>
-        </scene>
-        <!--dog-->
-        <scene sceneID="Y0w-5O-bnQ">
-            <objects>
-                <viewController storyboardIdentifier="randomdog" id="7BS-0c-BeB" customClass="RandomDogViewController" sceneMemberID="viewController">
-                    <layoutGuides>
-                        <viewControllerLayoutGuide type="top" id="8aB-J9-t1a"/>
-                        <viewControllerLayoutGuide type="bottom" id="xnd-92-7Jg"/>
-                    </layoutGuides>
-                    <view key="view" contentMode="scaleToFill" id="IOt-5e-7JO">
-                        <rect key="frame" x="0.0" y="0.0" width="320" height="568"/>
-                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
-                        <subviews>
-                            <imageView userInteractionEnabled="NO" contentMode="scaleAspectFit" horizontalHuggingPriority="251" verticalHuggingPriority="251" translatesAutoresizingMaskIntoConstraints="NO" id="rNG-3K-8J4">
-                                <rect key="frame" x="0.0" y="64" width="320" height="504"/>
-                            </imageView>
-                            <activityIndicatorView hidden="YES" opaque="NO" contentMode="scaleToFill" horizontalHuggingPriority="750" verticalHuggingPriority="750" hidesWhenStopped="YES" style="whiteLarge" translatesAutoresizingMaskIntoConstraints="NO" id="SPE-DX-2Bh">
-                                <rect key="frame" x="141.5" y="265.5" width="37" height="37"/>
-                                <color key="color" red="1" green="0.0" blue="0.0" alpha="1" colorSpace="calibratedRGB"/>
-                            </activityIndicatorView>
-                        </subviews>
-                        <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
-                        <constraints>
-                            <constraint firstItem="SPE-DX-2Bh" firstAttribute="centerY" secondItem="IOt-5e-7JO" secondAttribute="centerY" id="2ne-Sd-VVz"/>
-                            <constraint firstItem="xnd-92-7Jg" firstAttribute="top" secondItem="rNG-3K-8J4" secondAttribute="bottom" id="8H9-xc-RDH"/>
-                            <constraint firstItem="SPE-DX-2Bh" firstAttribute="centerX" secondItem="IOt-5e-7JO" secondAttribute="centerX" id="O0L-Vu-lZ3"/>
-                            <constraint firstAttribute="trailing" secondItem="rNG-3K-8J4" secondAttribute="trailing" id="QmR-of-QBF"/>
-                            <constraint firstItem="rNG-3K-8J4" firstAttribute="top" secondItem="8aB-J9-t1a" secondAttribute="bottom" id="lwq-dK-P9i"/>
-                            <constraint firstItem="rNG-3K-8J4" firstAttribute="leading" secondItem="IOt-5e-7JO" secondAttribute="leading" id="wtK-Js-xM3"/>
-                        </constraints>
-                    </view>
-                    <navigationItem key="navigationItem" title="dog" id="QM6-WU-Ojf">
-                        <rightBarButtonItems>
-                            <barButtonItem systemItem="refresh" id="rVv-25-ghy">
-                                <connections>
-                                    <action selector="reloadButtonDidClick:" destination="7BS-0c-BeB" id="rHr-b5-XVx"/>
-                                </connections>
-                            </barButtonItem>
-                            <barButtonItem id="wtx-Wd-PCJ">
-                                <button key="customView" opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="infoLight" showsTouchWhenHighlighted="YES" lineBreakMode="middleTruncation" id="alg-gV-69y">
-                                    <rect key="frame" x="245" y="11" width="22" height="22"/>
-                                    <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
-                                    <connections>
-                                        <action selector="aboutButtonDidClick:" destination="7BS-0c-BeB" eventType="touchUpInside" id="DZ6-Db-QHh"/>
-                                    </connections>
-                                </button>
-                            </barButtonItem>
-                        </rightBarButtonItems>
-                    </navigationItem>
-                    <connections>
-                        <outlet property="imageView" destination="rNG-3K-8J4" id="gy6-bq-Nzj"/>
-                        <outlet property="indicatorView" destination="SPE-DX-2Bh" id="dgf-QF-ZbL"/>
-                    </connections>
-                </viewController>
-                <placeholder placeholderIdentifier="IBFirstResponder" id="3Ad-GX-f76" userLabel="First Responder" sceneMemberID="firstResponder"/>
-            </objects>
-            <point key="canvasLocation" x="2036" y="-461"/>
         </scene>
         <!--Navigation Controller-->
         <scene sceneID="HgS-Gq-iXN">
@@ -208,52 +97,6 @@ http://dog.ceo/dog-api</string>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="h4T-ha-0bQ" userLabel="First Responder" sceneMemberID="firstResponder"/>
             </objects>
             <point key="canvasLocation" x="426" y="19"/>
-        </scene>
-        <!--local-->
-        <scene sceneID="Pkf-VV-eIq">
-            <objects>
-                <viewController storyboardIdentifier="localstore" id="Oba-Rz-Dgy" customClass="LocalStoreViewController" sceneMemberID="viewController">
-                    <layoutGuides>
-                        <viewControllerLayoutGuide type="top" id="OR9-LN-Nga"/>
-                        <viewControllerLayoutGuide type="bottom" id="4hh-o2-auz"/>
-                    </layoutGuides>
-                    <view key="view" contentMode="scaleToFill" id="Cet-x7-Zfc">
-                        <rect key="frame" x="0.0" y="0.0" width="320" height="568"/>
-                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
-                        <subviews>
-                            <imageView userInteractionEnabled="NO" contentMode="scaleAspectFit" horizontalHuggingPriority="251" verticalHuggingPriority="251" translatesAutoresizingMaskIntoConstraints="NO" id="M1w-4V-RMN">
-                                <rect key="frame" x="0.0" y="64" width="320" height="504"/>
-                            </imageView>
-                            <activityIndicatorView hidden="YES" opaque="NO" contentMode="scaleToFill" horizontalHuggingPriority="750" verticalHuggingPriority="750" hidesWhenStopped="YES" style="whiteLarge" translatesAutoresizingMaskIntoConstraints="NO" id="iA4-aL-Yfl">
-                                <rect key="frame" x="141.5" y="265.5" width="37" height="37"/>
-                                <color key="color" red="1" green="0.0" blue="0.0" alpha="1" colorSpace="calibratedRGB"/>
-                            </activityIndicatorView>
-                        </subviews>
-                        <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
-                        <constraints>
-                            <constraint firstItem="4hh-o2-auz" firstAttribute="top" secondItem="M1w-4V-RMN" secondAttribute="bottom" id="2s2-4A-G6O"/>
-                            <constraint firstAttribute="trailing" secondItem="M1w-4V-RMN" secondAttribute="trailing" id="Q2Y-Ms-D01"/>
-                            <constraint firstItem="M1w-4V-RMN" firstAttribute="leading" secondItem="Cet-x7-Zfc" secondAttribute="leading" id="baf-Vs-n1L"/>
-                            <constraint firstItem="M1w-4V-RMN" firstAttribute="top" secondItem="OR9-LN-Nga" secondAttribute="bottom" id="cAq-Am-75y"/>
-                            <constraint firstItem="iA4-aL-Yfl" firstAttribute="centerY" secondItem="Cet-x7-Zfc" secondAttribute="centerY" id="ghv-DD-nqy"/>
-                            <constraint firstItem="iA4-aL-Yfl" firstAttribute="centerX" secondItem="Cet-x7-Zfc" secondAttribute="centerX" id="n51-eT-6H9"/>
-                        </constraints>
-                    </view>
-                    <navigationItem key="navigationItem" title="local" id="1Cd-gc-3qv">
-                        <barButtonItem key="rightBarButtonItem" systemItem="refresh" id="P9c-dH-hSD">
-                            <connections>
-                                <action selector="reloadButtonDidClick:" destination="Oba-Rz-Dgy" id="T5V-za-6Om"/>
-                            </connections>
-                        </barButtonItem>
-                    </navigationItem>
-                    <connections>
-                        <outlet property="imageView" destination="M1w-4V-RMN" id="Ewd-Fy-oi8"/>
-                        <outlet property="indicatorView" destination="iA4-aL-Yfl" id="y6x-Xw-6wf"/>
-                    </connections>
-                </viewController>
-                <placeholder placeholderIdentifier="IBFirstResponder" id="4Ri-Ug-U7Y" userLabel="First Responder" sceneMemberID="firstResponder"/>
-            </objects>
-            <point key="canvasLocation" x="2034" y="237"/>
         </scene>
     </scenes>
 </document>

@@ -34,11 +34,7 @@ typedef selector_block (^memoized_selector_generator)(NSArray<selector_block> *,
 
 
 /**
- create memoized selector of `resultSelector`
- 
- @param selectors selectors used as source of arguments of `resultSelector`
- @param resultSelector selector which be memoized
- @return memoized selector of `resultSelector`
+ create memoized selector of `resultSelector` 
  */
 FOUNDATION_EXTERN memoized_selector_generator memoizeSelector;
 

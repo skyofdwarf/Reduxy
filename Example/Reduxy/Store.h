@@ -6,14 +6,9 @@
 //  Copyright © 2018 skyofdwarf. All rights reserved.
 //
 
-#import "ReduxyStore.h"
-#import "ReduxySimpleRecorder.h"
-#import "ReduxySimplePlayer.h"
-
+@import Reduxy;
 
 @interface Store : ReduxyStore
-@property (strong, nonatomic, readonly) ReduxySimpleRecorder *recorder;
-@property (strong, nonatomic, readonly) ReduxySimplePlayer *player;
 
 + (Store *)shared;
 

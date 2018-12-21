@@ -10,9 +10,11 @@
 #endif
 #endif
 
+#import "ReduxyActionManager.h"
 #import "ReduxyAsyncAction.h"
 #import "ReduxyFunctionAction.h"
 #import "ReduxyFunctionMiddleware.h"
+#import "ReduxyMemoizer.h"
 #import "ReduxyStore.h"
 #import "ReduxyTypes.h"
 

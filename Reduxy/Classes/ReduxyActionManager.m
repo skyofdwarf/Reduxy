@@ -1,5 +1,5 @@
 //
-//  Actions.m
+//  ReduxyActionManager.m
 //  Reduxy_Example
 //
 //  Created by yjkim on 10/05/2018.
@@ -7,8 +7,12 @@
 //
 
 #import <Foundation/Foundation.h>
+
+#import "ReduxyActionManager.h"
+
 #import <objc/runtime.h>
-#import "Actions.h"
+#import <objc/message.h>
+
 
 @interface ReduxyActionManager()
 @property (strong, nonatomic) NSMutableArray<ReduxyActionType> *actions;

@@ -18,17 +18,19 @@ memoized_block (^memoize)(memoizable_block) = ^memoized_block (memoizable_block 
         if (!same) {
             last_args = args;
             last_result = block(args);
-            
-            LOG(@"memozie> return new result: %@", last_result);
-        }
-        else {
-            LOG(@"memozie> return cached result");
         }
         
         return last_result;
     };
 };
 
+/**
+ create memoized selector of `resultSelector`
+ 
+ @param selectors selectors used as source of arguments of `resultSelector`
+ @param resultSelector selector which be memoized
+ @return memoized selector of `resultSelector`
+ */
 memoized_selector_generator memoizeSelector = ^selector_block (NSArray<selector_block> *selectors, memoized_selector_block resultSelector) {
     memoized_block memoizedResultSelector = memoize(resultSelector);
     
