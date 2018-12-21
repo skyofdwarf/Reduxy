@@ -10,11 +10,54 @@
 #import "ReduxyTypes.h"
 
 
+
+#pragma mark - reduxy action key
+
+NSString * const ReduxyActionTypeKey = @"type";
+NSString * const ReduxyActionPayloadKey = @"payload";
+
+
 #pragma mark - reduxy error domain
 
 NSErrorDomain const ReduxyErrorDomain = @"ReduxyErrorDomain";
 
 
+
+#pragma mark - reducer helper
+
+ReduxyReducer ReduxyValueReducerForAction(ReduxyActionType type, id defaultValue) {
+    return ^ReduxyState (ReduxyState state, ReduxyAction action) {
+        if ([action is:type]) {
+            id value = action.payload;
+            
+            if (!value)
+                @throw [NSException exceptionWithName:NSInternalInconsistencyException
+                                               reason:[NSString stringWithFormat:@"No payload value for action: %@", type]
+                                             userInfo:nil];
+            return value;
+        }
+        else {
+            return (state? state: defaultValue);
+        }
+    };
+};
+
+ReduxyReducer ReduxyKeyPathReducerForAction(ReduxyActionType type, NSString *keypath, id defaultValue) {
+    return ^ReduxyState (ReduxyState state, ReduxyAction action) {
+        if ([action is:type]) {
+            id value = [action.payload valueForKeyPath:keypath];
+            
+            if (!value)
+                @throw [NSException exceptionWithName:NSInternalInconsistencyException
+                                               reason:[NSString stringWithFormat:@"No payload value for keypath: `%@` of acton type: %@", keypath, type]
+                                             userInfo:nil];
+            return value;
+        }
+        else {
+            return (state? state: defaultValue);
+        }
+    };
+};
 
 #pragma mark - default implementations of ReduxyAction protocol
 
@@ -22,6 +65,10 @@ NSErrorDomain const ReduxyErrorDomain = @"ReduxyErrorDomain";
 - (NSString *)type {
     // must be overriden
     return self.description;
+}
+
+- (NSString *)payload {
+    return nil;
 }
 
 - (BOOL)is:(ReduxyActionType)type {
@@ -35,27 +82,21 @@ NSErrorDomain const ReduxyErrorDomain = @"ReduxyErrorDomain";
     return self;
 }
 
-- (NSString *)data {
+- (NSString *)payload {
     return self;
 }
 
-- (BOOL)is:(ReduxyActionType)type {
-    return [self isEqualToString:type];
-}
 @end
 
 
 @implementation NSDictionary (ReduxyAction)
 - (NSString *)type {
-    return [self objectForKey:@"type"];
+    return [self objectForKey:ReduxyActionTypeKey];
 }
 
-- (NSDictionary *)data {
-    return self;
+- (NSDictionary *)payload {
+    return [self objectForKey:ReduxyActionPayloadKey];
 }
 
-- (BOOL)is:(ReduxyActionType)type {
-    return [self.type isEqualToString:type];
-}
 @end
 

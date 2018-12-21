@@ -8,11 +8,26 @@
 
 #import "ReduxyAppDelegate.h"
 
+@import Reduxy;
+
+
+
+#pragma mark - app delegate
+
+
+
+@interface ReduxyAppDelegate ()
+@property (strong, nonatomic) ReduxyStore *store;
+
+@end
+
+
 @implementation ReduxyAppDelegate
 
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions
 {
     // Override point for customization after application launch.
+    
     return YES;
 }
 
@@ -43,4 +58,15 @@
     // Called when the application is about to terminate. Save data if appropriate. See also applicationDidEnterBackground:.
 }
 
+
+#pragma mark - helper
+
++ (instancetype)shared {
+    return (ReduxyAppDelegate *)UIApplication.sharedApplication.delegate;
+}
+
 @end
+
+
+
+

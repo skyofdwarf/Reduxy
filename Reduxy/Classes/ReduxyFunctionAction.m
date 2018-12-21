@@ -7,15 +7,20 @@
 
 #import "ReduxyFunctionAction.h"
 
+@interface ReduxyFunctionAction ()
+@property (copy, nonatomic) ReduxyFunctionActor call;
+@property (copy, nonatomic) NSString *tag;
+@end
 
 @implementation ReduxyFunctionAction
-+ (instancetype)newWithActor:(ReduxyFunctionActor)actor {
-    return [[ReduxyFunctionAction alloc] initWithActor:actor];
++ (instancetype)newWithTag:(NSString *)tag actor:(ReduxyFunctionActor)actor {
+    return [[ReduxyFunctionAction alloc] initWithTag:tag actor:actor];
 }
 
-- (instancetype)initWithActor:(ReduxyFunctionActor)actor {
+- (instancetype)initWithTag:(NSString *)tag actor:(ReduxyFunctionActor)actor {
     self = [super init];
     if (self) {
+        self.tag = tag;
         self.call = actor;
     }
     return self;
@@ -23,6 +28,10 @@
 
 - (NSString *)type {
     return @"ReduxyFunctionAction";
+}
+
+- (NSString *)description {
+    return [NSString stringWithFormat:@"%@: %@", self.type, self.tag];
 }
 
 @end

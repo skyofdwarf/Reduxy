@@ -13,4 +13,13 @@
 #ifdef __OBJC__
     @import UIKit;
     @import Foundation;
+
+
+#import "ReduxyAppDelegate.h"
+
+#define LOG_HERE NSLog(@"%s", __PRETTY_FUNCTION__);
+//#define LOG(...)  NSLog(__VA_ARGS__)
+#define LOG(...)  NSLog(@"%@", [NSString stringWithFormat:@"%s %@", __PRETTY_FUNCTION__, [NSString stringWithFormat:__VA_ARGS__]])
+
+
 #endif

@@ -10,6 +10,7 @@
 
 
 #define LOG_HERE  NSLog(@"%s", __PRETTY_FUNCTION__);
+#define LOG(...)  NSLog(__VA_ARGS__)
 
 
 @interface ReduxyStore ()
@@ -19,7 +20,7 @@
 @property (copy, nonatomic) ReduxyReducer reducer;
 @property (copy, nonatomic) ReduxyDispatch dispatchFuction;
 
-@property (strong, nonatomic) NSMutableSet<id<ReduxyStoreSubscriber>> *subscribers;
+@property (strong, nonatomic) NSHashTable<id<ReduxyStoreSubscriber>> *subscribers;
 @end
 
 
@@ -60,7 +61,7 @@
 - (instancetype)initWithState:(ReduxyState)state reducer:(ReduxyReducer)reducer middlewares:(NSArray<ReduxyMiddleware> *)middlewares {
     self = [super init];
     if (self) {
-        self.subscribers = [NSMutableSet set];
+        self.subscribers = [NSHashTable weakObjectsHashTable];
         
         self.state = [state copy];
         self.reducer = reducer;
@@ -82,18 +83,13 @@
                 return action;
             }
             
-            NSLog(@"in default dispatch");
-            NSLog(@"\tcall reducer");
-            
             sself.isDispatching = YES;
             {
                 sself.state = sself.reducer(sself.state, action);
             }
             sself.isDispatching = NO;
             
-            NSLog(@"\twill publish new state");
             [sself publishState:sself.state action:action];
-            NSLog(@"\tdid publish new state");
         }
         
         return action;
@@ -110,13 +106,18 @@
 }
 
 - (void)publishState:(ReduxyState)state action:(ReduxyAction)action {
-    for (id<ReduxyStoreSubscriber> subscriber in self.subscribers) {
+    LOG(@"publish action: %@, state: %@", action, state);
+    
+    NSArray<id<ReduxyStoreSubscriber>> *subs = self.subscribers.allObjects;
+    LOG(@"subs: %@", subs);
+    
+    for (id<ReduxyStoreSubscriber> subscriber in subs) {
         [self publishState:state to:subscriber action:action];
     }
 }
 
 - (void)publishState:(ReduxyState)state to:(id<ReduxyStoreSubscriber>)subscriber action:(ReduxyAction)action {
-    [subscriber reduxyStore:self didChangeState:state byAction:action];
+    [subscriber store:self didChangeState:state byAction:action];
 }
 
 #pragma mark - public
@@ -141,19 +142,36 @@
     }
 }
 
+- (id)dispatch:(ReduxyActionType)type payload:(id)payload {
+    NSDictionary *action = (payload?
+                            @{ ReduxyActionTypeKey: type, ReduxyActionPayloadKey: payload }:
+                            @{ ReduxyActionTypeKey: type });
+    
+    return [self dispatch:action];
+}
+
 - (void)subscribe:(id<ReduxyStoreSubscriber>)subscriber {
-    if (![self.subscribers containsObject:subscriber]) {
+    if ([self.subscribers containsObject:subscriber]) {
+        LOG(@"already subscribed: %@", subscriber);
+    }
+    else {
         [self.subscribers addObject:subscriber];
         
+        // TODO: ? - publish state to new subscriber
 //        [self publishState:self.state to:subscriber action:ReduxyActionStoreSubscription];
+        
+        LOG(@"subscribed: %@", subscriber);
     }
 }
 
 - (void)unsubscribe:(id<ReduxyStoreSubscriber>)subscriber {
     [self.subscribers removeObject:subscriber];
+    
+    LOG(@"unsubscribed: %@", subscriber);
 }
 
 - (void)unsubscribeAll {
+    LOG_HERE
     [self.subscribers removeAllObjects];
 }
 
