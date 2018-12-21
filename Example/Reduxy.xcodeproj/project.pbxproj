@@ -255,9 +255,6 @@
 				LastUpgradeCheck = 0930;
 				ORGANIZATIONNAME = skyofdwarf;
 				TargetAttributes = {
-					6003F589195388D20070C39A = {
-						DevelopmentTeam = CZLKGY4ZN7;
-					};
 					6003F5AD195388D20070C39A = {
 						TestTargetID = 6003F589195388D20070C39A;
 					};
@@ -573,7 +570,7 @@
 			baseConfigurationReference = 8BE8262C697AF4330CB4632C /* Pods-Reduxy_Example.debug.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				DEVELOPMENT_TEAM = CZLKGY4ZN7;
+				DEVELOPMENT_TEAM = "";
 				ENABLE_STRICT_OBJC_MSGSEND = NO;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "Reduxy/Reduxy-Prefix.pch";
@@ -590,7 +587,7 @@
 			baseConfigurationReference = B6B7AD2B090DD5E146C768D9 /* Pods-Reduxy_Example.release.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				DEVELOPMENT_TEAM = CZLKGY4ZN7;
+				DEVELOPMENT_TEAM = "";
 				ENABLE_STRICT_OBJC_MSGSEND = NO;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "Reduxy/Reduxy-Prefix.pch";
