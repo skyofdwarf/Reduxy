@@ -9,10 +9,6 @@
 #import "ReduxyStore.h"
 
 
-#define LOG_HERE  NSLog(@"%s", __PRETTY_FUNCTION__);
-#define LOG(...)  NSLog(__VA_ARGS__)
-
-
 @interface ReduxyStore ()
 @property (strong, atomic) ReduxyState state;
 @property (assign, atomic) BOOL isDispatching;
@@ -27,7 +23,7 @@
 @implementation ReduxyStore
 
 - (void)dealloc {
-    LOG_HERE
+    [self unsubscribeAll];
 }
 
 + (instancetype)storeWithReducer:(ReduxyReducer)reducer {
@@ -106,10 +102,7 @@
 }
 
 - (void)publishState:(ReduxyState)state action:(ReduxyAction)action {
-    LOG(@"publish action: %@, state: %@", action, state);
-    
     NSArray<id<ReduxyStoreSubscriber>> *subs = self.subscribers.allObjects;
-    LOG(@"subs: %@", subs);
     
     for (id<ReduxyStoreSubscriber> subscriber in subs) {
         [self publishState:state to:subscriber action:action];
@@ -151,27 +144,16 @@
 }
 
 - (void)subscribe:(id<ReduxyStoreSubscriber>)subscriber {
-    if ([self.subscribers containsObject:subscriber]) {
-        LOG(@"already subscribed: %@", subscriber);
-    }
-    else {
+    if (![self.subscribers containsObject:subscriber]) {
         [self.subscribers addObject:subscriber];
-        
-        // TODO: ? - publish state to new subscriber
-//        [self publishState:self.state to:subscriber action:ReduxyActionStoreSubscription];
-        
-        LOG(@"subscribed: %@", subscriber);
     }
 }
 
 - (void)unsubscribe:(id<ReduxyStoreSubscriber>)subscriber {
     [self.subscribers removeObject:subscriber];
-    
-    LOG(@"unsubscribed: %@", subscriber);
 }
 
 - (void)unsubscribeAll {
-    LOG_HERE
     [self.subscribers removeAllObjects];
 }
 

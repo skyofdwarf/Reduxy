@@ -1,6 +1,0 @@
-framework module Reduxy {
-  umbrella header "Reduxy-umbrella.h"
-
-  export *
-  module * { export * }
-}
