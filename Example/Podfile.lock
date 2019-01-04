@@ -1,6 +1,6 @@
 PODS:
   - Expecta (1.0.5)
-  - Reduxy (0.2.0)
+  - Reduxy (0.3.1)
   - Specta (1.0.6)
 
 DEPENDENCIES:
@@ -14,7 +14,7 @@ EXTERNAL SOURCES:
 
 SPEC CHECKSUMS:
   Expecta: e1c022fcd33910b6be89c291d2775b3fe27a89fe
-  Reduxy: 1f43f9bef091433146030655d4c2500cf6febfd1
+  Reduxy: 51fc237e472728e1c73cccc607cfc5f8e19f619c
   Specta: f506f3a8361de16bc0dcf3b17b75e269072ba465
 
 PODFILE CHECKSUM: 9990574aba6998d728a7d6496c0bff6d1342bb0d
