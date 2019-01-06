@@ -7,26 +7,18 @@
 //
 
 #import "ReduxyAppDelegate.h"
+#import "GlobalStore.h"
 
 @import Reduxy;
-
-
-
-#pragma mark - app delegate
-
-
-
-@interface ReduxyAppDelegate ()
-@property (strong, nonatomic) ReduxyStore *store;
-
-@end
-
 
 @implementation ReduxyAppDelegate
 
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions
 {
     // Override point for customization after application launch.
+    
+    [GlobalStore.shared dispatch:raction(indicator, @YES)];
+    [GlobalStore.shared dispatch:raction(indicator, @NO)];
     
     return YES;
 }

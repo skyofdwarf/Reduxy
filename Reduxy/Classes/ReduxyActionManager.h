@@ -11,64 +11,12 @@
 
 
 /**
- macro to register keypath to raction
-
- @param action_type action type to register
- @param comment justcomment
- */
-#define raction_add_raw(action_type, ...) [ReduxyActionManager.shared register:action_type]
-#define raction_add(action_type, ...) raction_add_raw(@#action_type)
-
-/**
-macro to register keypath to raction
-
-@param action_type action type to register
-@param comment justcomment
-*/
-#define raction_remove(action_type, ...) [ReduxyActionManager.shared unregister:@(#action_type)]
-
-
-/**
- returns validated action with type and payload
-
- @param action_type action type to use
- @param payload payload
- 
- @return ReduxyAction
- */
-#define raction(type) raction_payload(type, nil)
-#define raction_payload(type, p) [ReduxyActionManager.shared actionWithType:@(#type) payload:p]
-
-#define raction_raw(type, p) [ReduxyActionManager.shared actionWithType:type payload:p]
-
-
-/**
- just convert to NSString *, no validation
-
- @param type action type
- @return ReduxyActionType
- */
-#define raction_nv(type) raction_log(type)
-#define raction_log(type) @(#type)
-
-/**
- returns validated action type
- 
- @param action_type action type to use
- @param payload paload
- 
- @return ReduxyActionType
- */
-#define ratype(action_type) [ReduxyActionManager.shared type:@(#action_type)]
-
-
-/**
  action manager which register action to be used and validate action being used
  */
 @interface ReduxyActionManager: NSObject
 
-+ (instancetype)shared;
-
+- (instancetype)initWithActions:(NSArray<ReduxyActionType> *)actions;
+- (instancetype)init;
 
 /**
  register action type
@@ -87,21 +35,21 @@ macro to register keypath to raction
 
 
 /**
- validate action type and just return the action type
-
- @param actionType action type to return after validattion
- @return id<ReduxyAction> instance, or throw exception
+ validate action and throw a exception if action is not registered
+ 
+ @param action action to validate
+ @return YES if valid
  */
-- (ReduxyActionType)type:(ReduxyActionType)actionType;
+- (BOOL)valid:(ReduxyAction)action;
+
 
 /**
- validate action type and just return the action type
+ validate action and throw a exception if action is not registered
  
- @param actionType action type to return after validattion
- @param payload payload of action type
- @return id<ReduxyAction> instance, or throw exception
+ @param action action to validate
  */
-- (ReduxyAction)actionWithType:(ReduxyActionType)actionType payload:(id)payload;
+- (void)validate:(ReduxyAction)action;
+
 @end
 
 

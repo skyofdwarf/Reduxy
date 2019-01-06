@@ -7,7 +7,8 @@
 //
 
 #import "BreedListViewController.h"
-#import "Store.h"
+#import "BreedListStore.h"
+
 
 #pragma mark - selectors
 
@@ -38,23 +39,15 @@ UISearchBarDelegate
 @property (weak, nonatomic) IBOutlet UIActivityIndicatorView *indicatorView;
 
 @property (copy, nonatomic) selector_block filteredBreedsSelector;
+
+@property (strong, nonatomic) ReduxyStore *store;
 @end
 
 
 @implementation BreedListViewController
 
-+ (void)load {
-    raction_add(breedlist.filtered, "note: ...");
-    raction_add(breedlist.reload);
-    raction_add(indicator);
-}
-
-- (NSString *)path {
-    return @"breedlist";
-}
-
 - (void)dealloc {
-    [Store.shared unsubscribe:self];
+    LOG_HERE
 }
 
 - (void)viewDidLoad {
@@ -75,7 +68,7 @@ UISearchBarDelegate
         }
     });
     
-    [Store.shared subscribe:self];
+    [self attachStore];
 }
 
 - (void)viewWillAppear:(BOOL)animated {
@@ -140,6 +133,12 @@ UISearchBarDelegate
     }
 }
 
+- (void)attachStore {
+    self.store = [BreedListStore new];
+    
+    [self.store subscribe:self];
+}
+
 #pragma mark - Table view data source
 
 - (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView {
@@ -147,7 +146,7 @@ UISearchBarDelegate
 }
 
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section {
-    NSDictionary *state = [Store.shared getState];
+    NSDictionary *state = [self.store getState];
     
     NSArray *filteredBreeds = self.filteredBreedsSelector(state);
     return filteredBreeds.count;
@@ -156,7 +155,7 @@ UISearchBarDelegate
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
     UITableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:@"BreedCell" forIndexPath:indexPath];
     
-    NSDictionary *state = [Store.shared getState];
+    NSDictionary *state = [self.store getState];
     
     NSArray *items = self.filteredBreedsSelector(state);
 
@@ -171,56 +170,59 @@ UISearchBarDelegate
     LOG_HERE
     
     // dispatch fetching action
-    [Store.shared dispatch:raction_payload(indicator, @YES)];
+    [self.store dispatch:raction(indicator, @YES)];
     
     ReduxyAsyncAction *action =
-    [ReduxyAsyncAction newWithTag:@"breedlist.reload"
-                            actor:^ReduxyAsyncActionCanceller(ReduxyDispatch storeDispatch) {
-         
-         NSURL *url = [NSURL URLWithString:@"https://dog.ceo/api/breeds/list/all"];
-         
-         NSURLSessionDataTask *task =
-         [NSURLSession.sharedSession dataTaskWithURL:url
-                                   completionHandler:
-          ^(NSData * _Nullable data, NSURLResponse * _Nullable response, NSError * _Nullable error) {
-              if (!error) {
-                  NSError *jsonError = nil;
-                  NSDictionary *json = [NSJSONSerialization JSONObjectWithData:data
-                                                                       options:0
-                                                                         error:&jsonError];
-                  if (!jsonError) {
-                      NSString *status = json[@"status"];
-                      if ([status isEqualToString:@"success"]) {
-                          NSDictionary *breeds = json[@"message"];
-                          
-                          storeDispatch(raction_payload(breedlist.reload, @{ @"breeds": breeds }));
-                          storeDispatch(raction_payload(indicator, @NO));
-                          // success
-                          return ;
-                      }
-                  }
-              }
-              
-              // fail
-              storeDispatch(raction_payload(breedlist.reload, @{ @"breeds": @[] }));
-              storeDispatch(raction_payload(indicator, @NO));
-          }];
-         
-         [task resume];
-         
-         return ^() {
-             [task cancel];
-             storeDispatch(raction_payload(indicator, @NO));
-         };
-     }];
+    [ReduxyAsyncAction newWithActor:^ReduxyAsyncActionCanceller(ReduxyDispatch storeDispatch) {
+        
+        NSURL *url = [NSURL URLWithString:@"https://dog.ceo/api/breeds/list/all"];
+        
+        NSURLSessionDataTask *task =
+        [NSURLSession.sharedSession dataTaskWithURL:url
+                                  completionHandler:
+         ^(NSData * _Nullable data, NSURLResponse * _Nullable response, NSError * _Nullable error) {
+             if (!error) {
+                 NSError *jsonError = nil;
+                 NSDictionary *json = [NSJSONSerialization JSONObjectWithData:data
+                                                                      options:0
+                                                                        error:&jsonError];
+                 if (!jsonError) {
+                     NSString *status = json[@"status"];
+                     if ([status isEqualToString:@"success"]) {
+                         NSDictionary *breeds = json[@"message"];
+                         
+                         storeDispatch(raction(reload, @{ @"data": @{ @"breeds": breeds,
+                                                                      @"dummy": @NO,
+                                                                      } }));
+                         storeDispatch(raction(indicator, @NO));
+                         // success
+                         return ;
+                     }
+                 }
+             }
+             
+             // fail
+             storeDispatch(raction(reload, @{ @"data": @{ @"breeds": @[],
+                                                          @"dummy": @NO,
+                                                          } }));
+             storeDispatch(raction(indicator, @NO));
+         }];
+        
+        [task resume];
+        
+        return ^() {
+            [task cancel];
+            storeDispatch(raction(indicator, @NO));
+        };
+    }];
     
-    [Store.shared dispatch:action];
+    [self.store dispatch:action];
 }
 
 
 #pragma mark - ReduxyStoreSubscriber
 
-- (void)store:(id<ReduxyStore>)store didChangeState:(ReduxyState)state byAction:(ReduxyAction)action {
+- (void)store:(ReduxyStore *)store didChangeState:(ReduxyState)state byAction:(ReduxyAction)action {
 
     NSNumber *indicator = indicatorSelector(state);
     if (indicator.boolValue) {
@@ -237,10 +239,7 @@ UISearchBarDelegate
 
 - (void)searchBar:(UISearchBar *)searchBar textDidChange:(NSString *)searchText {
     LOG(@"search bar text did change: %@", searchText);
-    
-    [Store.shared dispatch:ratype(breedlist.filtered)
-                 payload:@{ @"filter": searchText
-                            }];
+    [self.store dispatch:raction(filter, searchText )];
 }
 
 #pragma mark - UISearchResultsUpdating
@@ -248,9 +247,7 @@ UISearchBarDelegate
 - (void)updateSearchResultsForSearchController:(UISearchController *)searchController {
     NSString *text = searchController.searchBar.text;
     
-    [Store.shared dispatch:ratype(breedlist.filtered)
-                 payload:@{ @"filter": text
-                            }];
+    [self.store dispatch:raction(filter, text)];
 }
 
 @end

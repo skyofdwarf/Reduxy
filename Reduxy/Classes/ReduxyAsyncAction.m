@@ -11,11 +11,19 @@
 
 @implementation ReduxyAsyncAction
 
-+ (instancetype)newWithTag:(NSString *)tag actor:(ReduxyAsyncActor)actor {
-    return [[ReduxyAsyncAction alloc] initWithTag:tag actor:actor];
++ (instancetype)newWithActor:(ReduxyAsyncActor)actor {
+    return [[ReduxyAsyncAction alloc] initWithActor:actor];
 }
 
-- (instancetype)initWithTag:(NSString *)tag actor:(ReduxyAsyncActor)actor {
++ (instancetype)newWithActor:(ReduxyAsyncActor)actor tag:(NSString *)tag {
+    return [[ReduxyAsyncAction alloc] initWithActor:actor tag:tag];
+}
+
+- (instancetype)initWithActor:(ReduxyAsyncActor)actor {
+    return [self initWithActor:actor tag:@"untagged"];
+}
+
+- (instancetype)initWithActor:(ReduxyAsyncActor)actor tag:(NSString *)tag {
     
     ReduxyFunctionActor functionActor = ^id(id<ReduxyStore> store, ReduxyDispatch next, ReduxyAction action) {
         ReduxyDispatch storeDispatch = ^ReduxyAction(ReduxyAction action) {
@@ -25,7 +33,7 @@
         return actor(storeDispatch);
     };
     
-    self = [super initWithTag:tag actor:functionActor];
+    self = [super initWithActor:functionActor tag:tag];
     
     if (self) {
     }

@@ -10,15 +10,6 @@
 #define ReduxyTypes_h
 
 
-
-
-#define REDUXY_ACTION(type, data)\
-@{\
-  ReduxyActionTypeKey: type,\
-  ReduxyActionDataKey: data \
-}
-
-
 #pragma mark - forward declarations of protocols
 
 @protocol ReduxyActionable;
@@ -26,11 +17,12 @@
 @protocol ReduxyStoreSubscriber;
 
 #pragma mark - types
+
 typedef id<ReduxyActionable> ReduxyAction;
-typedef id ReduxyState;
+typedef NSDictionary * ReduxyState;
 
 typedef NSString * const ReduxyActionType;
-
+typedef id ReduxyActionPayload;
 
 
 #pragma mark - function types
@@ -44,21 +36,10 @@ typedef ReduxyAction (^ReduxyDispatch)(ReduxyAction action);
 typedef ReduxyDispatch (^ReduxyTransducer)(ReduxyDispatch next);
 typedef ReduxyTransducer (^ReduxyMiddleware)(id<ReduxyStore> store);
 
-
 /**
  regular selector, no computations
  */
 typedef id (^selector_block) (ReduxyState);
-
-
-#pragma mark - reduxy action key
-
-FOUNDATION_EXTERN NSString * const ReduxyActionTypeKey;
-FOUNDATION_EXTERN NSString * const ReduxyActionPayloadKey;
-
-#pragma mark - reduxy error domain
-
-FOUNDATION_EXTERN NSErrorDomain const ReduxyErrorDomain;
 
 
 #pragma mark - reduxy errors
@@ -68,35 +49,10 @@ typedef NS_ENUM(NSUInteger, ReduxyError) {
     ReduxyErrorMultipleDispatching = 100,
 };
 
-#pragma mark - reducer helper
 
-FOUNDATION_EXTERN ReduxyReducer ReduxyValueReducerForAction(ReduxyActionType type, id defaultValue);
-FOUNDATION_EXTERN ReduxyReducer ReduxyKeyPathReducerForAction(ReduxyActionType type, NSString *key, id defaultValue);
+#pragma mark - reduxy error domain
 
-
-
-#pragma mark - middleware helper macro
-
-
-/**
- utility macro for creating a middleware
- 
- maybe you should be call `next(action)` at last line of block to keep chaining of middlewares
-
- @param store instance of ReduxyStore
- @param next next middleware
- @param action action dispatched
- @param block code block of middleware
- @return block of middleware
- */
-#define ReduxyMiddlewareCreateMacro(store, next, action, block) \
-^ReduxyTransducer (id<ReduxyStore> store) { \
-  return ^ReduxyDispatch (ReduxyDispatch next) { \
-    return ^ReduxyAction (ReduxyAction action) { \
-      block \
-    }; \
-  }; \
-};
+FOUNDATION_EXTERN NSErrorDomain const ReduxyErrorDomain;
 
 
 #pragma mark - reduxy protocols
@@ -107,7 +63,7 @@ FOUNDATION_EXTERN ReduxyReducer ReduxyKeyPathReducerForAction(ReduxyActionType t
 - (BOOL)is:(ReduxyActionType)type;
 
 @optional
-- (id)payload;
+- (ReduxyActionPayload)payload;
 @end
 
 @protocol ReduxyStoreSubscriber <NSObject>
@@ -119,31 +75,107 @@ FOUNDATION_EXTERN ReduxyReducer ReduxyKeyPathReducerForAction(ReduxyActionType t
 @protocol ReduxyStore <NSObject>
 - (ReduxyState)getState;
 - (ReduxyAction)dispatch:(ReduxyAction)action;
-- (ReduxyAction)dispatch:(ReduxyActionType)action payload:(id)payload;
+- (ReduxyAction)dispatch:(ReduxyActionType)action payload:(ReduxyActionPayload)payload;
 
 - (void)subscribe:(id<ReduxyStoreSubscriber>)subscriber;
 - (void)unsubscribe:(id<ReduxyStoreSubscriber>)subscriber;
 @end
 
 
-#pragma mark - default implementations of ReduxyAction protocol
-
-@interface NSObject (ReduxyAction) <ReduxyActionable>
-- (ReduxyActionType)type;
-- (id)payload;
-
-- (BOOL)is:(ReduxyActionType)type;
-@end
+#pragma mark - NSString (ReduxyAction)
 
 @interface NSString (ReduxyAction) <ReduxyActionable>
 - (ReduxyActionType)type;
-- (NSString *)payload;
+- (ReduxyActionPayload)payload;
 @end
+
 
 @interface NSDictionary (ReduxyAction) <ReduxyActionable>
 - (ReduxyActionType)type;
-- (NSDictionary *)payload;
+- (ReduxyActionPayload)payload;
 @end
+
+#pragma mark - NSDictionary (ReduxyAction)
+
+/**
+ keys for NSDictionary(ReduxyAction)
+ @{
+   ReduxyActionTypeKey: type,
+   ReduxyActionPayloadKey: payload
+ }
+ */
+FOUNDATION_EXTERN NSString * const ReduxyActionTypeKey;
+FOUNDATION_EXTERN NSString * const ReduxyActionPayloadKey;
+
+
+#pragma mark - Reduxy
+
+typedef id (^ReduxyDefaultValueBlock)(void);
+typedef id (^ReduxyReduceBlock)(ReduxyActionPayload);
+
+@interface Reduxy: NSObject
+
+#pragma mark - reducer helper
++ (ReduxyReducer)reducerForAction:(ReduxyActionType)type defaultValue:(id)defaultValue;
++ (ReduxyReducer)reducerForAction:(ReduxyActionType)type defaultValueBlock:(ReduxyDefaultValueBlock)defaultValueBlock;
+
++ (ReduxyReducer)reducerForAction:(ReduxyActionType)type keypath:(NSString *)keypath defaultValue:(id)defaultValue;
++ (ReduxyReducer)reducerForAction:(ReduxyActionType)type keypath:(NSString *)keypath defaultValueBlock:(ReduxyDefaultValueBlock)defaultValueBlock;
+
++ (ReduxyReducer)reducerForAction:(ReduxyActionType)type reduce:(ReduxyReduceBlock)reduce defaultValueBlock:(ReduxyDefaultValueBlock)defaultValueBlock;
+@end
+
+#pragma mark - macros
+
+/**
+ macro to create a type
+ */
+#define ratype(type) (@(#type))
+
+
+/**
+ macro to create NSString action with type
+ */
+#define raction_no_payload(type) (@(#type))
+
+/**
+ macro to create NSDictionary action with type and payload
+ */
+#define raction_payload(type, ...) \
+(@{ \
+  ReduxyActionTypeKey: @(#type),\
+  ReduxyActionPayloadKey: __VA_ARGS__ \
+})
+
+#define raction(...) raction_payload(__VA_ARGS__)
+
+/**
+ utility macro to create a middleware
+ 
+ maybe you should be call `next(action)` at last line of block to keep chaining of middlewares
+ 
+ ``` objc
+ ReduxyMiddleware mw = rmiddleware(store, next, action, {
+   NSLog(@"action: %@", action);
+   return next(action);
+ });
+ ```
+ 
+ @param store instance of ReduxyStore
+ @param next next middleware
+ @param action action dispatched
+ @param block code block of middleware
+ 
+ @return block of middleware
+ */
+#define rmiddleware(store, next, action, block) \
+  ^ReduxyTransducer (id<ReduxyStore> store) { \
+    return ^ReduxyDispatch (ReduxyDispatch next) { \
+      return ^ReduxyAction (ReduxyAction action) { \
+        block \
+    }; \
+  }; \
+};
 
 
 #endif /* ReduxyTypes_h */

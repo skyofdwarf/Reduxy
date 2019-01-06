@@ -7,57 +7,51 @@
 //
 
 #import "ReduxyStore.h"
+#import "ReduxyActionManager.h"
+#import "ReduxyFunctionAction.h"
+#import "ReduxyAsyncAction.h"
+
 
 
 @interface ReduxyStore ()
 @property (strong, atomic) ReduxyState state;
-@property (assign, atomic) BOOL isDispatching;
 
 @property (copy, nonatomic) ReduxyReducer reducer;
 @property (copy, nonatomic) ReduxyDispatch dispatchFuction;
 
 @property (strong, nonatomic) NSHashTable<id<ReduxyStoreSubscriber>> *subscribers;
+@property (strong, nonatomic) ReduxyActionManager *actionManager;
+
 @end
 
 
 @implementation ReduxyStore
 
 - (void)dealloc {
+    NSLog(@"%s", __PRETTY_FUNCTION__);
+    
     [self unsubscribeAll];
 }
 
-+ (instancetype)storeWithReducer:(ReduxyReducer)reducer {
-    return [[ReduxyStore alloc] initWithReducer:reducer];
++ (instancetype)storeWithState:(ReduxyState)state reducer:(ReduxyReducer)reducer actions:(NSArray *)actions {
+    return [ReduxyStore storeWithState:state reducer:reducer middlewares:@[] actions:actions];
 }
 
-+ (instancetype)storeWithState:(ReduxyState)state reducer:(ReduxyReducer)reducer {
-    return [ReduxyStore storeWithState:state reducer:reducer middlewares:nil];
++ (instancetype)storeWithState:(ReduxyState)state reducer:(ReduxyReducer)reducer middlewares:(NSArray<ReduxyMiddleware> *)middlewares actions:(NSArray *)actions {
+    return [[ReduxyStore alloc] initWithState:state reducer:reducer middlewares:middlewares actions:@[]];
 }
 
-+ (instancetype)storeWithReducer:(ReduxyReducer)reducer middlewares:(NSArray<ReduxyMiddleware> *)middlewares {
-    return [[ReduxyStore alloc] initWithReducer:reducer middlewares:middlewares];
+- (instancetype)initWithState:(ReduxyState)state reducer:(ReduxyReducer)reducer actions:(NSArray *)actions {
+    return [self initWithState:state reducer:reducer middlewares:@[] actions:actions];
 }
 
-+ (instancetype)storeWithState:(ReduxyState)state reducer:(ReduxyReducer)reducer middlewares:(NSArray<ReduxyMiddleware> *)middlewares {
-    return [[ReduxyStore alloc] initWithState:state reducer:reducer middlewares:middlewares];
-}
-
-- (instancetype)initWithReducer:(ReduxyReducer)reducer {
-    return [self initWithState:@{} reducer:reducer];
-}
-
-- (instancetype)initWithReducer:(ReduxyReducer)reducer middlewares:(NSArray<ReduxyMiddleware> *)middlewares {
-    return [self initWithState:@{} reducer:reducer middlewares:middlewares];
-}
-
-- (instancetype)initWithState:(ReduxyState)state reducer:(ReduxyReducer)reducer {
-    return [self initWithState:state reducer:reducer middlewares:nil];
-}
-
-- (instancetype)initWithState:(ReduxyState)state reducer:(ReduxyReducer)reducer middlewares:(NSArray<ReduxyMiddleware> *)middlewares {
+- (instancetype)initWithState:(ReduxyState)state reducer:(ReduxyReducer)reducer middlewares:(NSArray<ReduxyMiddleware> *)middlewares actions:(NSArray *)actions {
     self = [super init];
     if (self) {
         self.subscribers = [NSHashTable weakObjectsHashTable];
+        
+        self.actionManager = [[ReduxyActionManager alloc] initWithActions:[actions arrayByAddingObjectsFromArray:@[ ratype(ReduxyFunctionAction),
+                                                                                                                    ratype(ReduxyAsyncAction) ]]];
         
         self.state = [state copy];
         self.reducer = reducer;
@@ -69,30 +63,27 @@
 
 #pragma mark - private
 
+- (ReduxyAction)reduceWithAction:(ReduxyAction)action {
+    self.state = self.reducer(self.state, action);
+    
+    [self publishState:self.state action:action];
+    
+    return action;
+}
+
+
 - (ReduxyDispatch)buildDispatchWithMiddlewares:(NSArray<ReduxyMiddleware> *)middlewares {
-    typeof(self) __weak wself = self;
-    ReduxyDispatch defaultDispatch = ^ReduxyAction (ReduxyAction action) {
-        typeof(self) __strong sself = wself;
-        if (sself) {
-            if (sself.isDispatching) {
-                @throw [NSError errorWithDomain:ReduxyErrorDomain code:ReduxyErrorMultipleDispatching userInfo:nil];
-                return action;
-            }
-            
-            sself.isDispatching = YES;
-            {
-                sself.state = sself.reducer(sself.state, action);
-            }
-            sself.isDispatching = NO;
-            
-            [sself publishState:sself.state action:action];
-        }
+   typedef ReduxyDispatch (^ReduxyDefaulDispatch)(ReduxyStore *store);
+    
+    ReduxyDefaulDispatch defaultDispatch = ^ReduxyDispatch (ReduxyStore *store) {
+        return ^ReduxyAction (ReduxyAction action) {
+            return [store reduceWithAction:action];
+        };
         
-        return action;
     };
     
     NSArray<ReduxyMiddleware> *revereMiddlewares = [[middlewares reverseObjectEnumerator] allObjects];
-    ReduxyDispatch dispatch = defaultDispatch;
+    ReduxyDispatch dispatch = defaultDispatch(self);
 
     for (ReduxyMiddleware mw in revereMiddlewares) {
         dispatch = mw(self)(dispatch);
@@ -120,22 +111,10 @@
 }
 
 - (id)dispatch:(ReduxyAction)action {
-    if (NSThread.isMainThread) {
-        return self.dispatchFuction(action);
-    }
-    else {
-        ReduxyDispatch dispatch = self.dispatchFuction;
-        __block id result = nil;
-        
-        dispatch_sync(dispatch_get_main_queue(), ^{
-            result = dispatch(action);
-        });
-        
-        return result;
-    }
+    return self.dispatchFuction(action);
 }
 
-- (id)dispatch:(ReduxyActionType)type payload:(id)payload {
+- (id)dispatch:(ReduxyActionType)type payload:(ReduxyActionPayload)payload {
     NSDictionary *action = (payload?
                             @{ ReduxyActionTypeKey: type, ReduxyActionPayloadKey: payload }:
                             @{ ReduxyActionTypeKey: type });

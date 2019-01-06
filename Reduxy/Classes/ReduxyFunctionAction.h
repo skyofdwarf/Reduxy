@@ -23,7 +23,11 @@ typedef id (^ReduxyFunctionActor)(id<ReduxyStore> store, ReduxyDispatch next, Re
 @property (copy, nonatomic, readonly) ReduxyFunctionActor call;
 @property (copy, nonatomic, readonly) NSString *tag;
 
-+ (instancetype)newWithTag:(NSString *)tag actor:(ReduxyFunctionActor)actor;
-- (instancetype)initWithTag:(NSString *)tag actor:(ReduxyFunctionActor)actor;
++ (instancetype)newWithActor:(ReduxyFunctionActor)actor;
++ (instancetype)newWithActor:(ReduxyFunctionActor)actor tag:(NSString *)tag;
+
+- (instancetype)initWithActor:(ReduxyFunctionActor)actor;
+- (instancetype)initWithActor:(ReduxyFunctionActor)actor tag:(NSString *)tag;
+
 @end
 

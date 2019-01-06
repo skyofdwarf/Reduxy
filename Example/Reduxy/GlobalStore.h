@@ -8,8 +8,8 @@
 
 @import Reduxy;
 
-@interface Store : ReduxyStore
+@interface GlobalStore : ReduxyStore
 
-+ (Store *)shared;
++ (GlobalStore *)shared;
 
 @end

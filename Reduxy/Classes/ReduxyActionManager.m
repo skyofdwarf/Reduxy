@@ -15,7 +15,7 @@
 
 
 @interface ReduxyActionManager()
-@property (strong, nonatomic) NSMutableArray<ReduxyActionType> *actions;
+@property (strong, nonatomic) NSMutableSet<ReduxyActionType> *actions;
 @end
 
 @implementation ReduxyActionManager
@@ -32,9 +32,13 @@
 }
 
 - (instancetype)init {
+    return [self initWithActions:@[]];
+}
+
+- (instancetype)initWithActions:(NSArray<ReduxyActionType> *)actions {
     self = [super init];
     if (self) {
-        self.actions = [NSMutableArray new];
+        self.actions = [[NSMutableSet alloc] initWithArray:actions];
     }
     return self;
 }
@@ -54,31 +58,15 @@
     [self.actions removeObject:actionType];
 }
 
-- (ReduxyActionType)type:(ReduxyActionType)actionType {
-    // TODO: JSON schema ?
-    
-    if ([self.actions containsObject:actionType]) {
-        return actionType;
-    }
-    else {
-        @throw [NSException exceptionWithName:NSInternalInconsistencyException
-                                       reason:[NSString stringWithFormat:@"No reigistered action type: %@", actionType]
-                                     userInfo:@{ @"type": actionType }];
-    }
+- (BOOL)valid:(ReduxyAction)action {
+    return [self.actions containsObject:action.type];
 }
 
-- (ReduxyAction)actionWithType:(ReduxyActionType)actionType payload:(id)payload {
-    if ([self.actions containsObject:actionType]) {
-        return (payload?
-                @{ ReduxyActionTypeKey: actionType,
-                   ReduxyActionPayloadKey: payload }:
-                
-                @{ ReduxyActionTypeKey: actionType });
-    }
-    else {
+- (void)validate:(ReduxyAction)action {
+    if (![self valid:action]) {
         @throw [NSException exceptionWithName:NSInternalInconsistencyException
-                                       reason:[NSString stringWithFormat:@"No reigistered action type: %@", actionType]
-                                     userInfo:@{ @"type": actionType }];
+                                       reason:[NSString stringWithFormat:@"No reigistered action with type: %@", action.type]
+                                     userInfo:@{ @"type": action.type }];
     }
 }
 

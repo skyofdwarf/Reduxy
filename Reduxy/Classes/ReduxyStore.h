@@ -10,51 +10,33 @@
 
 #import "ReduxyTypes.h"
 
-
-
-
-/*
- TODO: add -[subscriber:selector:]
+/**
+ ReduxyStore
  */
-
-
-
-
-/*! Reduxy(Redux[Obj]C) is a implementation of redux with ObjC.
- */
-
-/// reduxy store
 @interface ReduxyStore : NSObject <ReduxyStore>
-
-+ (instancetype)storeWithReducer:(ReduxyReducer)reducer;
-
-+ (instancetype)storeWithReducer:(ReduxyReducer)reducer
-                     middlewares:(NSArray<ReduxyMiddleware> *)middlewares;
-    
-+ (instancetype)storeWithState:(ReduxyState)state
-                       reducer:(ReduxyReducer)reducer;
 
 + (instancetype)storeWithState:(ReduxyState)state
                        reducer:(ReduxyReducer)reducer
-                   middlewares:(NSArray<ReduxyMiddleware> *)middlewares;
+                       actions:(NSArray *)actions;
 
-- (instancetype)initWithReducer:(ReduxyReducer)reducer;
-
-- (instancetype)initWithReducer:(ReduxyReducer)reducer
-                    middlewares:(NSArray<ReduxyMiddleware> *)middlewares;
-
-- (instancetype)initWithState:(ReduxyState)state
-                      reducer:(ReduxyReducer)reducer;
++ (instancetype)storeWithState:(ReduxyState)state
+                       reducer:(ReduxyReducer)reducer
+                   middlewares:(NSArray<ReduxyMiddleware> *)middlewares
+                       actions:(NSArray *)actions;
 
 - (instancetype)initWithState:(ReduxyState)state
                       reducer:(ReduxyReducer)reducer
-                  middlewares:(NSArray<ReduxyMiddleware> *)middlewares;
+                      actions:(NSArray *)actions;
 
+- (instancetype)initWithState:(ReduxyState)state
+                      reducer:(ReduxyReducer)reducer
+                  middlewares:(NSArray<ReduxyMiddleware> *)middlewares
+                      actions:(NSArray *)actions;
     
 - (ReduxyState)getState;
 
 - (id)dispatch:(ReduxyAction)action;
-- (id)dispatch:(ReduxyActionType)type payload:(id)payload;
+- (id)dispatch:(ReduxyActionType)type payload:(ReduxyActionPayload)payload;
 
 - (void)subscribe:(id<ReduxyStoreSubscriber>)subscriber;
 - (void)unsubscribe:(id<ReduxyStoreSubscriber>)subscriber;

@@ -13,11 +13,21 @@
 @end
 
 @implementation ReduxyFunctionAction
-+ (instancetype)newWithTag:(NSString *)tag actor:(ReduxyFunctionActor)actor {
-    return [[ReduxyFunctionAction alloc] initWithTag:tag actor:actor];
+
++ (instancetype)newWithActor:(ReduxyFunctionActor)actor {
+    return [[ReduxyFunctionAction alloc] initWithActor:actor];
 }
 
-- (instancetype)initWithTag:(NSString *)tag actor:(ReduxyFunctionActor)actor {
++ (instancetype)newWithActor:(ReduxyFunctionActor)actor tag:(NSString *)tag {
+    return [[ReduxyFunctionAction alloc] initWithActor:actor tag:tag];
+}
+
+
+- (instancetype)initWithActor:(ReduxyFunctionActor)actor {
+    return [self initWithActor:actor tag:@"untagged"];
+}
+
+- (instancetype)initWithActor:(ReduxyFunctionActor)actor tag:(NSString *)tag {
     self = [super init];
     if (self) {
         self.tag = tag;
@@ -28,6 +38,10 @@
 
 - (NSString *)type {
     return @"ReduxyFunctionAction";
+}
+
+- (BOOL)is:(ReduxyActionType)type {
+    return [self.type isEqualToString:type];
 }
 
 - (NSString *)description {
