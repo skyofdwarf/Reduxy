@@ -104,7 +104,7 @@ NSString * const ReduxyActionPayloadKey = @"payload";
 + (ReduxyReducer)reducerForAction:(ReduxyActionType)type reduce:(ReduxyReduceBlock)reduce defaultValueBlock:(ReduxyDefaultValueBlock)defaultValueBlock {
     return ^ReduxyState (ReduxyState state, ReduxyAction action) {
         if ([type is:action.type]) {
-            id value = reduce(action.payload);
+            id value = reduce(state, action.payload);
             
             if (!value)
                 @throw [NSException exceptionWithName:NSInternalInconsistencyException

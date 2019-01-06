@@ -30,7 +30,7 @@ static ReduxyMiddleware logger = rmiddleware(store, next, action, {
                                             defaultValueBlock:^{ return [NSDate date]; }];
     
     __unused ReduxyReducer notUsedReducer = [Reduxy reducerForAction:ratype(not.used)
-                                                              reduce:^(ReduxyActionPayload payload) {
+                                                              reduce:^(ReduxyState state, ReduxyActionPayload payload) {
                                                                   return [payload valueForKeyPath:@"not.used"];
                                                               }
                                                    defaultValueBlock:^{ return @"not used"; }];

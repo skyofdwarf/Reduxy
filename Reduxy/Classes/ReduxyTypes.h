@@ -111,7 +111,7 @@ FOUNDATION_EXTERN NSString * const ReduxyActionPayloadKey;
 #pragma mark - Reduxy
 
 typedef id (^ReduxyDefaultValueBlock)(void);
-typedef id (^ReduxyReduceBlock)(ReduxyActionPayload);
+typedef id (^ReduxyReduceBlock)(ReduxyState, ReduxyActionPayload);
 
 @interface Reduxy: NSObject
 

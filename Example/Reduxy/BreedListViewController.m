@@ -239,7 +239,7 @@ UISearchBarDelegate
 
 - (void)searchBar:(UISearchBar *)searchBar textDidChange:(NSString *)searchText {
     LOG(@"search bar text did change: %@", searchText);
-    [self.store dispatch:raction(filter, searchText )];
+    [self.store dispatch:raction(filter, searchText)];
 }
 
 #pragma mark - UISearchResultsUpdating
