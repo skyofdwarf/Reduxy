@@ -19,7 +19,7 @@
 #pragma mark - types
 
 typedef id<ReduxyActionable> ReduxyAction;
-typedef NSDictionary * ReduxyState;
+typedef id ReduxyState;
 
 typedef NSString * const ReduxyActionType;
 typedef id ReduxyActionPayload;
